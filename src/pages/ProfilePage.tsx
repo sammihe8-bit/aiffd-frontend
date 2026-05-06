@@ -110,4 +110,116 @@ export default function ProfilePage() {
                 <h1 className="text-2xl font-bold text-gray-900">
                   {currentUser.name || '未设置姓名'}
                 </h1>
-                <span className={`inline-flex items
+                <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${currentLevel.color}`}>
+                  {currentLevel.icon}
+                  {currentLevel.label}
+                </span>
+              </div>
+              <p className="text-gray-500 text-sm">{currentLevel.desc}</p>
+            </div>
+
+            <div className="flex gap-3">
+              <button onClick={() => navigate('/diagnosis')} className="btn-primary inline-flex items-center gap-2">
+                <Palette className="w-4 h-4" />
+                开始诊断
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-8">
+          <div className="md:col-span-2 space-y-6">
+            <div className="card">
+              <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <User className="w-5 h-5 text-primary-500" />
+                基本信息
+              </h2>
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                  <Phone className="w-5 h-5 text-gray-400" />
+                  <div>
+                    <p className="text-xs text-gray-500">手机号</p>
+                    <p className="font-medium text-gray-900">{currentUser.phone}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                  <Mail className="w-5 h-5 text-gray-400" />
+                  <div>
+                    <p className="text-xs text-gray-500">邮箱</p>
+                    <p className="font-medium text-gray-900">{currentUser.email || '未设置'}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                  <Calendar className="w-5 h-5 text-gray-400" />
+                  <div>
+                    <p className="text-xs text-gray-500">加入时间</p>
+                    <p className="font-medium text-gray-900">{joinDate}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="card">
+              <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <Heart className="w-5 h-5 text-red-500" />
+                最近活动
+              </h2>
+              <div className="text-center py-8 text-gray-400">
+                <Palette className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <p>暂无诊断记录</p>
+                <button onClick={() => navigate('/diagnosis')} className="mt-4 text-primary-600 hover:text-primary-700 font-medium inline-flex items-center gap-1">
+                  立即开始第一次诊断
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <div className="card">
+              <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <Award className="w-5 h-5 text-secondary-500" />
+                会员等级
+              </h2>
+              <div className="space-y-3">
+                {memberLevels.map((level) => (
+                  <div key={level.key} className={`p-3 rounded-lg border-2 transition-all ${
+                    currentUser.memberLevel === level.key
+                      ? 'border-primary-500 bg-primary-50 shadow-sm'
+                      : 'border-transparent bg-gray-50 opacity-60'
+                  }`}>
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 ${level.color} rounded-lg flex items-center justify-center`}>
+                        {level.icon}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-sm">{level.label}</span>
+                          {currentUser.memberLevel === level.key && (
+                            <span className="text-xs bg-primary-500 text-white px-2 py-0.5 rounded-full">当前</span>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-500 mt-0.5">{level.desc}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {currentUser.memberLevel === 'normal' && (
+              <div className="card bg-gradient-to-br from-primary-50 to-secondary-50 border-primary-200">
+                <div className="text-center">
+                  <Gem className="w-10 h-10 text-primary-500 mx-auto mb-3" />
+                  <h3 className="font-bold text-gray-900 mb-2">升级 VIP</h3>
+                  <p className="text-sm text-gray-600 mb-4">解锁高级诊断功能，获取专属色彩报告</p>
+                  <button className="w-full btn-primary">立即升级</button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
