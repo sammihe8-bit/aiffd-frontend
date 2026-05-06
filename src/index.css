@@ -39,6 +39,11 @@
     @apply w-full border-b border-[#ccc] bg-transparent px-0 py-3 text-[14px] text-[#1a1a1a] focus:outline-none focus:border-[#1a1a1a] transition-colors;
     font-family: 'Inter', sans-serif;
   }
+  .input-lux::placeholder {
+    color: #bbb;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+  }
   .label-lux {
     @apply text-[10px] tracking-[2px] text-[#888] uppercase;
     font-family: 'Inter', sans-serif;
