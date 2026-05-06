@@ -18,15 +18,15 @@
 
 @layer components {
   .btn-primary {
-    @apply bg-[#1a1a1a] text-white text-[11px] tracking-[3px] px-8 py-3 inline-block transition-all duration-200 hover:bg-[#333] cursor-pointer;
+    @apply bg-[#1a1a1a] text-white text-[11px] tracking-[1px] px-8 py-3 inline-block transition-all duration-200 hover:bg-[#333] cursor-pointer;
     font-family: 'Inter', sans-serif;
   }
   .btn-outline {
-    @apply border border-[#1a1a1a] text-[#1a1a1a] text-[11px] tracking-[3px] px-8 py-3 inline-block transition-all duration-200 hover:bg-[#1a1a1a] hover:text-white cursor-pointer;
+    @apply border border-[#1a1a1a] text-[#1a1a1a] text-[11px] tracking-[1px] px-8 py-3 inline-block transition-all duration-200 hover:bg-[#1a1a1a] hover:text-white cursor-pointer;
     font-family: 'Inter', sans-serif;
   }
   .btn-gold {
-    @apply border border-[#B8973A] text-[#B8973A] text-[11px] tracking-[3px] px-8 py-3 inline-block transition-all duration-200 hover:bg-[#B8973A] hover:text-white cursor-pointer;
+    @apply border border-[#B8973A] text-[#B8973A] text-[11px] tracking-[1px] px-8 py-3 inline-block transition-all duration-200 hover:bg-[#B8973A] hover:text-white cursor-pointer;
     font-family: 'Inter', sans-serif;
   }
   .card-lux {
@@ -37,7 +37,7 @@
     font-family: 'Inter', sans-serif;
   }
   .label-lux {
-    @apply text-[10px] tracking-[2.5px] text-[#888] uppercase;
+    @apply text-[10px] tracking-[2px] text-[#888] uppercase;
     font-family: 'Inter', sans-serif;
   }
   .text-gold {
