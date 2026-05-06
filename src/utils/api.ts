@@ -27,11 +27,13 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('aiffd_token')
-      localStorage.removeItem('aiffd_user')
-      window.location.href = '/auth'
-    }
+const isAuthRoute = error.config?.url?.includes('/auth/')
+const hasToken = !!localStorage.getItem('aiffd_token')
+if (error.response?.status === 401 && hasToken && !isAuthRoute) {
+  localStorage.removeItem('aiffd_token')
+  localStorage.removeItem('aiffd_user')
+  window.location.href = '/auth'
+}
     return Promise.reject(error)
   }
 )
