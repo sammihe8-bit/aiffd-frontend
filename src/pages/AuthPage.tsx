@@ -4,16 +4,11 @@ import { useAuth } from '../hooks/useAuth'
 import { authAPI } from '../utils/api'
 import { Eye, EyeOff } from 'lucide-react'
 
-// 从不同的响应格式中提取 token 和 user
 function extractAuthData(data: any): { token: string; user: any } | null {
-  // 格式1: { token, user }
   if (data?.token && data?.user) return { token: data.token, user: data.user }
-  // 格式2: { token, user: { ... } } 通过 data.data
   if (data?.data?.token) return { token: data.data.token, user: data.data.user || data.data }
-  // 格式3: { accessToken, user }
   if (data?.accessToken) return { token: data.accessToken, user: data.user || data }
-  // 格式4: { token } 只有 token
-  if (data?.token) return { token: data.token, user: data }
+  if (data?.token) return { token: data.token, user: { id: data.id, name: data.name } }
   return null
 }
 
@@ -22,17 +17,13 @@ export default function AuthPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [debugInfo, setDebugInfo] = useState('')  // 开发调试用
+  const [rawResponse, setRawResponse] = useState<string>('')
 
   const navigate = useNavigate()
   const { login } = useAuth()
 
   const [formData, setFormData] = useState({
-    name: '',
-    phone: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
+    name: '', phone: '', email: '', password: '', confirmPassword: '',
   })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -61,54 +52,40 @@ export default function AuthPage() {
 
     setLoading(true)
     setError('')
-    setDebugInfo('')
+    setRawResponse('')
 
     try {
-      let response: any
-      if (isLogin) {
-        response = await authAPI.login({
-          phone: formData.phone,
-          password: formData.password,
-        })
-      } else {
-        response = await authAPI.register({
-          name: formData.name,
-          phone: formData.phone,
-          email: formData.email,
-          password: formData.password,
-        })
-      }
+      const response = isLogin
+        ? await authAPI.login({ phone: formData.phone, password: formData.password })
+        : await authAPI.register({ name: formData.name, phone: formData.phone, email: formData.email, password: formData.password })
 
       const raw = response.data
-      const authData = extractAuthData(raw)
+      // 暂时记录响应，方便调试
+      setRawResponse(JSON.stringify(raw, null, 2))
 
+      const authData = extractAuthData(raw)
       if (authData) {
         login(authData.token, authData.user)
         navigate('/profile')
       } else {
-        // 接口返回了 200 但没有期望的字段，展示原始响应帮助调试
-        setDebugInfo(JSON.stringify(raw, null, 2))
-        setError('登录成功但响应格式异常，请联系开发者')
+        setError('登录成功但响应格式异常，请查看下方接口响应')
       }
     } catch (err: any) {
-      console.error('Auth error:', err)
-      // 尽量显示后端返回的具体错误
-      const backendMsg =
-        err.response?.data?.message ||
-        err.response?.data?.error ||
-        err.response?.data?.msg ||
-        (typeof err.response?.data === 'string' ? err.response.data : null)
-      const statusCode = err.response?.status
-      
-      if (statusCode === 401) {
-        setError('手机号或密码错误')
-      } else if (statusCode === 409 || backendMsg?.includes('已存在') || backendMsg?.includes('already')) {
-        setError('该手机号已注册，请直接登录')
-      } else if (statusCode === 404) {
-        setError('接口地址不存在，请联系开发者')
-      } else {
-        setError(backendMsg || `操作失败（${statusCode || '网络错误'}）`)
-      }
+      const status = err.response?.status
+      const body = err.response?.data
+
+      // 记录完整错误响应
+      setRawResponse(JSON.stringify({ status, body }, null, 2))
+
+      const msg =
+        body?.message || body?.error || body?.msg || body?.detail ||
+        (typeof body === 'string' ? body : null)
+
+      if (status === 401) setError('手机号或密码错误')
+      else if (status === 409 || msg?.includes('已存在') || msg?.includes('exist')) setError('该手机号已注册，请直接登录')
+      else if (status === 422) setError(`字段格式错误：${msg || '请检查填写内容'}`)
+      else if (status === 404) setError('接口不存在，请联系开发者')
+      else setError(msg || `${isLogin ? '登录' : '注册'}失败（${status || '网络错误'}），请查看下方详情`)
     } finally {
       setLoading(false)
     }
@@ -117,7 +94,7 @@ export default function AuthPage() {
   const switchMode = (loginMode: boolean) => {
     setIsLogin(loginMode)
     setError('')
-    setDebugInfo('')
+    setRawResponse('')
     setFormData({ name: '', phone: '', email: '', password: '', confirmPassword: '' })
   }
 
@@ -127,8 +104,10 @@ export default function AuthPage() {
       {/* Top bar */}
       <div className="border-b border-[#e8e8e4] py-5 px-6">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <Link to="/" className="label-lux text-[#555] no-underline hover:text-[#1a1a1a] transition-colors">← 返回首页</Link>
-          <span className="label-lux text-[#1a1a1a]">AIFFD</span>
+          <Link to="/" className="label-lux text-[#555] hover:text-[#1a1a1a] transition-colors" style={{ textDecoration: 'none' }}>
+            ← 返回首页
+          </Link>
+          <span className="label-lux">AIFFD</span>
         </div>
       </div>
 
@@ -143,88 +122,100 @@ export default function AuthPage() {
             <h1 className="text-[28px] font-normal mb-2" style={{ fontFamily: 'Georgia, serif' }}>
               {isLogin ? '登录账户' : '创建风格档案'}
             </h1>
-            <p className="text-[13px] text-[#888] leading-[1.8]" style={{ fontFamily: 'Inter, sans-serif' }}>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: '#888', lineHeight: 1.8 }}>
               {isLogin ? '继续你的风格决策之旅' : '5 分钟建立你的专属穿衣系统'}
             </p>
           </div>
 
-          {/* Mode switch — 下划线 tab 风格 */}
-          <div className="flex border-b border-[#e8e8e4] mb-8">
-            <button
-              onClick={() => switchMode(false)}
-              className={`flex-1 pb-3 transition-all ${!isLogin ? 'text-[#1a1a1a]' : 'text-[#bbb]'}`}
-              style={{
-                fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '1.5px',
-                textTransform: 'uppercase', background: 'none', border: 'none',
-                borderBottom: !isLogin ? '2px solid #1a1a1a' : '2px solid transparent',
-                marginBottom: '-1px', cursor: 'pointer',
-              }}
-            >注册</button>
-            <button
-              onClick={() => switchMode(true)}
-              className={`flex-1 pb-3 transition-all ${isLogin ? 'text-[#1a1a1a]' : 'text-[#bbb]'}`}
-              style={{
-                fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '1.5px',
-                textTransform: 'uppercase', background: 'none', border: 'none',
-                borderBottom: isLogin ? '2px solid #1a1a1a' : '2px solid transparent',
-                marginBottom: '-1px', cursor: 'pointer',
-              }}
-            >登录</button>
+          {/* Tab switch */}
+          <div style={{ display: 'flex', borderBottom: '1px solid #e8e8e4', marginBottom: '32px' }}>
+            {[{ label: '注册', loginMode: false }, { label: '登录', loginMode: true }].map(({ label, loginMode }) => {
+              const active = isLogin === loginMode
+              return (
+                <button key={label} onClick={() => switchMode(loginMode)}
+                  style={{
+                    flex: 1, paddingBottom: '12px', background: 'none', border: 'none',
+                    borderBottom: active ? '2px solid #1a1a1a' : '2px solid transparent',
+                    marginBottom: '-1px', cursor: 'pointer',
+                    fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '1.5px',
+                    textTransform: 'uppercase', color: active ? '#1a1a1a' : '#bbb',
+                    transition: 'all 0.2s',
+                  }}>
+                  {label}
+                </button>
+              )
+            })}
           </div>
 
           {/* Error */}
           {error && (
-            <div className="mb-6 px-4 py-3 border border-red-200 bg-red-50 text-[12px] text-red-600"
-              style={{ fontFamily: 'Inter, sans-serif' }}>
+            <div style={{
+              marginBottom: '24px', padding: '12px 16px',
+              border: '1px solid #fca5a5', background: '#fef2f2',
+              fontFamily: 'Inter, sans-serif', fontSize: '12px', color: '#dc2626',
+            }}>
               {error}
             </div>
           )}
 
-          {/* Debug info — 仅在有调试信息时显示 */}
-          {debugInfo && (
-            <details className="mb-4">
-              <summary className="text-[11px] text-[#999] cursor-pointer" style={{ fontFamily: 'Inter, sans-serif' }}>
-                查看接口响应（开发调试）
+          {/* Raw response debug — 开发期显示，接口调通后可删 */}
+          {rawResponse && (
+            <details style={{ marginBottom: '16px' }}>
+              <summary style={{
+                fontFamily: 'Inter, sans-serif', fontSize: '11px',
+                color: '#999', cursor: 'pointer', marginBottom: '8px',
+              }}>
+                接口原始响应（调试用）
               </summary>
-              <pre className="text-[10px] text-[#666] bg-[#f5f5f3] p-3 mt-2 overflow-auto max-h-32">{debugInfo}</pre>
+              <pre style={{
+                fontFamily: 'monospace', fontSize: '10px', color: '#555',
+                background: '#f5f5f3', padding: '12px', overflowX: 'auto',
+                maxHeight: '140px', lineHeight: 1.6,
+              }}>{rawResponse}</pre>
             </details>
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+
             {!isLogin && (
               <div>
-                <label className="label-lux block mb-2">姓名</label>
-                <input type="text" name="name" value={formData.name}
-                  onChange={handleChange} placeholder="请输入姓名" className="input-lux" />
+                <p className="label-lux" style={{ marginBottom: '8px' }}>姓名</p>
+                <input type="text" name="name" value={formData.name} onChange={handleChange}
+                  placeholder="请输入姓名" className="input-lux"
+                  style={{ fontSize: '14px' }} />
               </div>
             )}
 
             <div>
-              <label className="label-lux block mb-2">手机号</label>
-              <input type="tel" name="phone" value={formData.phone}
-                onChange={handleChange} placeholder="1xx xxxx xxxx" className="input-lux" />
+              <p className="label-lux" style={{ marginBottom: '8px' }}>手机号</p>
+              <input type="tel" name="phone" value={formData.phone} onChange={handleChange}
+                placeholder="1xx xxxx xxxx" className="input-lux"
+                style={{ fontSize: '14px' }} />
             </div>
 
             {!isLogin && (
               <div>
-                <label className="label-lux block mb-2">邮箱</label>
-                <input type="email" name="email" value={formData.email}
-                  onChange={handleChange} placeholder="your@email.com" className="input-lux" />
+                <p className="label-lux" style={{ marginBottom: '8px' }}>邮箱</p>
+                <input type="email" name="email" value={formData.email} onChange={handleChange}
+                  placeholder="your@email.com" className="input-lux"
+                  style={{ fontSize: '14px' }} />
               </div>
             )}
 
             <div>
-              <label className="label-lux block mb-2">密码</label>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  name="password" value={formData.password}
-                  onChange={handleChange} placeholder="至少 6 位" className="input-lux pr-8"
-                />
-                <button type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 text-[#aaa] hover:text-[#555] transition-colors p-1">
+              <p className="label-lux" style={{ marginBottom: '8px' }}>密码</p>
+              <div style={{ position: 'relative' }}>
+                <input type={showPassword ? 'text' : 'password'} name="password"
+                  value={formData.password} onChange={handleChange}
+                  placeholder="至少 6 位" className="input-lux pr-8"
+                  style={{ fontSize: '14px' }} />
+                <button type="button" onClick={() => setShowPassword(!showPassword)}
+                  style={{
+                    position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)',
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    color: '#aaa', padding: '4px',
+                  }}>
                   {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
               </div>
@@ -232,32 +223,42 @@ export default function AuthPage() {
 
             {!isLogin && (
               <div>
-                <label className="label-lux block mb-2">确认密码</label>
+                <p className="label-lux" style={{ marginBottom: '8px' }}>确认密码</p>
                 <input type="password" name="confirmPassword" value={formData.confirmPassword}
-                  onChange={handleChange} placeholder="再次输入密码" className="input-lux" />
+                  onChange={handleChange} placeholder="再次输入密码" className="input-lux"
+                  style={{ fontSize: '14px' }} />
               </div>
             )}
 
-            <div className="pt-4">
+            <div style={{ paddingTop: '8px' }}>
               <button type="submit" disabled={loading}
-                className="btn-primary disabled:opacity-40 disabled:cursor-not-allowed"
-                style={{ display: 'block', width: '100%', textAlign: 'center' }}>
+                className="btn-primary"
+                style={{ display: 'block', width: '100%', textAlign: 'center', opacity: loading ? 0.4 : 1 }}>
                 {loading ? '处理中...' : (isLogin ? '登录' : '注册并建立档案')}
               </button>
             </div>
           </form>
 
-          {/* Bottom switch */}
-          <p className="text-center text-[12px] text-[#999] mt-8" style={{ fontFamily: 'Inter, sans-serif' }}>
+          {/* Switch link */}
+          <p style={{
+            textAlign: 'center', fontFamily: 'Inter, sans-serif',
+            fontSize: '12px', color: '#999', marginTop: '32px',
+          }}>
             {isLogin ? '还没有账户？' : '已有账户？'}
-            <button onClick={() => switchMode(!isLogin)}
-              className="text-[#1a1a1a] underline underline-offset-2 ml-1 hover:text-[#B8973A] transition-colors">
+            <button onClick={() => switchMode(!isLogin)} style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              color: '#1a1a1a', textDecoration: 'underline', textUnderlineOffset: '2px',
+              marginLeft: '4px', fontSize: '12px', fontFamily: 'Inter, sans-serif',
+            }}>
               {isLogin ? '立即注册' : '立即登录'}
             </button>
           </p>
 
           {!isLogin && (
-            <p className="text-center text-[11px] text-[#bbb] mt-4 leading-[1.7]" style={{ fontFamily: 'Inter, sans-serif' }}>
+            <p style={{
+              textAlign: 'center', fontFamily: 'Inter, sans-serif',
+              fontSize: '11px', color: '#bbb', marginTop: '16px', lineHeight: 1.7,
+            }}>
               注册即表示同意 AIFFD 服务条款与隐私政策
             </p>
           )}
