@@ -3,31 +3,47 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    background-color: #fafaf8;
+    color: #1a1a1a;
+  }
   body {
-    @apply bg-gray-50 text-gray-900 font-sans antialiased;
+    @apply bg-[#fafaf8] text-[#1a1a1a];
+  }
+  * {
+    -webkit-font-smoothing: antialiased;
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply px-6 py-2.5 bg-primary-600 text-white rounded-lg font-medium 
-           hover:bg-primary-700 transition-colors duration-200 
-           focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+    @apply bg-[#1a1a1a] text-white text-[11px] tracking-[3px] px-8 py-3 inline-block transition-all duration-200 hover:bg-[#333] cursor-pointer;
+    font-family: 'Inter', sans-serif;
   }
-  
-  .btn-secondary {
-    @apply px-6 py-2.5 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium 
-           hover:bg-gray-50 transition-colors duration-200
-           focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2;
+  .btn-outline {
+    @apply border border-[#1a1a1a] text-[#1a1a1a] text-[11px] tracking-[3px] px-8 py-3 inline-block transition-all duration-200 hover:bg-[#1a1a1a] hover:text-white cursor-pointer;
+    font-family: 'Inter', sans-serif;
   }
-  
-  .input-field {
-    @apply w-full px-4 py-2.5 border border-gray-300 rounded-lg 
-           focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
-           placeholder:text-gray-400;
+  .btn-gold {
+    @apply border border-[#B8973A] text-[#B8973A] text-[11px] tracking-[3px] px-8 py-3 inline-block transition-all duration-200 hover:bg-[#B8973A] hover:text-white cursor-pointer;
+    font-family: 'Inter', sans-serif;
   }
-  
-  .card {
-    @apply bg-white rounded-xl shadow-sm border border-gray-100 p-6;
+  .card-lux {
+    @apply bg-white border border-[#e8e8e4] p-6;
+  }
+  .input-lux {
+    @apply w-full border-b border-[#ccc] bg-transparent px-0 py-3 text-[14px] text-[#1a1a1a] focus:outline-none focus:border-[#1a1a1a] transition-colors;
+    font-family: 'Inter', sans-serif;
+  }
+  .label-lux {
+    @apply text-[10px] tracking-[2.5px] text-[#888] uppercase;
+    font-family: 'Inter', sans-serif;
+  }
+  .text-gold {
+    color: #B8973A;
+  }
+  .divider-lux {
+    @apply border-t border-[#e8e8e4];
   }
 }
