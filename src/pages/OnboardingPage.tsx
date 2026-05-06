@@ -63,6 +63,13 @@ const BUDGET_OPTIONS = [
 
 const SCENES = ['职场办公', '商务出行', '日常休闲', '社交聚会', '亲子活动', '旅行度假', '重要场合']
 
+const COLOR_PREFERENCES = [
+  { label: '暖色系', sub: '米、橙、棕、暖红、驼色' },
+  { label: '冷色系', sub: '宝蓝、冰粉、紫、灰蓝' },
+  { label: '中性色', sub: '黑、白、灰、深海军蓝' },
+  { label: '不确定', sub: '需要帮我判断' },
+]
+
 interface FormData {
   ageRange: string
   height: string
@@ -72,11 +79,41 @@ interface FormData {
   bodyType: string
   skinTone: string
   hairColor: string
+  colorPreference: string
   styleDirections: string[]
   budget: string
 }
 
 const STEPS = ['基础信息', '体型判断', '色彩信息', '风格偏好', '专属档案']
+
+// Body type image component with error fallback
+function BodyTypeImage({ src, alt }: { src: string; alt: string }) {
+  const [imgError, setImgError] = useState(false)
+  const [imgLoaded, setImgLoaded] = useState(false)
+
+  return (
+    <div className="aspect-[3/5] overflow-hidden mb-3 bg-[#f0ede8] relative">
+      {!imgLoaded && !imgError && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-6 h-6 border border-[#ddd] border-t-[#999] rounded-full animate-spin" />
+        </div>
+      )}
+      {imgError ? (
+        <div className="w-full h-full flex items-center justify-center">
+          <span className="text-[10px] text-[#bbb]" style={{ fontFamily: 'Inter, sans-serif' }}>{alt}</span>
+        </div>
+      ) : (
+        <img
+          src={src}
+          alt={alt}
+          className={`w-full h-full object-cover object-top transition-opacity duration-300 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
+          onLoad={() => setImgLoaded(true)}
+          onError={() => { setImgError(true); setImgLoaded(true) }}
+        />
+      )}
+    </div>
+  )
+}
 
 export default function OnboardingPage() {
   const navigate = useNavigate()
@@ -90,6 +127,7 @@ export default function OnboardingPage() {
     bodyType: '',
     skinTone: '',
     hairColor: '',
+    colorPreference: '',
     styleDirections: [],
     budget: '',
   })
@@ -119,7 +157,7 @@ export default function OnboardingPage() {
           ? 'border-[#B8973A] text-[#B8973A] bg-[#fdf8ee]'
           : 'border-[#e8e8e4] text-[#666] hover:border-[#999]'
       }`}
-      style={{ fontFamily: 'Inter, sans-serif', letterSpacing: '1px' }}
+      style={{ fontFamily: 'Inter, sans-serif', letterSpacing: '0.5px' }}
     >
       {label}
     </button>
@@ -131,16 +169,22 @@ export default function OnboardingPage() {
 
         {/* Progress */}
         <div className="mb-16">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between">
             {STEPS.map((s, i) => (
               <div key={i} className="flex items-center gap-2">
                 <div className={`w-6 h-6 flex items-center justify-center text-[10px] border transition-all
-                  ${i === step ? 'border-[#B8973A] text-[#B8973A]' : i < step ? 'border-[#1a1a1a] bg-[#1a1a1a] text-white' : 'border-[#ddd] text-[#ccc]'}`}
+                  ${i === step
+                    ? 'border-[#B8973A] text-[#B8973A]'
+                    : i < step
+                    ? 'border-[#1a1a1a] bg-[#1a1a1a] text-white'
+                    : 'border-[#ddd] text-[#ccc]'
+                  }`}
                   style={{ fontFamily: 'Inter, sans-serif' }}>
                   {i < step ? '✓' : i + 1}
                 </div>
-                <span className={`text-[10px] tracking-[1.5px] hidden md:block ${i === step ? 'text-[#1a1a1a]' : 'text-[#bbb]'}`}
-                  style={{ fontFamily: 'Inter, sans-serif' }}>
+                <span className={`text-[10px] tracking-[1.5px] hidden md:block transition-colors ${
+                  i === step ? 'text-[#1a1a1a]' : 'text-[#bbb]'
+                }`} style={{ fontFamily: 'Inter, sans-serif' }}>
                   {s}
                 </span>
                 {i < 4 && <div className={`w-8 h-[0.5px] mx-2 ${i < step ? 'bg-[#1a1a1a]' : 'bg-[#e8e8e4]'}`} />}
@@ -217,13 +261,10 @@ export default function OnboardingPage() {
                   key={bt.id}
                   onClick={() => setForm(f => ({ ...f, bodyType: bt.id }))}
                   className={`border p-3 text-left transition-all cursor-pointer ${
-                    form.bodyType === bt.id ? 'border-[#B8973A]' : 'border-[#e8e8e4] hover:border-[#ccc]'
+                    form.bodyType === bt.id ? 'border-[#B8973A] bg-[#fdf8ee]' : 'border-[#e8e8e4] hover:border-[#ccc]'
                   }`}
                 >
-                  <div className="aspect-[3/5] overflow-hidden mb-3 bg-[#f0ede8]">
-                    <img src={bt.img} alt={bt.name}
-                      className="w-full h-full object-cover object-top" />
-                  </div>
+                  <BodyTypeImage src={bt.img} alt={bt.name} />
                   <p className={`text-[12px] mb-1 ${form.bodyType === bt.id ? 'text-[#B8973A]' : 'text-[#1a1a1a]'}`}
                     style={{ fontFamily: 'Inter, sans-serif', letterSpacing: '1px' }}>
                     {bt.name}
@@ -272,17 +313,18 @@ export default function OnboardingPage() {
               <div>
                 <p className="label-lux mb-4">你觉得自己穿哪类颜色更好看？</p>
                 <div className="grid grid-cols-2 gap-4">
-                  {[
-                    { label: '暖色系', sub: '米、橙、棕、暖红、驼色' },
-                    { label: '冷色系', sub: '宝蓝、冰粉、紫、灰蓝' },
-                    { label: '中性色', sub: '黑、白、灰、深海军蓝' },
-                    { label: '不确定', sub: '需要帮我判断' },
-                  ].map(opt => (
-                    <button key={opt.label}
-                      onClick={() => setForm(f => ({ ...f, skinTone: f.skinTone + opt.label }))}
-                      className={`border p-4 text-left transition-all cursor-pointer`}
-                      style={{ borderColor: '#e8e8e4', fontFamily: 'Inter, sans-serif' }}>
-                      <p className="text-[13px] text-[#1a1a1a] mb-1">{opt.label}</p>
+                  {COLOR_PREFERENCES.map(opt => (
+                    <button
+                      key={opt.label}
+                      onClick={() => setForm(f => ({ ...f, colorPreference: opt.label }))}
+                      className={`border p-4 text-left transition-all cursor-pointer ${
+                        form.colorPreference === opt.label
+                          ? 'border-[#B8973A] bg-[#fdf8ee]'
+                          : 'border-[#e8e8e4] hover:border-[#ccc]'
+                      }`}
+                      style={{ fontFamily: 'Inter, sans-serif' }}
+                    >
+                      <p className={`text-[13px] mb-1 ${form.colorPreference === opt.label ? 'text-[#B8973A]' : 'text-[#1a1a1a]'}`}>{opt.label}</p>
                       <p className="text-[11px] text-[#999]">{opt.sub}</p>
                     </button>
                   ))}
@@ -318,7 +360,7 @@ export default function OnboardingPage() {
                     <button key={b.label}
                       onClick={() => setForm(f => ({ ...f, budget: b.label }))}
                       className={`border p-4 text-left transition-all cursor-pointer ${
-                        form.budget === b.label ? 'border-[#B8973A]' : 'border-[#e8e8e4] hover:border-[#ccc]'
+                        form.budget === b.label ? 'border-[#B8973A] bg-[#fdf8ee]' : 'border-[#e8e8e4] hover:border-[#ccc]'
                       }`}
                       style={{ fontFamily: 'Inter, sans-serif' }}>
                       <p className={`text-[13px] mb-1 ${form.budget === b.label ? 'text-[#B8973A]' : 'text-[#1a1a1a]'}`}>{b.label}</p>
@@ -335,7 +377,7 @@ export default function OnboardingPage() {
         {step === 4 && (
           <div className="space-y-10">
             <div>
-              <p className="label-lux mb-2 text-gold">Style Profile 1.0</p>
+              <p className="label-lux mb-2" style={{ color: '#B8973A' }}>Style Profile 1.0</p>
               <h2 className="text-[32px] font-normal" style={{ fontFamily: 'Georgia, serif' }}>
                 你的专属风格档案
               </h2>
@@ -349,13 +391,15 @@ export default function OnboardingPage() {
               <div className="flex items-start justify-between border-b border-[#e8e8e4] pb-6">
                 <div>
                   <p className="label-lux mb-2">体型风格</p>
-                  <p className="text-[22px] font-normal text-gold" style={{ fontFamily: 'Georgia, serif' }}>
+                  <p className="text-[22px] font-normal" style={{ fontFamily: 'Georgia, serif', color: '#B8973A' }}>
                     {BODY_TYPES.find(b => b.id === form.bodyType)?.name || '待完善'}
                   </p>
                 </div>
                 <div className="text-right">
                   <p className="label-lux mb-2">档案版本</p>
-                  <p className="text-[13px] text-[#888]" style={{ fontFamily: 'Inter, sans-serif' }}>v1.0 · {new Date().toLocaleDateString('zh-CN')}</p>
+                  <p className="text-[13px] text-[#888]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                    v1.0 · {new Date().toLocaleDateString('zh-CN')}
+                  </p>
                 </div>
               </div>
 
@@ -365,19 +409,26 @@ export default function OnboardingPage() {
                   <div className="flex flex-wrap gap-2 mt-2">
                     {form.styleDirections.length > 0
                       ? form.styleDirections.map(s => (
-                        <span key={s} className="text-[11px] border border-[#B8973A] text-gold px-3 py-1"
-                          style={{ fontFamily: 'Inter, sans-serif' }}>{s}</span>
+                        <span key={s} className="text-[11px] border border-[#B8973A] px-3 py-1"
+                          style={{ fontFamily: 'Inter, sans-serif', color: '#B8973A' }}>{s}</span>
                       ))
                       : <span className="text-[12px] text-[#999]">请返回补充风格偏好</span>
                     }
                   </div>
                 </div>
                 <div>
-                  <p className="label-lux mb-2">预算区间</p>
-                  <p className="text-[14px] text-[#1a1a1a] mt-2" style={{ fontFamily: 'Inter, sans-serif' }}>
-                    {form.budget || '未填写'}
+                  <p className="label-lux mb-2">肤色 / 配色偏好</p>
+                  <p className="text-[13px] text-[#1a1a1a] mt-2" style={{ fontFamily: 'Inter, sans-serif' }}>
+                    {[form.skinTone, form.colorPreference].filter(Boolean).join(' · ') || '未填写'}
                   </p>
                 </div>
+              </div>
+
+              <div>
+                <p className="label-lux mb-2">预算区间</p>
+                <p className="text-[14px] text-[#1a1a1a]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                  {form.budget || '未填写'}
+                </p>
               </div>
 
               <div className="border-t border-[#e8e8e4] pt-6">
@@ -394,11 +445,15 @@ export default function OnboardingPage() {
               </div>
 
               <div className="border-t border-[#e8e8e4] pt-6 bg-[#fdf8ee] -mx-8 -mb-8 px-8 py-6">
-                <p className="label-lux mb-3 text-gold">推荐下一步</p>
+                <p className="label-lux mb-3" style={{ color: '#B8973A' }}>推荐下一步</p>
                 <div className="space-y-2">
-                  {['上传一套满意的穿搭，帮系统更精准了解你', '上传想购买的商品，获得 AI 购买建议', '开通会员，解锁造型师人工服务'].map((r, i) => (
+                  {[
+                    '上传一套满意的穿搭，帮系统更精准了解你',
+                    '上传想购买的商品，获得 AI 购买建议',
+                    '开通会员，解锁造型师人工服务',
+                  ].map((r, i) => (
                     <p key={i} className="text-[12px] text-[#666] flex gap-2" style={{ fontFamily: 'Inter, sans-serif' }}>
-                      <span className="text-gold">→</span> {r}
+                      <span style={{ color: '#B8973A' }}>→</span> {r}
                     </p>
                   ))}
                 </div>
