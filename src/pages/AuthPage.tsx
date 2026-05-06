@@ -142,4 +142,46 @@ export default function AuthPage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">手机号</label>
-              <input type="tel" name="
+              <input type="tel" name="phone" value={formData.phone} onChange={handleChange} placeholder="请输入手机号" className="input-field" />
+            </div>
+
+            {!isLogin && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">邮箱</label>
+                <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="请输入邮箱地址" className="input-field" />
+              </div>
+            )}
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">密码</label>
+              <div className="relative">
+                <input type={showPassword ? 'text' : 'password'} name="password" value={formData.password} onChange={handleChange} placeholder="请输入密码（至少6位）" className="input-field pr-10" />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+            </div>
+
+            {!isLogin && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">确认密码</label>
+                <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} placeholder="再次输入密码" className="input-field" />
+              </div>
+            )}
+
+            <button type="submit" disabled={loading} className="w-full btn-primary py-3 text-base disabled:opacity-50 disabled:cursor-not-allowed">
+              {loading ? '处理中...' : (isLogin ? '登录' : '注册')}
+            </button>
+          </form>
+
+          <p className="text-center text-sm text-gray-500 mt-6">
+            {isLogin ? '还没有账户？' : '已有账户？'}
+            <button onClick={() => { setIsLogin(!isLogin); setError('') }} className="text-primary-600 hover:text-primary-700 font-medium ml-1">
+              {isLogin ? '立即注册' : '立即登录'}
+            </button>
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
