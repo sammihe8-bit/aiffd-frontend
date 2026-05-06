@@ -39,10 +39,13 @@ export default function HomePage() {
             不是一次性测试，而是一套持续进化的个人风格档案。
             AI 判断日常穿搭，复杂需求交给专业造型师。
           </p>
-          <div className="flex gap-4 flex-wrap">
+          <div className="flex gap-4 flex-wrap items-center">
             <Link to="/onboarding" className="btn-primary">开始风格测试</Link>
             <Link to="/diagnosis" className="btn-outline">上传商品做分析</Link>
           </div>
+          <p className="text-[11px] text-[#aaa] mt-5" style={{ fontFamily: 'Inter, sans-serif', letterSpacing: '1px' }}>
+            5 分钟完成 · 免费建立初始档案
+          </p>
         </div>
       </section>
 
