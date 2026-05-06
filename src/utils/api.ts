@@ -36,7 +36,7 @@ api.interceptors.response.use(
   }
 )
 
-// 认证相关API
+// 认证相关API — 后端字段确认：email + password（无 phone）
 export const authAPI = {
   register: (data: { name?: string; email: string; password: string }) =>
     api.post('/auth/register', data),
