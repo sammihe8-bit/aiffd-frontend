@@ -38,10 +38,10 @@ api.interceptors.response.use(
 
 // 认证相关API
 export const authAPI = {
-  register: (data: { name: string; phone: string; email: string; password: string }) =>
+  register: (data: { name?: string; email: string; password: string }) =>
     api.post('/auth/register', data),
   
-  login: (data: { phone: string; password: string }) =>
+  login: (data: { email: string; password: string }) =>
     api.post('/auth/login', data),
   
   getMe: () =>
