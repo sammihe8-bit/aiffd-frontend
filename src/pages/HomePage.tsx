@@ -318,4 +318,42 @@ export default function HomePage() {
             <div key={i} className={`card-lux ${i === 1 ? 'border-[#B8973A]' : ''}`}>
               <div className="flex items-start justify-between mb-6">
                 <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '3px', color: C.gold, border: `1px solid ${C.gold}`, padding: '3px 10px' }}>{s.tag}</span>
-                <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color:
+                <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted }}>{s.price}</span>
+              </div>
+              <h3 className="font-normal mb-3" style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h3 }}>{s.title}</h3>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '16px', color: C.body, lineHeight: '1.8' }}>{s.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <div className="divider-lux" />
+
+      {/* ── CTA ── */}
+      {!token && (
+        <section className="max-w-6xl mx-auto px-6 py-24 text-center">
+          <p className="mb-6" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.gold }}>立即开始</p>
+          <h2 className="font-normal mb-6" style={{ fontFamily: 'Georgia, serif', fontSize: '32px', lineHeight: '1.3', color: C.h1 }}>
+            建立你的专属<em style={{ color: C.gold, fontStyle: 'normal' }}>风格档案</em>
+          </h2>
+          <p className="mb-10 max-w-md mx-auto" style={{ fontFamily: 'Inter, sans-serif', fontSize: '17px', color: C.sub, lineHeight: '1.8' }}>
+            5 分钟完成初评，立即获得 Style Profile 1.0
+          </p>
+          <div className="flex gap-4 justify-center flex-wrap">
+            <Link to="/onboarding" className="btn-primary">免费建立风格档案</Link>
+            <Link to="/auth" className="btn-outline">查看会员方案</Link>
+          </div>
+        </section>
+      )}
+
+      {/* ── FOOTER ── */}
+      <footer className="border-t border-[#e8e8e4] py-8">
+        <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
+          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '4px', color: C.muted }}>AIFFD © 2026</span>
+          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '3px', color: C.muted }}>智搭 · 购买前风格决策系统</span>
+        </div>
+      </footer>
+
+    </div>
+  )
+}
