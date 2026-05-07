@@ -273,18 +273,20 @@ export default function HomePage() {
                 justifyContent: 'center',
                 padding: '40px',
                 background: i === 0 ? '#f0ece4' : '#f8f5f0',
+                maxHeight: '480px',
+                overflow: 'hidden',
               }}>
                 {i === 0 ? (
                   <img
                     src="/stylereport.png"
                     alt="AIFFD 风格报告"
-                    style={{ width: '80%', height: 'auto', display: 'block', objectFit: 'contain' }}
+                    style={{ width: '60%', height: 'auto', display: 'block', objectFit: 'contain', maxHeight: '400px' }}
                   />
                 ) : (
                   <img
                     src="/shangpin.png"
                     alt="商品判断示例"
-                    style={{ width: '70%', height: 'auto', display: 'block', objectFit: 'contain' }}
+                    style={{ width: '55%', height: 'auto', display: 'block', objectFit: 'contain', maxHeight: '400px' }}
                   />
                 )}
               </div>
