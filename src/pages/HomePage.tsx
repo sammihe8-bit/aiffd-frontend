@@ -38,6 +38,16 @@ const services = [
   { tag: 'S2+', title: '高级造型师', desc: '专属顾问，季度档案升级，高价值购买支持', price: '高级会员' },
 ]
 
+const C = {
+  h1: '#111111',
+  h3: '#222222',
+  sub: '#444444',
+  body: '#666666',
+  muted: '#999999',
+  gold: '#B8973A',
+  border: '#e8e8e4',
+}
+
 export default function HomePage() {
   const { token } = useAuth()
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -142,18 +152,20 @@ export default function HomePage() {
         <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none" />
         <div className="relative z-10 max-w-6xl mx-auto px-6 pt-20 pb-24 text-center">
           <div className="max-w-2xl mx-auto">
-            <p className="label-lux mb-8">购买前风格决策系统</p>
-            <h1 className="text-[48px] leading-[1.2] font-normal mb-6" style={{ fontFamily: 'Georgia, serif' }}>
-              40+ 女性的<em className="text-gold not-italic">风格档案</em>系统
+            <p className="mb-8" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.gold }}>
+              购买前风格决策系统
+            </p>
+            <h1 className="font-normal mb-6" style={{ fontFamily: 'Georgia, serif', fontSize: '42px', lineHeight: '1.2', color: C.h1 }}>
+              40+ 女性的<em style={{ color: C.gold, fontStyle: 'normal' }}>风格档案</em>系统
             </h1>
-            <p className="text-[15px] text-[#555] leading-[1.9] mb-10 max-w-lg mx-auto" style={{ fontFamily: 'Inter, sans-serif' }}>
+            <p className="mb-10 max-w-lg mx-auto" style={{ fontFamily: 'Inter, sans-serif', fontSize: '17px', color: C.sub, lineHeight: '1.9' }}>
               从体型、色彩、风格与场景出发，减少无效购买，建立长期审美判断。
             </p>
             <div className="flex gap-4 flex-wrap items-center justify-center mb-5">
               <Link to="/onboarding" className="btn-primary">开始风格测试</Link>
               <Link to="/diagnosis" className="btn-outline">上传商品做分析</Link>
             </div>
-            <p className="text-[11px] text-[#aaa]" style={{ fontFamily: 'Inter, sans-serif', letterSpacing: '1px' }}>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, letterSpacing: '1px' }}>
               5 分钟完成 · 获得初步风格判断 · 适合 40+ 女性
             </p>
           </div>
@@ -164,11 +176,16 @@ export default function HomePage() {
 
       {/* ── PROBLEMS ── */}
       <section className="max-w-6xl mx-auto px-6 py-20">
-        <p className="label-lux mb-4">我们解决的问题</p>
-        <h2 className="text-[28px] font-normal mb-12 max-w-xl" style={{ fontFamily: 'Georgia, serif' }}>
+        <p className="mb-4" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.gold }}>
+          我们解决的问题
+        </p>
+        <h2 className="font-normal mb-4" style={{ fontFamily: 'Georgia, serif', fontSize: '32px', lineHeight: '1.3', color: C.h1 }}>
           40+ 女性买衣服，真正难的不是选择少，<br />
-          而是<em className="text-gold not-italic">判断成本太高</em>
+          而是<em style={{ color: C.gold, fontStyle: 'normal' }}>判断成本太高</em>
         </h2>
+        <p className="mb-12" style={{ fontFamily: 'Inter, sans-serif', fontSize: '17px', color: C.sub, lineHeight: '1.85' }}>
+          每一次购买决策背后，都是时间、精力与金钱的消耗。
+        </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border border-[#e8e8e4]">
           {problems.map((p, i) => (
             <div
@@ -179,11 +196,13 @@ export default function HomePage() {
                 i < 2 ? 'border-b border-[#e8e8e4]' : '',
               ].join(' ')}
             >
-              <p className="text-gold label-lux mb-4">{p.num}</p>
-              <h3 className="text-[17px] font-normal mb-3 leading-[1.5]" style={{ fontFamily: 'Georgia, serif' }}>
+              <p className="mb-4" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.gold }}>
+                {p.num}
+              </p>
+              <h3 className="font-normal mb-3" style={{ fontFamily: 'Georgia, serif', fontSize: '20px', lineHeight: '1.4', color: C.h3 }}>
                 {p.title}
               </h3>
-              <p className="text-[13px] text-[#666] leading-[1.8]" style={{ fontFamily: 'Inter, sans-serif' }}>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '16px', color: C.body, lineHeight: '1.75' }}>
                 {p.desc}
               </p>
             </div>
@@ -195,13 +214,24 @@ export default function HomePage() {
 
       {/* ── HOW IT WORKS ── */}
       <section className="max-w-6xl mx-auto px-6 py-20">
-        <p className="label-lux mb-12">系统如何运作</p>
+        <p className="mb-4" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.gold }}>
+          系统如何运作
+        </p>
+        <h2 className="font-normal mb-12" style={{ fontFamily: 'Georgia, serif', fontSize: '32px', lineHeight: '1.3', color: C.h1 }}>
+          四步建立你的<em style={{ color: C.gold, fontStyle: 'normal' }}>专属档案</em>
+        </h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-0 border border-[#e8e8e4]">
           {steps.map((s, i) => (
             <div key={i} className={`p-8 ${i < 3 ? 'border-r border-[#e8e8e4]' : ''}`}>
-              <p className="label-lux text-gold mb-4">{s.step}</p>
-              <h3 className="text-[16px] font-normal mb-2" style={{ fontFamily: 'Georgia, serif' }}>{s.title}</h3>
-              <p className="text-[12px] text-[#888] leading-[1.7]" style={{ fontFamily: 'Inter, sans-serif' }}>{s.desc}</p>
+              <p className="mb-4" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.gold }}>
+                {s.step}
+              </p>
+              <h3 className="font-normal mb-3" style={{ fontFamily: 'Georgia, serif', fontSize: '20px', color: C.h3 }}>
+                {s.title}
+              </h3>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '15px', color: C.body, lineHeight: '1.7' }}>
+                {s.desc}
+              </p>
             </div>
           ))}
         </div>
@@ -211,16 +241,29 @@ export default function HomePage() {
 
       {/* ── SERVICES ── */}
       <section className="max-w-6xl mx-auto px-6 py-20">
-        <p className="label-lux mb-12">服务分层</p>
+        <p className="mb-4" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.gold }}>
+          服务分层
+        </p>
+        <h2 className="font-normal mb-12" style={{ fontFamily: 'Georgia, serif', fontSize: '32px', lineHeight: '1.3', color: C.h1 }}>
+          AI 判断日常，<em style={{ color: C.gold, fontStyle: 'normal' }}>造型师</em>处理复杂
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {services.map((s, i) => (
             <div key={i} className={`card-lux ${i === 1 ? 'border-[#B8973A]' : ''}`}>
               <div className="flex items-start justify-between mb-6">
-                <span className="label-lux text-gold border border-[#B8973A] px-3 py-1">{s.tag}</span>
-                <span className="text-[11px] text-[#888]" style={{ fontFamily: 'Inter, sans-serif' }}>{s.price}</span>
+                <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '3px', color: C.gold, border: `1px solid ${C.gold}`, padding: '3px 10px' }}>
+                  {s.tag}
+                </span>
+                <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted }}>
+                  {s.price}
+                </span>
               </div>
-              <h3 className="text-[20px] font-normal mb-3" style={{ fontFamily: 'Georgia, serif' }}>{s.title}</h3>
-              <p className="text-[13px] text-[#666] leading-[1.8]" style={{ fontFamily: 'Inter, sans-serif' }}>{s.desc}</p>
+              <h3 className="font-normal mb-3" style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h3 }}>
+                {s.title}
+              </h3>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '16px', color: C.body, lineHeight: '1.8' }}>
+                {s.desc}
+              </p>
             </div>
           ))}
         </div>
@@ -231,12 +274,14 @@ export default function HomePage() {
       {/* ── CTA ── */}
       {!token && (
         <section className="max-w-6xl mx-auto px-6 py-24 text-center">
-          <p className="label-lux mb-6">立即开始</p>
-          <h2 className="text-[36px] font-normal mb-6" style={{ fontFamily: 'Georgia, serif' }}>
-            建立你的专属<em className="text-gold not-italic">风格档案</em>
+          <p className="mb-6" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.gold }}>
+            立即开始
+          </p>
+          <h2 className="font-normal mb-6" style={{ fontFamily: 'Georgia, serif', fontSize: '32px', lineHeight: '1.3', color: C.h1 }}>
+            建立你的专属<em style={{ color: C.gold, fontStyle: 'normal' }}>风格档案</em>
           </h2>
-          <p className="text-[14px] text-[#666] mb-10 max-w-md mx-auto leading-[1.8]" style={{ fontFamily: 'Inter, sans-serif' }}>
-            5分钟完成初评，立即获得 Style Profile 1.0
+          <p className="mb-10 max-w-md mx-auto" style={{ fontFamily: 'Inter, sans-serif', fontSize: '17px', color: C.sub, lineHeight: '1.8' }}>
+            5 分钟完成初评，立即获得 Style Profile 1.0
           </p>
           <div className="flex gap-4 justify-center flex-wrap">
             <Link to="/onboarding" className="btn-primary">免费建立风格档案</Link>
@@ -245,11 +290,15 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* Footer */}
+      {/* ── FOOTER ── */}
       <footer className="border-t border-[#e8e8e4] py-8">
         <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
-          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '4px', color: '#888' }}>AIFFD © 2026</span>
-          <span className="label-lux">智搭 · 购买前风格决策系统</span>
+          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '4px', color: C.muted }}>
+            AIFFD © 2026
+          </span>
+          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '3px', color: C.muted }}>
+            智搭 · 购买前风格决策系统
+          </span>
         </div>
       </footer>
 
