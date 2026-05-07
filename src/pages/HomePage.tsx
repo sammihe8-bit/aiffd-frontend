@@ -18,20 +18,14 @@ const dimensions = [
 
 const paths = [
   {
-    tag: 'PATH 01',
-    title: '建立风格档案',
+    tag: 'PATH 01', title: '建立风格档案',
     items: ['完成 5 分钟风格测试', '记录体型、色彩、风格偏好', '获得初步穿衣关键词', '后续可持续更新'],
-    btn: '开始建立档案',
-    to: '/onboarding',
-    primary: true,
+    btn: '开始建立档案', to: '/onboarding', primary: true,
   },
   {
-    tag: 'PATH 02',
-    title: '上传商品做分析',
+    tag: 'PATH 02', title: '上传商品做分析',
     items: ['上传想购买的衣服图片', 'AI 判断是否适合你的档案', '给出适合度、风险点和搭配建议', '支持购买前决策'],
-    btn: '分析一件商品',
-    to: '/diagnosis',
-    primary: false,
+    btn: '分析一件商品', to: '/diagnosis', primary: false,
   },
 ]
 
@@ -94,24 +88,6 @@ function DimCard({ d }: { d: typeof dimensions[0] }) {
         {d.num}
       </span>
     </div>
-  )
-}
-
-function PathBtn({ to, children, primary }: { to: string, children: React.ReactNode, primary: boolean }) {
-  const [hovered, setHovered] = useState(false)
-  const bg     = hovered ? '#ffffff' : primary ? '#f0e8d0' : 'transparent'
-  const color  = hovered ? '#111111' : primary ? '#1a1a1a' : '#1a1a1a'
-  const border = primary ? (hovered ? '1px solid #ccc' : '1px solid #d4c9a8')
-                         : (hovered ? '1px solid #ccc' : '1px solid #1a1a1a')
-  return (
-    <Link
-      to={to}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{ display: 'inline-block', background: bg, color, border, fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '2px', padding: '12px 28px', textDecoration: 'none', transition: 'background 0.2s, color 0.2s, border-color 0.2s' }}
-    >
-      {children}
-    </Link>
   )
 }
 
@@ -278,7 +254,7 @@ export default function HomePage() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
           {paths.map((p, i) => (
-            <div key={i} style={{ border: '1px solid #e0e0d8', borderRight: i === 0 ? 'none' : '1px solid #e0e0d8', position: 'relative' }}>
+            <div key={i} style={{ border: '1px solid #e0e0d8', borderRight: i === 0 ? 'none' : '1px solid #e0e0d8' }}>
               <div style={{ height: '3px', background: C.gold }} />
               <div style={{ padding: '40px 40px 48px' }}>
                 <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '4px', color: C.gold, marginBottom: '18px' }}>{p.tag}</p>
@@ -286,13 +262,13 @@ export default function HomePage() {
                 <div>
                   {p.items.map((item, j) => (
                     <div key={j} style={{ display: 'flex', gap: '12px', alignItems: 'baseline', padding: '10px 0', borderBottom: '0.5px solid #ebebeb', borderTop: j === 0 ? '0.5px solid #ebebeb' : 'none' }}>
-                      <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', color: C.gold, letterSpacing: '1px', flexShrink: 0 }}>—</span>
+                      <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', color: C.gold, flexShrink: 0 }}>—</span>
                       <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: C.muted, lineHeight: '1.75' }}>{item}</span>
                     </div>
                   ))}
                 </div>
                 <div style={{ marginTop: '36px' }}>
-                  <PathBtn to={p.to} primary={p.primary}>{p.btn}</PathBtn>
+                  <Link to={p.to} className={p.primary ? 'btn-primary' : 'btn-outline'}>{p.btn}</Link>
                 </div>
               </div>
             </div>
@@ -319,6 +295,12 @@ export default function HomePage() {
             </div>
           ))}
         </div>
+        <div className="flex justify-center mt-12">
+          {token
+            ? <Link to="/profile" className="btn-primary">我的档案</Link>
+            : <Link to="/onboarding" className="btn-primary">建立我的档案</Link>
+          }
+        </div>
       </section>
 
       <div className="divider-lux" />
@@ -336,42 +318,4 @@ export default function HomePage() {
             <div key={i} className={`card-lux ${i === 1 ? 'border-[#B8973A]' : ''}`}>
               <div className="flex items-start justify-between mb-6">
                 <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '3px', color: C.gold, border: `1px solid ${C.gold}`, padding: '3px 10px' }}>{s.tag}</span>
-                <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted }}>{s.price}</span>
-              </div>
-              <h3 className="font-normal mb-3" style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h3 }}>{s.title}</h3>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '16px', color: C.body, lineHeight: '1.8' }}>{s.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <div className="divider-lux" />
-
-      {/* ── CTA ── */}
-      {!token && (
-        <section className="max-w-6xl mx-auto px-6 py-24 text-center">
-          <p className="mb-6" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.gold }}>立即开始</p>
-          <h2 className="font-normal mb-6" style={{ fontFamily: 'Georgia, serif', fontSize: '32px', lineHeight: '1.3', color: C.h1 }}>
-            建立你的专属<em style={{ color: C.gold, fontStyle: 'normal' }}>风格档案</em>
-          </h2>
-          <p className="mb-10 max-w-md mx-auto" style={{ fontFamily: 'Inter, sans-serif', fontSize: '17px', color: C.sub, lineHeight: '1.8' }}>
-            5 分钟完成初评，立即获得 Style Profile 1.0
-          </p>
-          <div className="flex gap-4 justify-center flex-wrap">
-            <Link to="/onboarding" className="btn-primary">免费建立风格档案</Link>
-            <Link to="/auth" className="btn-outline">查看会员方案</Link>
-          </div>
-        </section>
-      )}
-
-      {/* ── FOOTER ── */}
-      <footer className="border-t border-[#e8e8e4] py-8">
-        <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
-          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '4px', color: C.muted }}>AIFFD © 2026</span>
-          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '3px', color: C.muted }}>智搭 · 购买前风格决策系统</span>
-        </div>
-      </footer>
-
-    </div>
-  )
-}
+                <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color:
