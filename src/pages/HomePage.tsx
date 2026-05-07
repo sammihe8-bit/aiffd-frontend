@@ -269,24 +269,25 @@ export default function HomePage() {
           </div>
         </div>
         {/* 图片区 */}
-        <div style={{ overflow: 'hidden', background: i === 0 ? '#f0ece4' : '#f8f5f0' }}>
-          {i === 0 ? (
-            <img
-              src="/stylereport.png"
-              alt="AIFFD 风格报告"
-              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center', display: 'block' }}
-            />
-          ) : (
-            <img
-              src="/shangpin.png"
-              alt="商品判断示例"
-              style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'center', padding: '32px', display: 'block' }}
-            />
-          )}
-        </div>
-      </div>
-    ))}
-  </div>
+<div style={{ 
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  padding: '32px', background: i === 0 ? '#f0ece4' : '#f8f5f0',
+  borderLeft: '1px solid #e0e0d8'
+}}>
+  {i === 0 ? (
+    <img
+      src="/stylereport.png"
+      alt="AIFFD 风格报告"
+      style={{ width: '75%', height: 'auto', objectFit: 'contain', display: 'block' }}
+    />
+  ) : (
+    <img
+      src="/shangpin.png"
+      alt="商品判断示例"
+      style={{ width: '65%', height: 'auto', objectFit: 'contain', display: 'block' }}
+    />
+  )}
+</div>
 </section>
 
       <div className="divider-lux" />
