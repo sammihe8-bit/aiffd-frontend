@@ -36,11 +36,7 @@ const steps = [
   { step: 'STEP 04', title: '定期更新', desc: '每季度档案升级，风格越来越准' },
 ]
 
-const services = [
-  { tag: 'AI',  title: 'AI 造型师',  desc: '即时回复，商品分析，每日穿搭建议', price: '免费起' },
-  { tag: 'S1',  title: '专业造型师', desc: '人工审核，月度报告，场景造型方案', price: '会员专享' },
-  { tag: 'S2+', title: '高级造型师', desc: '专属顾问，季度档案升级，高价值购买支持', price: '高级会员' },
-]
+const keywords = ['少买错', '穿得稳', '建立长期风格资产']
 
 const C = {
   h1: '#111111', h3: '#222222', sub: '#444444',
@@ -305,25 +301,32 @@ export default function HomePage() {
 
       <div className="divider-lux" />
 
-      {/* ── SERVICES ── */}
+      {/* ── WHY 40+ ── */}
       <section className="max-w-6xl mx-auto px-6 py-20">
-        <div className="text-center mb-12">
-          <p className="mb-4" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.gold }}>服务分层</p>
-          <h2 className="font-normal" style={{ fontFamily: 'Georgia, serif', fontSize: '32px', lineHeight: '1.3', color: C.h1 }}>
-            AI 判断日常，<em style={{ color: C.gold, fontStyle: 'normal' }}>造型师</em>处理复杂
+        <div className="text-center mb-16">
+          <p className="mb-4" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.gold }}>为什么专为 40+ 女性设计</p>
+          <h2 className="font-normal mx-auto" style={{ fontFamily: 'Georgia, serif', fontSize: '32px', lineHeight: '1.4', color: C.h1, maxWidth: '680px' }}>
+            40+ 以后，穿衣不再只是好看，<br />
+            而是关于<em style={{ color: C.gold, fontStyle: 'normal' }}>判断、质感和自我稳定</em>
           </h2>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {services.map((s, i) => (
-            <div key={i} className={`card-lux ${i === 1 ? 'border-[#B8973A]' : ''}`}>
-              <div className="flex items-start justify-between mb-6">
-                <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '3px', color: C.gold, border: `1px solid ${C.gold}`, padding: '3px 10px' }}>{s.tag}</span>
-                <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted }}>{s.price}</span>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border border-[#e8e8e4]">
+          <div className="p-10 border-r border-[#e8e8e4] flex flex-col justify-between">
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '16px', color: C.sub, lineHeight: '2.0' }}>
+              40+ 女性的穿衣需求，不只是追随趋势，而是需要在身材变化、身份变化、场景变化和消费升级之间，建立一套稳定的判断系统。
+            </p>
+            <p className="mt-6" style={{ fontFamily: 'Inter, sans-serif', fontSize: '16px', color: C.body, lineHeight: '2.0' }}>
+              AIFFD 希望帮助用户从「被商品吸引」转向「主动判断是否适合自己」。
+            </p>
+          </div>
+          <div className="p-10 flex flex-col justify-center gap-0">
+            {keywords.map((kw, i) => (
+              <div key={i} style={{ padding: '20px 0', borderBottom: i < keywords.length - 1 ? `0.5px solid ${C.border}` : 'none', display: 'flex', alignItems: 'center', gap: '20px' }}>
+                <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '2px', color: C.gold }}>0{i + 1}</span>
+                <span style={{ fontFamily: 'Georgia, serif', fontSize: '22px', fontWeight: 400, color: C.h3 }}>{kw}</span>
               </div>
-              <h3 className="font-normal mb-3" style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h3 }}>{s.title}</h3>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '16px', color: C.body, lineHeight: '1.8' }}>{s.desc}</p>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </section>
 
