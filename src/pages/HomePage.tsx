@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 const problems = [
   { num: '01', title: '买了很多，但真正常穿的不多', desc: '衣橱越来越满，却总觉得没有合适的衣服。' },
@@ -10,10 +10,10 @@ const problems = [
 ]
 
 const dimensions = [
-  { num: '01', en: 'BODY', title: '体型适配', tags: ['肩线', '腰线', '比例', '松紧度', '廓形'], desc: '从结构出发判断剪裁与身形的匹配关系。', dark: true },
-  { num: '02', en: 'COLOR', title: '色彩适配', tags: ['肤色', '发色', '常穿色', '明度', '饱和度'], desc: '基于个人色彩系统判断色调与肤色的协调度。', dark: false },
-  { num: '03', en: 'STYLE', title: '风格适配', tags: ['优雅', '自然', '戏剧', '浪漫', '经典'], desc: '匹配个人风格倾向，避免单品与气质违和。', dark: false },
-  { num: '04', en: 'SCENE', title: '场景适配', tags: ['通勤', '聚会', '旅行', '正式', '日常'], desc: '判断单品在目标场景中的实际穿着可行性。', dark: false },
+  { num: '01', en: 'BODY',  title: '体型适配', tags: ['肩线','腰线','比例','松紧度','廓形'],   desc: '从结构出发判断剪裁与身形的匹配关系。', defaultDark: true },
+  { num: '02', en: 'COLOR', title: '色彩适配', tags: ['肤色','发色','常穿色','明度','饱和度'], desc: '基于个人色彩系统判断色调与肤色的协调度。', defaultDark: false },
+  { num: '03', en: 'STYLE', title: '风格适配', tags: ['优雅','自然','戏剧','浪漫','经典'],     desc: '匹配个人风格倾向，避免单品与气质违和。', defaultDark: false },
+  { num: '04', en: 'SCENE', title: '场景适配', tags: ['通勤','聚会','旅行','正式','日常'],     desc: '判断单品在目标场景中的实际穿着可行性。', defaultDark: true },
 ]
 
 const steps = [
@@ -24,19 +24,76 @@ const steps = [
 ]
 
 const services = [
-  { tag: 'AI', title: 'AI 造型师', desc: '即时回复，商品分析，每日穿搭建议', price: '免费起' },
-  { tag: 'S1', title: '专业造型师', desc: '人工审核，月度报告，场景造型方案', price: '会员专享' },
+  { tag: 'AI',  title: 'AI 造型师',  desc: '即时回复，商品分析，每日穿搭建议', price: '免费起' },
+  { tag: 'S1',  title: '专业造型师', desc: '人工审核，月度报告，场景造型方案', price: '会员专享' },
   { tag: 'S2+', title: '高级造型师', desc: '专属顾问，季度档案升级，高价值购买支持', price: '高级会员' },
 ]
 
 const C = {
-  h1: '#111111',
-  h3: '#222222',
-  sub: '#444444',
-  body: '#666666',
-  muted: '#999999',
-  gold: '#B8973A',
-  border: '#e8e8e4',
+  h1: '#111111', h3: '#222222', sub: '#444444',
+  body: '#666666', muted: '#999999', gold: '#B8973A', border: '#e8e8e4',
+}
+
+function DimCard({ d }: { d: typeof dimensions[0] }) {
+  const [hovered, setHovered] = useState(false)
+  const isDark = d.defaultDark || hovered
+
+  const bg    = hovered && d.defaultDark ? '#111111'
+              : d.defaultDark            ? '#2a2a2a'
+              : hovered                  ? '#111111'
+              :                            '#fafaf8'
+
+  const titleColor = isDark ? '#f0ece0' : C.h3
+  const descColor  = isDark ? '#999999' : C.body
+  const barColor   = isDark ? C.gold    : '#1a1a1a'
+  const tagColor   = isDark ? C.gold    : '#555'
+  const tagBorder  = isDark ? C.gold    : '#ccc'
+  const bgNumColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'
+
+  return (
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        background: bg,
+        padding: '32px 28px 40px',
+        position: 'relative',
+        overflow: 'hidden',
+        cursor: 'default',
+        transition: 'background 0.25s',
+      }}
+    >
+      <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '4px', color: C.gold, marginBottom: '16px' }}>
+        {d.num} · {d.en}
+      </p>
+      <h3 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', fontWeight: 400, color: titleColor, marginBottom: '16px', transition: 'color 0.25s' }}>
+        {d.title}
+      </h3>
+      <div style={{ width: '32px', height: '1px', background: barColor, marginBottom: '16px', transition: 'background 0.25s' }} />
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '14px' }}>
+        {d.tags.map((tag, j) => (
+          <span key={j} style={{
+            fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '1.5px',
+            color: tagColor, border: `0.5px solid ${tagBorder}`, padding: '4px 10px',
+            transition: 'color 0.25s, border-color 0.25s',
+          }}>
+            {tag}
+          </span>
+        ))}
+      </div>
+      <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: descColor, lineHeight: '1.7', transition: 'color 0.25s' }}>
+        {d.desc}
+      </p>
+      <span style={{
+        position: 'absolute', bottom: '16px', right: '20px',
+        fontFamily: 'Georgia, serif', fontSize: '48px', fontWeight: 400,
+        color: bgNumColor, lineHeight: 1, pointerEvents: 'none',
+        transition: 'color 0.25s',
+      }}>
+        {d.num}
+      </span>
+    </div>
+  )
 }
 
 export default function HomePage() {
@@ -48,7 +105,7 @@ export default function HomePage() {
     const canvas = canvasRef.current
     if (!canvas || !wrap) return
     const ctx = canvas.getContext('2d')!
-    const GOLD = ['#B8973A', '#C9A84C', '#D4B86A', '#E8D49A', '#F0E4B8']
+    const GOLD = ['#B8973A','#C9A84C','#D4B86A','#E8D49A','#F0E4B8']
     const N = 140
     let W = 0, H = 0, t = 0, rafId = 0
     let mouse = { x: -999, y: -999 }, active = false
@@ -167,16 +224,18 @@ export default function HomePage() {
 
       {/* ── PROBLEMS ── */}
       <section className="max-w-6xl mx-auto px-6 py-20">
-        <p className="mb-4" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.gold }}>
-          我们解决的问题
-        </p>
-        <h2 className="font-normal mb-4" style={{ fontFamily: 'Georgia, serif', fontSize: '32px', lineHeight: '1.3', color: C.h1 }}>
-          40+ 女性买衣服，真正难的不是选择少，<br />
-          而是<em style={{ color: C.gold, fontStyle: 'normal' }}>判断成本太高</em>
-        </h2>
-        <p className="mb-12" style={{ fontFamily: 'Inter, sans-serif', fontSize: '17px', color: C.sub, lineHeight: '1.85' }}>
-          每一次购买决策背后，都是时间、精力与金钱的消耗。
-        </p>
+        <div className="text-center mb-12">
+          <p className="mb-4" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.gold }}>
+            我们解决的问题
+          </p>
+          <h2 className="font-normal mb-4" style={{ fontFamily: 'Georgia, serif', fontSize: '32px', lineHeight: '1.3', color: C.h1 }}>
+            40+ 女性买衣服，真正难的不是选择少，<br />
+            而是<em style={{ color: C.gold, fontStyle: 'normal' }}>判断成本太高</em>
+          </h2>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '17px', color: C.sub, lineHeight: '1.85' }}>
+            每一次购买决策背后，都是时间、精力与金钱的消耗。
+          </p>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border border-[#e8e8e4]">
           {problems.map((p, i) => (
             <div key={i} className={['p-8', i % 2 === 0 ? 'border-r border-[#e8e8e4]' : '', i < 2 ? 'border-b border-[#e8e8e4]' : ''].join(' ')}>
@@ -192,66 +251,20 @@ export default function HomePage() {
 
       {/* ── DIMENSIONS ── */}
       <section className="max-w-6xl mx-auto px-6 py-20">
-        <p className="mb-4" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.gold }}>
-          AIFFD 如何判断一件衣服适不适合你
-        </p>
-        <h2 className="font-normal mb-4" style={{ fontFamily: 'Georgia, serif', fontSize: '32px', lineHeight: '1.3', color: C.h1 }}>
-          我们不是推荐流行款，<br />
-          而是判断<em style={{ color: C.gold, fontStyle: 'normal' }}>「适合度」</em>
-        </h2>
-        <p className="mb-12" style={{ fontFamily: 'Inter, sans-serif', fontSize: '17px', color: C.sub, lineHeight: '1.85' }}>
-          AIFFD 不是让用户看更多衣服，而是帮助她少买错衣服。
-        </p>
+        <div className="text-center mb-12">
+          <p className="mb-4" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.gold }}>
+            AIFFD 如何判断一件衣服适不适合你
+          </p>
+          <h2 className="font-normal mb-4" style={{ fontFamily: 'Georgia, serif', fontSize: '32px', lineHeight: '1.3', color: C.h1 }}>
+            我们不是推荐流行款，<br />
+            而是判断<em style={{ color: C.gold, fontStyle: 'normal' }}>「适合度」</em>
+          </h2>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '17px', color: C.sub, lineHeight: '1.85' }}>
+            AIFFD 不是让用户看更多衣服，而是帮助她少买错衣服。
+          </p>
+        </div>
         <div className="grid grid-cols-2 gap-0" style={{ background: '#1a1a1a' }}>
-          {dimensions.map((d, i) => (
-            <div
-              key={i}
-              className="group"
-              style={{
-                background: d.dark ? '#1a1a1a' : '#fafaf8',
-                padding: '32px 28px',
-                position: 'relative',
-                overflow: 'hidden',
-                cursor: 'default',
-                transition: 'background 0.25s',
-              }}
-              onMouseEnter={e => { if (!d.dark) (e.currentTarget as HTMLElement).style.background = '#111' }}
-              onMouseLeave={e => { if (!d.dark) (e.currentTarget as HTMLElement).style.background = '#fafaf8' }}
-            >
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '4px', color: C.gold, marginBottom: '16px' }}>
-                {d.num} · {d.en}
-              </p>
-              <h3 className="font-normal" style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: d.dark ? '#fafaf8' : C.h3, marginBottom: '16px', transition: 'color 0.25s' }}>
-                {d.title}
-              </h3>
-              <div style={{ width: '32px', height: '1px', background: d.dark ? C.gold : '#1a1a1a', marginBottom: '16px', transition: 'background 0.25s' }} />
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '14px' }}>
-                {d.tags.map((tag, j) => (
-                  <span key={j} style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontSize: '11px',
-                    letterSpacing: '1.5px',
-                    color: d.dark ? C.gold : '#555',
-                    border: `0.5px solid ${d.dark ? C.gold : '#ccc'}`,
-                    padding: '4px 10px',
-                  }}>
-                    {tag}
-                  </span>
-                ))}
-              </div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: d.dark ? '#999' : C.body, lineHeight: '1.7' }}>
-                {d.desc}
-              </p>
-              <span style={{
-                position: 'absolute', bottom: '16px', right: '20px',
-                fontFamily: 'Georgia, serif', fontSize: '48px', fontWeight: 400,
-                color: d.dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
-                lineHeight: 1, pointerEvents: 'none',
-              }}>
-                {d.num}
-              </span>
-            </div>
-          ))}
+          {dimensions.map((d, i) => <DimCard key={i} d={d} />)}
         </div>
       </section>
 
@@ -259,12 +272,14 @@ export default function HomePage() {
 
       {/* ── HOW IT WORKS ── */}
       <section className="max-w-6xl mx-auto px-6 py-20">
-        <p className="mb-4" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.gold }}>
-          系统如何运作
-        </p>
-        <h2 className="font-normal mb-12" style={{ fontFamily: 'Georgia, serif', fontSize: '32px', lineHeight: '1.3', color: C.h1 }}>
-          四步建立你的<em style={{ color: C.gold, fontStyle: 'normal' }}>专属档案</em>
-        </h2>
+        <div className="text-center mb-12">
+          <p className="mb-4" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.gold }}>
+            系统如何运作
+          </p>
+          <h2 className="font-normal" style={{ fontFamily: 'Georgia, serif', fontSize: '32px', lineHeight: '1.3', color: C.h1 }}>
+            四步建立你的<em style={{ color: C.gold, fontStyle: 'normal' }}>专属档案</em>
+          </h2>
+        </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-0 border border-[#e8e8e4]">
           {steps.map((s, i) => (
             <div key={i} className={`p-8 ${i < 3 ? 'border-r border-[#e8e8e4]' : ''}`}>
@@ -280,12 +295,14 @@ export default function HomePage() {
 
       {/* ── SERVICES ── */}
       <section className="max-w-6xl mx-auto px-6 py-20">
-        <p className="mb-4" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.gold }}>
-          服务分层
-        </p>
-        <h2 className="font-normal mb-12" style={{ fontFamily: 'Georgia, serif', fontSize: '32px', lineHeight: '1.3', color: C.h1 }}>
-          AI 判断日常，<em style={{ color: C.gold, fontStyle: 'normal' }}>造型师</em>处理复杂
-        </h2>
+        <div className="text-center mb-12">
+          <p className="mb-4" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.gold }}>
+            服务分层
+          </p>
+          <h2 className="font-normal" style={{ fontFamily: 'Georgia, serif', fontSize: '32px', lineHeight: '1.3', color: C.h1 }}>
+            AI 判断日常，<em style={{ color: C.gold, fontStyle: 'normal' }}>造型师</em>处理复杂
+          </h2>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {services.map((s, i) => (
             <div key={i} className={`card-lux ${i === 1 ? 'border-[#B8973A]' : ''}`}>
