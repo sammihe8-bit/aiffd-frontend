@@ -3,10 +3,26 @@ import { useAuth } from '../hooks/useAuth'
 import { useEffect, useRef } from 'react'
 
 const problems = [
-  { num: '01', title: '我适合什么风格', desc: '体型、肤色、气质三维建档，AI 精准匹配你的专属风格关键词' },
-  { num: '02', title: '这件商品值不值得买', desc: '上传商品图或链接，30秒获得购买前风险判断与建议' },
-  { num: '03', title: '今天 / 本周怎么穿', desc: '基于你的风格档案，生成场景化穿搭方案与单品清单' },
-  { num: '04', title: '复杂问题找专业造型师', desc: '遇到高价值购买或特殊场景，升级人工造型师一对一服务' },
+  {
+    num: '01',
+    title: '买了很多，但真正常穿的不多',
+    desc: '衣橱越来越满，却总觉得没有合适的衣服。'
+  },
+  {
+    num: '02',
+    title: '试穿时还可以，回家就不对了',
+    desc: '单品本身好看，但和身材、肤色、场景不匹配。'
+  },
+  {
+    num: '03',
+    title: '风格不稳定，容易被流行带走',
+    desc: '每次购物都像重新开始，没有自己的长期判断系统。'
+  },
+  {
+    num: '04',
+    title: '高价单品更怕买错',
+    desc: '不是买不起，而是不想再为错误选择付费。'
+  },
 ]
 
 const steps = [
@@ -148,13 +164,28 @@ export default function HomePage() {
 
       {/* ── PROBLEMS ── */}
       <section className="max-w-6xl mx-auto px-6 py-20">
-        <p className="label-lux mb-12">我们解决的问题</p>
+        <p className="label-lux mb-4">我们解决的问题</p>
+        <h2 className="text-[28px] font-normal mb-12 max-w-xl" style={{ fontFamily: 'Georgia, serif' }}>
+          40+ 女性买衣服，真正难的不是选择少，<br />
+          而是<em className="text-gold not-italic">判断成本太高</em>
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border border-[#e8e8e4]">
           {problems.map((p, i) => (
-            <div key={i} className={`p-8 ${i % 2 === 0 ? 'border-r border-[#e8e8e4]' : ''} ${i < 2 ? 'border-b border-[#e8e8e4]' : ''}`}>
+            <div
+              key={i}
+              className={[
+                'p-8',
+                i % 2 === 0 ? 'border-r border-[#e8e8e4]' : '',
+                i < 2 ? 'border-b border-[#e8e8e4]' : '',
+              ].join(' ')}
+            >
               <p className="text-gold label-lux mb-4">{p.num}</p>
-              <h3 className="text-[18px] font-normal mb-3" style={{ fontFamily: 'Georgia, serif' }}>{p.title}</h3>
-              <p className="text-[13px] text-[#666] leading-[1.8]" style={{ fontFamily: 'Inter, sans-serif' }}>{p.desc}</p>
+              <h3 className="text-[17px] font-normal mb-3 leading-[1.5]" style={{ fontFamily: 'Georgia, serif' }}>
+                {p.title}
+              </h3>
+              <p className="text-[13px] text-[#666] leading-[1.8]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                {p.desc}
+              </p>
             </div>
           ))}
         </div>
