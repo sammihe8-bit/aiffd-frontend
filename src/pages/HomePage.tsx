@@ -248,46 +248,20 @@ export default function HomePage() {
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', border: '1px solid #e0e0d8' }}>
           {paths.map((p, i) => (
-            <div key={i} style={{ borderRight: i === 0 ? '1px solid #e0e0d8' : 'none', display: 'grid', gridTemplateRows: 'auto 1fr' }}>
-              {/* 文字区 */}
-              <div style={{ padding: '48px 40px 40px', borderBottom: '1px solid #e0e0d8' }}>
-                <div style={{ height: '3px', background: C.gold, marginBottom: '36px', width: '100%' }} />
-                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '4px', color: C.gold, marginBottom: '18px' }}>{p.tag}</p>
-                <h3 style={{ fontFamily: 'Georgia, serif', fontSize: '24px', fontWeight: 400, color: C.h3, marginBottom: '28px' }}>{p.title}</h3>
-                <div>
-                  {p.items.map((item, j) => (
-                    <div key={j} style={{ display: 'flex', gap: '12px', alignItems: 'baseline', padding: '10px 0', borderBottom: '0.5px solid #ebebeb', borderTop: j === 0 ? '0.5px solid #ebebeb' : 'none' }}>
-                      <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', color: C.gold, flexShrink: 0 }}>—</span>
-                      <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: C.muted, lineHeight: '1.75' }}>{item}</span>
-                    </div>
-                  ))}
-                </div>
-                <div style={{ marginTop: '36px' }}>
-                  <Link to={p.to} className={p.primary ? 'btn-primary' : 'btn-outline'}>{p.btn}</Link>
-                </div>
+            <div key={i} style={{ borderRight: i === 0 ? '1px solid #e0e0d8' : 'none', padding: '48px 40px 52px' }}>
+              <div style={{ height: '3px', background: C.gold, marginBottom: '36px', width: '100%' }} />
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '4px', color: C.gold, marginBottom: '18px' }}>{p.tag}</p>
+              <h3 style={{ fontFamily: 'Georgia, serif', fontSize: '24px', fontWeight: 400, color: C.h3, marginBottom: '28px' }}>{p.title}</h3>
+              <div>
+                {p.items.map((item, j) => (
+                  <div key={j} style={{ display: 'flex', gap: '12px', alignItems: 'baseline', padding: '10px 0', borderBottom: '0.5px solid #ebebeb', borderTop: j === 0 ? '0.5px solid #ebebeb' : 'none' }}>
+                    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', color: C.gold, flexShrink: 0 }}>—</span>
+                    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: C.muted, lineHeight: '1.75' }}>{item}</span>
+                  </div>
+                ))}
               </div>
-              {/* 图片区 */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '40px',
-                background: i === 0 ? '#f0ece4' : '#f8f5f0',
-                height: '360px',
-              }}>
-                {i === 0 ? (
-                  <img
-                    src="/stylereport.png"
-                    alt="AIFFD 风格报告"
-                    style={{ maxHeight: '280px', width: 'auto', maxWidth: '80%', display: 'block', objectFit: 'contain' }}
-                  />
-                ) : (
-                  <img
-                    src="/shangpin.png"
-                    alt="商品判断示例"
-                    style={{ maxHeight: '280px', width: 'auto', maxWidth: '75%', display: 'block', objectFit: 'contain' }}
-                  />
-                )}
+              <div style={{ marginTop: '36px' }}>
+                <Link to={p.to} className={p.primary ? 'btn-primary' : 'btn-outline'}>{p.btn}</Link>
               </div>
             </div>
           ))}
