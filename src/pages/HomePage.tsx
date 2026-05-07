@@ -252,6 +252,22 @@ export default function HomePage() {
           {paths.map((p, i) => (
             <div key={i} style={{ border: '1px solid #e0e0d8', borderRight: i === 0 ? 'none' : '1px solid #e0e0d8' }}>
               <div style={{ height: '3px', background: C.gold }} />
+              {/* ── 插图 ── */}
+              <div style={{ width: '100%', aspectRatio: '3/2', overflow: 'hidden', background: '#f0ece4' }}>
+                {i === 0 ? (
+                  <img
+                    src="/stylereport.png"
+                    alt="AIFFD 风格报告"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }}
+                  />
+                ) : (
+                  <img
+                    src="/shangpin.png"
+                    alt="商品判断示例"
+                    style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'center', background: '#f8f5f0', padding: '24px' }}
+                  />
+                )}
+              </div>
               <div style={{ padding: '40px 40px 48px' }}>
                 <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '4px', color: C.gold, marginBottom: '18px' }}>{p.tag}</p>
                 <h3 style={{ fontFamily: 'Georgia, serif', fontSize: '24px', fontWeight: 400, color: C.h3, marginBottom: '28px' }}>{p.title}</h3>
@@ -310,20 +326,26 @@ export default function HomePage() {
             而是关于<em style={{ color: C.gold, fontStyle: 'normal' }}>判断、质感和自我稳定</em>
           </h2>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border border-[#e8e8e4]">
-          <div className="p-10 border-r border-[#e8e8e4] flex flex-col justify-between">
-            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '16px', color: C.sub, lineHeight: '2.0' }}>
+        <div className="border border-[#e8e8e4]">
+          {/* 核心描述 — 主体 */}
+          <div style={{ padding: '48px 64px', borderBottom: `1px solid ${C.border}` }}>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '17px', color: C.sub, lineHeight: '2.0', maxWidth: '760px', margin: '0 auto', textAlign: 'center' }}>
               40+ 女性的穿衣需求，不只是追随趋势，而是需要在身材变化、身份变化、场景变化和消费升级之间，建立一套稳定的判断系统。
             </p>
-            <p className="mt-6" style={{ fontFamily: 'Inter, sans-serif', fontSize: '16px', color: C.body, lineHeight: '2.0' }}>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '16px', color: C.body, lineHeight: '2.0', maxWidth: '640px', margin: '24px auto 0', textAlign: 'center' }}>
               AIFFD 希望帮助用户从「被商品吸引」转向「主动判断是否适合自己」。
             </p>
           </div>
-          <div className="p-10 flex flex-col justify-center gap-0">
+          {/* 三个关键词 — 底部 */}
+          <div className="grid grid-cols-3 gap-0">
             {keywords.map((kw, i) => (
-              <div key={i} style={{ padding: '20px 0', borderBottom: i < keywords.length - 1 ? `0.5px solid ${C.border}` : 'none', display: 'flex', alignItems: 'center', gap: '20px' }}>
+              <div key={i} style={{
+                padding: '28px 0', textAlign: 'center',
+                borderRight: i < keywords.length - 1 ? `0.5px solid ${C.border}` : 'none',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
+              }}>
                 <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '2px', color: C.gold }}>0{i + 1}</span>
-                <span style={{ fontFamily: 'Georgia, serif', fontSize: '22px', fontWeight: 400, color: C.h3 }}>{kw}</span>
+                <span style={{ fontFamily: 'Georgia, serif', fontSize: '20px', fontWeight: 400, color: C.h3 }}>{kw}</span>
               </div>
             ))}
           </div>
