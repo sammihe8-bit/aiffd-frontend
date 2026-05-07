@@ -27,27 +27,25 @@ export default function HomePage() {
   return (
     <div className="bg-cream">
 
-      {/* ── HERO ── */}
-      <section className="max-w-6xl mx-auto px-6 pt-20 pb-24">
-        <div className="max-w-2xl">
-          <p className="label-lux mb-8">购买前风格决策系统</p>
-          <h1 className="text-[48px] leading-[1.2] font-normal mb-6" style={{ fontFamily: 'Georgia, serif' }}>
-            为 40+ 女性<br />
-            建立长期<em className="text-gold not-italic">穿衣系统</em>
-          </h1>
-          <p className="text-[15px] text-[#555] leading-[1.9] mb-10 max-w-lg" style={{ fontFamily: 'Inter, sans-serif' }}>
-            不是一次性测试，而是一套持续进化的个人风格档案。
-            AI 判断日常穿搭，复杂需求交给专业造型师。
-          </p>
-          <div className="flex gap-4 flex-wrap items-center">
-            <Link to="/onboarding" className="btn-primary">开始风格测试</Link>
-            <Link to="/diagnosis" className="btn-outline">上传商品做分析</Link>
-          </div>
-          <p className="text-[11px] text-[#aaa] mt-5" style={{ fontFamily: 'Inter, sans-serif', letterSpacing: '1px' }}>
-            5 分钟完成 · 免费建立初始档案
-          </p>
-        </div>
-      </section>
+     {/* ── HERO ── */}
+<section className="max-w-6xl mx-auto px-6 pt-20 pb-24 text-center">
+  <div className="max-w-2xl mx-auto">
+    <p className="label-lux mb-8">购买前风格决策系统</p>
+    <h1 className="text-[48px] leading-[1.2] font-normal mb-6" style={{ fontFamily: 'Georgia, serif' }}>
+      40+ 女性的<em className="text-gold not-italic">风格档案</em>系统
+    </h1>
+    <p className="text-[15px] text-[#555] leading-[1.9] mb-10 max-w-lg mx-auto" style={{ fontFamily: 'Inter, sans-serif' }}>
+      从体型、色彩、风格与场景出发，减少无效购买，建立长期审美判断。
+    </p>
+    <div className="flex gap-4 flex-wrap items-center justify-center">
+      <Link to="/onboarding" className="btn-primary">开始风格测试</Link>
+      <Link to="/diagnosis" className="btn-outline">上传商品做分析</Link>
+    </div>
+    <p className="text-[11px] text-[#aaa] mt-5" style={{ fontFamily: 'Inter, sans-serif', letterSpacing: '1px' }}>
+      5 分钟完成 · 获得初步风格判断 · 适合 40+ 女性
+    </p>
+  </div>
+</section>
 
       <div className="divider-lux" />
 
