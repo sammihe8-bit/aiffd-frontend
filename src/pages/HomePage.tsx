@@ -16,6 +16,25 @@ const dimensions = [
   { num: '04', en: 'SCENE', title: '场景适配', tags: ['通勤','聚会','旅行','正式','日常'],     desc: '判断单品在目标场景中的实际穿着可行性。', defaultDark: true },
 ]
 
+const paths = [
+  {
+    tag: 'PATH 01',
+    title: '建立风格档案',
+    items: ['完成 5 分钟风格测试', '记录体型、色彩、风格偏好', '获得初步穿衣关键词', '后续可持续更新'],
+    btn: '开始建立档案',
+    to: '/onboarding',
+    primary: true,
+  },
+  {
+    tag: 'PATH 02',
+    title: '上传商品做分析',
+    items: ['上传想购买的衣服图片', 'AI 判断是否适合你的档案', '给出适合度、风险点和搭配建议', '支持购买前决策'],
+    btn: '分析一件商品',
+    to: '/diagnosis',
+    primary: false,
+  },
+]
+
 const steps = [
   { step: 'STEP 01', title: '问卷初评', desc: '5步建立你的初始风格档案' },
   { step: 'STEP 02', title: 'AI 建档', desc: '生成 Style Profile 1.0' },
@@ -37,12 +56,10 @@ const C = {
 function DimCard({ d }: { d: typeof dimensions[0] }) {
   const [hovered, setHovered] = useState(false)
   const isDark = d.defaultDark || hovered
-
-  const bg    = hovered && d.defaultDark ? '#111111'
-              : d.defaultDark            ? '#2a2a2a'
-              : hovered                  ? '#111111'
-              :                            '#fafaf8'
-
+  const bg = hovered && d.defaultDark ? '#111111'
+            : d.defaultDark           ? '#2a2a2a'
+            : hovered                 ? '#111111'
+            :                           '#fafaf8'
   const titleColor = isDark ? '#f0ece0' : C.h3
   const descColor  = isDark ? '#999999' : C.body
   const barColor   = isDark ? C.gold    : '#1a1a1a'
@@ -54,14 +71,7 @@ function DimCard({ d }: { d: typeof dimensions[0] }) {
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      style={{
-        background: bg,
-        padding: '32px 28px 40px',
-        position: 'relative',
-        overflow: 'hidden',
-        cursor: 'default',
-        transition: 'background 0.25s',
-      }}
+      style={{ background: bg, padding: '32px 28px 40px', position: 'relative', overflow: 'hidden', cursor: 'default', transition: 'background 0.25s' }}
     >
       <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '4px', color: C.gold, marginBottom: '16px' }}>
         {d.num} · {d.en}
@@ -72,11 +82,7 @@ function DimCard({ d }: { d: typeof dimensions[0] }) {
       <div style={{ width: '32px', height: '1px', background: barColor, marginBottom: '16px', transition: 'background 0.25s' }} />
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '14px' }}>
         {d.tags.map((tag, j) => (
-          <span key={j} style={{
-            fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '1.5px',
-            color: tagColor, border: `0.5px solid ${tagBorder}`, padding: '4px 10px',
-            transition: 'color 0.25s, border-color 0.25s',
-          }}>
+          <span key={j} style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '1.5px', color: tagColor, border: `0.5px solid ${tagBorder}`, padding: '4px 10px', transition: 'color 0.25s, border-color 0.25s' }}>
             {tag}
           </span>
         ))}
@@ -84,15 +90,28 @@ function DimCard({ d }: { d: typeof dimensions[0] }) {
       <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: descColor, lineHeight: '1.7', transition: 'color 0.25s' }}>
         {d.desc}
       </p>
-      <span style={{
-        position: 'absolute', bottom: '16px', right: '20px',
-        fontFamily: 'Georgia, serif', fontSize: '48px', fontWeight: 400,
-        color: bgNumColor, lineHeight: 1, pointerEvents: 'none',
-        transition: 'color 0.25s',
-      }}>
+      <span style={{ position: 'absolute', bottom: '16px', right: '20px', fontFamily: 'Georgia, serif', fontSize: '48px', fontWeight: 400, color: bgNumColor, lineHeight: 1, pointerEvents: 'none', transition: 'color 0.25s' }}>
         {d.num}
       </span>
     </div>
+  )
+}
+
+function PathBtn({ to, children, primary }: { to: string, children: React.ReactNode, primary: boolean }) {
+  const [hovered, setHovered] = useState(false)
+  const bg     = hovered ? '#ffffff' : primary ? '#f0e8d0' : 'transparent'
+  const color  = hovered ? '#111111' : primary ? '#1a1a1a' : '#1a1a1a'
+  const border = primary ? (hovered ? '1px solid #ccc' : '1px solid #d4c9a8')
+                         : (hovered ? '1px solid #ccc' : '1px solid #1a1a1a')
+  return (
+    <Link
+      to={to}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{ display: 'inline-block', background: bg, color, border, fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '2px', padding: '12px 28px', textDecoration: 'none', transition: 'background 0.2s, color 0.2s, border-color 0.2s' }}
+    >
+      {children}
+    </Link>
   )
 }
 
@@ -110,9 +129,7 @@ export default function HomePage() {
     let W = 0, H = 0, t = 0, rafId = 0
     let mouse = { x: -999, y: -999 }, active = false
     let particles: any[] = []
-
     const rand = (a: number, b: number) => a + Math.random() * (b - a)
-
     const mkParticle = (i: number) => ({
       x: rand(0, W), y: rand(0, H),
       r: rand(i < 36 ? 1.2 : 0.6, i < 36 ? 2.2 : 1.8),
@@ -122,13 +139,11 @@ export default function HomePage() {
       phase: rand(0, Math.PI * 2), freq: rand(0.008, 0.02),
       isMouse: i < 36,
     })
-
     const resize = () => {
       W = canvas.width = wrap.offsetWidth
       H = canvas.height = wrap.offsetHeight
       particles = Array.from({ length: N }, (_, i) => mkParticle(i))
     }
-
     const draw = () => {
       ctx.clearRect(0, 0, W, H)
       t++
@@ -151,7 +166,6 @@ export default function HomePage() {
         ctx.globalAlpha = Math.max(0, Math.min(1, p.alpha))
         ctx.fill()
         ctx.globalAlpha = 1
-
         if (i % 7 === 0 && i + 1 < particles.length) {
           const q = particles[i + 1]
           const dx = q.x - p.x, dy = q.y - p.y
@@ -170,20 +184,16 @@ export default function HomePage() {
       })
       rafId = requestAnimationFrame(draw)
     }
-
     const onMove = (e: MouseEvent) => {
       const r = wrap.getBoundingClientRect()
       mouse = { x: e.clientX - r.left, y: e.clientY - r.top }
       active = true
     }
     const onLeave = () => { active = false }
-
-    resize()
-    draw()
+    resize(); draw()
     wrap.addEventListener('mousemove', onMove)
     wrap.addEventListener('mouseleave', onLeave)
     window.addEventListener('resize', resize)
-
     return () => {
       cancelAnimationFrame(rafId)
       wrap.removeEventListener('mousemove', onMove)
@@ -200,9 +210,7 @@ export default function HomePage() {
         <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none" />
         <div className="relative z-10 max-w-6xl mx-auto px-6 pt-20 pb-24 text-center">
           <div className="max-w-2xl mx-auto">
-            <p className="mb-8" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.gold }}>
-              购买前风格决策系统
-            </p>
+            <p className="mb-8" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.gold }}>购买前风格决策系统</p>
             <h1 className="font-normal mb-6" style={{ fontFamily: 'Georgia, serif', fontSize: '42px', lineHeight: '1.2', color: C.h1 }}>
               40+ 女性的<em style={{ color: C.gold, fontStyle: 'normal' }}>风格档案</em>系统
             </h1>
@@ -225,16 +233,11 @@ export default function HomePage() {
       {/* ── PROBLEMS ── */}
       <section className="max-w-6xl mx-auto px-6 py-20">
         <div className="text-center mb-12">
-          <p className="mb-4" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.gold }}>
-            我们解决的问题
-          </p>
-          <h2 className="font-normal mb-4" style={{ fontFamily: 'Georgia, serif', fontSize: '32px', lineHeight: '1.3', color: C.h1 }}>
+          <p className="mb-4" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.gold }}>我们解决的问题</p>
+          <h2 className="font-normal" style={{ fontFamily: 'Georgia, serif', fontSize: '32px', lineHeight: '1.3', color: C.h1 }}>
             40+ 女性买衣服，真正难的不是选择少，<br />
             而是<em style={{ color: C.gold, fontStyle: 'normal' }}>判断成本太高</em>
           </h2>
-          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '17px', color: C.sub, lineHeight: '1.85' }}>
-            每一次购买决策背后，都是时间、精力与金钱的消耗。
-          </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border border-[#e8e8e4]">
           {problems.map((p, i) => (
@@ -252,16 +255,11 @@ export default function HomePage() {
       {/* ── DIMENSIONS ── */}
       <section className="max-w-6xl mx-auto px-6 py-20">
         <div className="text-center mb-12">
-          <p className="mb-4" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.gold }}>
-            AIFFD 如何判断一件衣服适不适合你
-          </p>
-          <h2 className="font-normal mb-4" style={{ fontFamily: 'Georgia, serif', fontSize: '32px', lineHeight: '1.3', color: C.h1 }}>
+          <p className="mb-4" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.gold }}>AIFFD 如何判断一件衣服适不适合你</p>
+          <h2 className="font-normal" style={{ fontFamily: 'Georgia, serif', fontSize: '32px', lineHeight: '1.3', color: C.h1 }}>
             我们不是推荐流行款，<br />
             而是判断<em style={{ color: C.gold, fontStyle: 'normal' }}>「适合度」</em>
           </h2>
-          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '17px', color: C.sub, lineHeight: '1.85' }}>
-            AIFFD 不是让用户看更多衣服，而是帮助她少买错衣服。
-          </p>
         </div>
         <div className="grid grid-cols-2 gap-0" style={{ background: '#1a1a1a' }}>
           {dimensions.map((d, i) => <DimCard key={i} d={d} />)}
@@ -270,12 +268,44 @@ export default function HomePage() {
 
       <div className="divider-lux" />
 
+      {/* ── PATHS ── */}
+      <section className="max-w-6xl mx-auto px-6 py-20">
+        <div className="text-center mb-12">
+          <p className="mb-4" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.gold }}>两条核心功能路径</p>
+          <h2 className="font-normal" style={{ fontFamily: 'Georgia, serif', fontSize: '32px', lineHeight: '1.3', color: C.h1 }}>
+            从<em style={{ color: C.gold, fontStyle: 'normal' }}>个人档案</em>，到<em style={{ color: C.gold, fontStyle: 'normal' }}>商品判断</em>
+          </h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
+          {paths.map((p, i) => (
+            <div key={i} style={{ border: '1px solid #e0e0d8', borderRight: i === 0 ? 'none' : '1px solid #e0e0d8', position: 'relative' }}>
+              <div style={{ height: '3px', background: C.gold }} />
+              <div style={{ padding: '40px 40px 48px' }}>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '4px', color: C.gold, marginBottom: '18px' }}>{p.tag}</p>
+                <h3 style={{ fontFamily: 'Georgia, serif', fontSize: '24px', fontWeight: 400, color: C.h3, marginBottom: '28px' }}>{p.title}</h3>
+                <div>
+                  {p.items.map((item, j) => (
+                    <div key={j} style={{ display: 'flex', gap: '12px', alignItems: 'baseline', padding: '10px 0', borderBottom: '0.5px solid #ebebeb', borderTop: j === 0 ? '0.5px solid #ebebeb' : 'none' }}>
+                      <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', color: C.gold, letterSpacing: '1px', flexShrink: 0 }}>—</span>
+                      <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: C.muted, lineHeight: '1.75' }}>{item}</span>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ marginTop: '36px' }}>
+                  <PathBtn to={p.to} primary={p.primary}>{p.btn}</PathBtn>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <div className="divider-lux" />
+
       {/* ── HOW IT WORKS ── */}
       <section className="max-w-6xl mx-auto px-6 py-20">
         <div className="text-center mb-12">
-          <p className="mb-4" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.gold }}>
-            系统如何运作
-          </p>
+          <p className="mb-4" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.gold }}>系统如何运作</p>
           <h2 className="font-normal" style={{ fontFamily: 'Georgia, serif', fontSize: '32px', lineHeight: '1.3', color: C.h1 }}>
             四步建立你的<em style={{ color: C.gold, fontStyle: 'normal' }}>专属档案</em>
           </h2>
@@ -296,9 +326,7 @@ export default function HomePage() {
       {/* ── SERVICES ── */}
       <section className="max-w-6xl mx-auto px-6 py-20">
         <div className="text-center mb-12">
-          <p className="mb-4" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.gold }}>
-            服务分层
-          </p>
+          <p className="mb-4" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.gold }}>服务分层</p>
           <h2 className="font-normal" style={{ fontFamily: 'Georgia, serif', fontSize: '32px', lineHeight: '1.3', color: C.h1 }}>
             AI 判断日常，<em style={{ color: C.gold, fontStyle: 'normal' }}>造型师</em>处理复杂
           </h2>
@@ -322,9 +350,7 @@ export default function HomePage() {
       {/* ── CTA ── */}
       {!token && (
         <section className="max-w-6xl mx-auto px-6 py-24 text-center">
-          <p className="mb-6" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.gold }}>
-            立即开始
-          </p>
+          <p className="mb-6" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.gold }}>立即开始</p>
           <h2 className="font-normal mb-6" style={{ fontFamily: 'Georgia, serif', fontSize: '32px', lineHeight: '1.3', color: C.h1 }}>
             建立你的专属<em style={{ color: C.gold, fontStyle: 'normal' }}>风格档案</em>
           </h2>
