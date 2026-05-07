@@ -239,16 +239,16 @@ export default function HomePage() {
       <div className="divider-lux" />
 
       {/* ── PATHS ── */}
-      <section className="max-w-6xl mx-auto px-6 py-20">
+      <section className="max-w-6xl mx-auto px-6 py-20" style={{ display: 'block' }}>
         <div className="text-center mb-12">
           <p className="mb-4" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.gold }}>两条核心功能路径</p>
           <h2 className="font-normal" style={{ fontFamily: 'Georgia, serif', fontSize: '32px', lineHeight: '1.3', color: C.h1 }}>
             从<em style={{ color: C.gold, fontStyle: 'normal' }}>个人档案</em>，到<em style={{ color: C.gold, fontStyle: 'normal' }}>商品判断</em>
           </h2>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
           {paths.map((p, i) => (
-            <div key={i} style={{ border: '1px solid #e0e0d8', borderBottom: i === 0 ? 'none' : '1px solid #e0e0d8', display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
+            <div key={i} style={{ border: '1px solid #e0e0d8', borderBottom: i === 0 ? 'none' : '1px solid #e0e0d8', display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)' }}>
               {/* 文字区 */}
               <div style={{ padding: '48px 48px 52px', borderRight: '1px solid #e0e0d8' }}>
                 <div style={{ height: '3px', background: C.gold, marginBottom: '36px', width: '100%' }} />
@@ -273,20 +273,19 @@ export default function HomePage() {
                 justifyContent: 'center',
                 padding: '40px',
                 background: i === 0 ? '#f0ece4' : '#f8f5f0',
-                maxHeight: '480px',
-                overflow: 'hidden',
+                height: '420px',
               }}>
                 {i === 0 ? (
                   <img
                     src="/stylereport.png"
                     alt="AIFFD 风格报告"
-                    style={{ width: '60%', height: 'auto', display: 'block', objectFit: 'contain', maxHeight: '400px' }}
+                    style={{ maxHeight: '340px', width: 'auto', maxWidth: '80%', display: 'block', objectFit: 'contain' }}
                   />
                 ) : (
                   <img
                     src="/shangpin.png"
                     alt="商品判断示例"
-                    style={{ width: '55%', height: 'auto', display: 'block', objectFit: 'contain', maxHeight: '400px' }}
+                    style={{ maxHeight: '340px', width: 'auto', maxWidth: '75%', display: 'block', objectFit: 'contain' }}
                   />
                 )}
               </div>
