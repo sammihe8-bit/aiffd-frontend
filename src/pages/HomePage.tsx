@@ -269,22 +269,24 @@ export default function HomePage() {
           </div>
         </div>
         {/* 图片区 */}
-<div style={{ 
-  display: 'flex', alignItems: 'center', justifyContent: 'center',
-  padding: '32px', background: i === 0 ? '#f0ece4' : '#f8f5f0',
-  borderLeft: '1px solid #e0e0d8'
+<div style={{
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: '40px',
+  background: i === 0 ? '#f0ece4' : '#f8f5f0',
 }}>
   {i === 0 ? (
     <img
       src="/stylereport.png"
       alt="AIFFD 风格报告"
-      style={{ width: '75%', height: 'auto', objectFit: 'contain', display: 'block' }}
+      style={{ width: '80%', height: 'auto', display: 'block', objectFit: 'contain' }}
     />
   ) : (
     <img
       src="/shangpin.png"
       alt="商品判断示例"
-      style={{ width: '65%', height: 'auto', objectFit: 'contain', display: 'block' }}
+      style={{ width: '70%', height: 'auto', display: 'block', objectFit: 'contain' }}
     />
   )}
 </div>
@@ -338,20 +340,35 @@ export default function HomePage() {
               AIFFD 希望帮助用户从「被商品吸引」转向「主动判断是否适合自己」。
             </p>
           </div>
-          {/* 三个关键词 — 底部 */}
-          <div className="grid grid-cols-3 gap-0">
-            {keywords.map((kw, i) => (
-              <div key={i} style={{
-                padding: '28px 0', textAlign: 'center',
-                borderRight: i < keywords.length - 1 ? `0.5px solid ${C.border}` : 'none',
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
-              }}>
-                <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '2px', color: C.gold }}>0{i + 1}</span>
-                <span style={{ fontFamily: 'Georgia, serif', fontSize: '20px', fontWeight: 400, color: C.h3 }}>{kw}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+         {/* 三个关键词 — 底部 */}
+<div className="grid grid-cols-3 gap-0">
+  <div style={{
+    padding: '36px 0', textAlign: 'center',
+    background: '#F5F0E8',
+    borderRight: `0.5px solid #e0d8c8`,
+    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px',
+  }}>
+    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '2px', color: '#B8973A' }}>01</span>
+    <span style={{ fontFamily: 'Georgia, serif', fontSize: '20px', fontWeight: 400, color: '#2a2219' }}>少买错</span>
+  </div>
+  <div style={{
+    padding: '36px 0', textAlign: 'center',
+    background: '#E8E2D6',
+    borderRight: `0.5px solid #d8d0c4`,
+    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px',
+  }}>
+    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '2px', color: '#B8973A' }}>02</span>
+    <span style={{ fontFamily: 'Georgia, serif', fontSize: '20px', fontWeight: 400, color: '#2a2219' }}>穿得稳</span>
+  </div>
+  <div style={{
+    padding: '36px 0', textAlign: 'center',
+    background: '#2a2219',
+    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px',
+  }}>
+    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '2px', color: '#B8973A' }}>03</span>
+    <span style={{ fontFamily: 'Georgia, serif', fontSize: '20px', fontWeight: 400, color: '#f0ece0' }}>建立长期风格资产</span>
+  </div>
+</div>
       </section>
 
       <div className="divider-lux" />
