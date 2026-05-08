@@ -184,7 +184,7 @@ export default function HomePage() {
             <h1 className="font-normal mb-6" style={{ fontFamily: 'Georgia, serif', fontSize: '42px', lineHeight: '1.2', color: C.h1 }}>
               40+ 女性的<em style={{ color: C.gold, fontStyle: 'normal' }}>风格档案</em>系统
             </h1>
-            <p className="mb-10 max-w-lg mx-auto" style={{ fontFamily: 'Inter, sans-serif', fontSize: '17px', color: C.sub, lineHeight: '1.9' }}>
+            <p className="mb-10 max-w-xl mx-auto" style={{ fontFamily: 'Inter, sans-serif', fontSize: '17px', color: C.sub, lineHeight: '1.9' }}>
               从体型、色彩、风格与场景出发，减少无效购买，建立长期审美判断。
             </p>
             <div className="flex gap-4 flex-wrap items-center justify-center mb-5">
