@@ -268,48 +268,11 @@ export default function HomePage() {
               </div>
               {/* 配图区 */}
               <div style={{ background: i === 0 ? '#f7f4ef' : '#f4f4f2', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px' }}>
-                {i === 0 ? (
-                  <svg viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', maxWidth: '180px' }}>
-                    <rect x="30" y="20" width="140" height="180" rx="2" fill="none" stroke="#B8973A" strokeWidth="0.8" />
-                    <rect x="42" y="32" width="116" height="156" rx="1" fill="#ede8df" />
-                    <line x1="42" y1="60" x2="158" y2="60" stroke="#B8973A" strokeWidth="0.5" />
-                    <rect x="55" y="42" width="50" height="6" rx="1" fill="#B8973A" opacity="0.5" />
-                    <rect x="55" y="70" width="90" height="3" rx="1" fill="#ccc" />
-                    <rect x="55" y="80" width="75" height="3" rx="1" fill="#ccc" />
-                    <rect x="55" y="90" width="82" height="3" rx="1" fill="#ccc" />
-                    <rect x="55" y="110" width="90" height="3" rx="1" fill="#ddd" />
-                    <rect x="55" y="120" width="60" height="3" rx="1" fill="#ddd" />
-                    <rect x="55" y="130" width="78" height="3" rx="1" fill="#ddd" />
-                    <rect x="55" y="150" width="90" height="3" rx="1" fill="#e0d8cc" />
-                    <rect x="55" y="160" width="50" height="3" rx="1" fill="#e0d8cc" />
-                    <rect x="55" y="170" width="68" height="3" rx="1" fill="#e0d8cc" />
-                    <circle cx="158" cy="210" r="18" fill="none" stroke="#B8973A" strokeWidth="0.8" />
-                    <circle cx="158" cy="210" r="12" fill="#B8973A" opacity="0.15" />
-                    <line x1="152" y1="210" x2="164" y2="210" stroke="#B8973A" strokeWidth="1.2" />
-                    <line x1="158" y1="204" x2="158" y2="216" stroke="#B8973A" strokeWidth="1.2" />
-                  </svg>
-                ) : (
-                  <svg viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', maxWidth: '180px' }}>
-                    <rect x="20" y="30" width="100" height="130" rx="2" fill="none" stroke="#B8973A" strokeWidth="0.8" />
-                    <rect x="28" y="38" width="84" height="114" rx="1" fill="#ede8df" />
-                    <rect x="36" y="50" width="68" height="50" rx="1" fill="#ddd5c8" />
-                    <line x1="50" y1="65" x2="90" y2="65" stroke="#B8973A" strokeWidth="0.4" strokeDasharray="3,2" />
-                    <line x1="50" y1="75" x2="90" y2="75" stroke="#B8973A" strokeWidth="0.4" strokeDasharray="3,2" />
-                    <rect x="36" y="108" width="50" height="3" rx="1" fill="#ccc" />
-                    <rect x="36" y="116" width="68" height="3" rx="1" fill="#ccc" />
-                    <rect x="36" y="124" width="42" height="3" rx="1" fill="#ccc" />
-                    <rect x="90" y="80" width="90" height="110" rx="2" fill="none" stroke="#B8973A" strokeWidth="0.8" />
-                    <rect x="98" y="88" width="74" height="94" rx="1" fill="#f0ece4" />
-                    <rect x="105" y="95" width="60" height="3" rx="1" fill="#B8973A" opacity="0.6" />
-                    <rect x="105" y="106" width="60" height="36" rx="1" fill="#e8e0d4" />
-                    <rect x="105" y="148" width="40" height="3" rx="1" fill="#ccc" />
-                    <rect x="105" y="156" width="55" height="3" rx="1" fill="#ccc" />
-                    <rect x="105" y="164" width="48" height="3" rx="1" fill="#ccc" />
-                    <circle cx="148" cy="123" r="8" fill="none" stroke="#B8973A" strokeWidth="0.8" />
-                    <line x1="144" y1="123" x2="152" y2="123" stroke="#B8973A" strokeWidth="1" />
-                    <line x1="148" y1="119" x2="148" y2="127" stroke="#B8973A" strokeWidth="1" />
-                  </svg>
-                )}
+                <img
+                  src={i === 0 ? '/stylereport.png' : '/shangpin.png'}
+                  alt={i === 0 ? 'AIFFD 风格报告' : '商品判断示例'}
+                  style={{ width: '100%', maxWidth: '220px', height: 'auto', display: 'block', objectFit: 'contain' }}
+                />
               </div>
             </div>
           ))}
