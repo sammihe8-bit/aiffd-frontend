@@ -184,7 +184,7 @@ export default function HomePage() {
             <h1 className="font-normal mb-6" style={{ fontFamily: 'Georgia, serif', fontSize: '42px', lineHeight: '1.2', color: C.h1 }}>
               40+ 女性的<em style={{ color: C.gold, fontStyle: 'normal' }}>风格档案</em>系统
             </h1>
-            <p className="mb-10 max-w-xl mx-auto" style={{ fontFamily: 'Inter, sans-serif', fontSize: '17px', color: C.sub, lineHeight: '1.9' }}>
+            <p className="mb-10 max-w-lg mx-auto" style={{ fontFamily: 'Inter, sans-serif', fontSize: '17px', color: C.sub, lineHeight: '1.9' }}>
               从体型、色彩、风格与场景出发，减少无效购买，建立长期审美判断。
             </p>
             <div className="flex gap-4 flex-wrap items-center justify-center mb-5">
@@ -246,19 +246,23 @@ export default function HomePage() {
             从<em style={{ color: C.gold, fontStyle: 'normal' }}>个人档案</em>，到<em style={{ color: C.gold, fontStyle: 'normal' }}>商品判断</em>
           </h2>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', border: '1px solid #e0e0d8' }}>
+        <div style={{ background: '#f7f4ef', padding: '0', display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
           {paths.map((p, i) => (
-            <div key={i} style={{ borderRight: i === 0 ? '1px solid #e0e0d8' : 'none', display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
+            <div key={i} style={{
+              borderRight: i === 0 ? '0.5px solid #e0d8cc' : 'none',
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+            }}>
               {/* 文字区 */}
-              <div style={{ padding: '48px 32px 52px', borderRight: '1px solid #e0e0d8' }}>
-                <div style={{ height: '3px', background: C.gold, marginBottom: '36px', width: '100%' }} />
+              <div style={{ padding: '52px 36px 56px' }}>
+                <div style={{ height: '2px', background: C.gold, marginBottom: '36px', width: '40px' }} />
                 <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '4px', color: C.gold, marginBottom: '18px' }}>{p.tag}</p>
-                <h3 style={{ fontFamily: 'Georgia, serif', fontSize: '24px', fontWeight: 400, color: C.h3, marginBottom: '28px' }}>{p.title}</h3>
+                <h3 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', fontWeight: 400, color: C.h3, marginBottom: '28px' }}>{p.title}</h3>
                 <div>
                   {p.items.map((item, j) => (
-                    <div key={j} style={{ display: 'flex', gap: '12px', alignItems: 'baseline', padding: '10px 0', borderBottom: '0.5px solid #ebebeb', borderTop: j === 0 ? '0.5px solid #ebebeb' : 'none' }}>
+                    <div key={j} style={{ display: 'flex', gap: '12px', alignItems: 'baseline', padding: '9px 0', borderBottom: '0.5px solid #e8e2d8', borderTop: j === 0 ? '0.5px solid #e8e2d8' : 'none' }}>
                       <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', color: C.gold, flexShrink: 0 }}>—</span>
-                      <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: C.muted, lineHeight: '1.75' }}>{item}</span>
+                      <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, lineHeight: '1.75' }}>{item}</span>
                     </div>
                   ))}
                 </div>
@@ -266,12 +270,12 @@ export default function HomePage() {
                   <Link to={p.to} className={p.primary ? 'btn-primary' : 'btn-outline'}>{p.btn}</Link>
                 </div>
               </div>
-              {/* 配图区 */}
-              <div style={{ background: i === 0 ? '#f7f4ef' : '#f4f4f2', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px' }}>
+              {/* 配图区 — 同背景，无边框 */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 28px' }}>
                 <img
                   src={i === 0 ? '/stylereport.png' : '/shangpin.png'}
                   alt={i === 0 ? 'AIFFD 风格报告' : '商品判断示例'}
-                  style={{ width: '100%', maxWidth: '220px', height: 'auto', display: 'block', objectFit: 'contain' }}
+                  style={{ width: '100%', maxWidth: '200px', height: 'auto', display: 'block', objectFit: 'contain' }}
                 />
               </div>
             </div>
