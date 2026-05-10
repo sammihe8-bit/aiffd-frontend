@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Link, useNavigate } from 'react-router-dom'
 
 const C = {
@@ -84,7 +84,6 @@ function ProgressBar({ current, total, label }: { current: number; total: number
 }
 
 export default function BodyTestPage() {
-  const navigate = useNavigate()
   const [step, setStep] = useState(0)
   const [method, setMethod] = useState<'manual' | 'ai' | ''>('')
   const [sheldon, setSheldon] = useState('')
