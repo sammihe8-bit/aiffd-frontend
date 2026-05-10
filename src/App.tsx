@@ -6,6 +6,7 @@ import ProfilePage from './pages/ProfilePage'
 import OnboardingPage from './pages/OnboardingPage'
 import PlaceholderPage from './pages/PlaceholderPage'
 import PrivacyPage from './pages/PrivacyPage'
+import BodyTestPage from './pages/BodyTestPage'
 import { useAuth } from './hooks/useAuth'
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -24,6 +25,16 @@ export default function App() {
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/onboarding" element={<OnboardingPage />} />
             <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/test/body" element={<BodyTestPage />} />
+            <Route path="/test/color" element={
+              <PlaceholderPage title="色彩测试" description="色彩测试即将上线，完成体型测试后继续" />
+            } />
+            <Route path="/test/style" element={
+              <PlaceholderPage title="风格测试" description="风格测试即将上线" />
+            } />
+            <Route path="/test/fashion" element={
+              <PlaceholderPage title="时尚个性测试" description="时尚个性测试即将上线" />
+            } />
             <Route path="/profile" element={
               <PrivateRoute><ProfilePage /></PrivateRoute>
             } />
