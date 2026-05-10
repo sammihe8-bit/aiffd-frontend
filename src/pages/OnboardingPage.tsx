@@ -1,480 +1,217 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 
-const BODY_TYPES = [
-  { id: 'xiju',    name: '戏剧型', img: '/xiju.png',    keywords: ['高挑','骨感','线条分明'], desc: '身形挺拔，骨骼感强，线条硬朗利落' },
-  { id: 'langman', name: '浪漫型', img: '/langman.png', keywords: ['曲线','丰盈','柔美'],    desc: '曲线丰盈，身形圆润，女性气息浓郁' },
-  { id: 'ziran',   name: '自然型', img: '/ziran.png',   keywords: ['匀称','平衡','自然'],    desc: '比例匀称，不突出也不平淡，适应性强' },
-  { id: 'lingqiao',name: '灵巧型', img: '/lingqiao.png',keywords: ['娇小','精致','轻盈'],   desc: '小巧精致，骨架细小，整体轻盈感' },
-  { id: 'jindain', name: '今黛型', img: '/jindain.png', keywords: ['纤细','直线','中性'],    desc: '身形纤细修长，直线条，现代感强' },
-]
-
-const STYLE_CONCERNS = [
-  '买了很多衣服但不知道怎么搭',
-  '每次购物都后悔，买回来不穿',
-  '不知道什么颜色适合自己',
-  '场合着装总是拿不准',
-  '体型有特点，普通搭配不适合',
-  '风格在变化，旧衣服越来越难搭',
-]
-
-const STYLE_DIRECTIONS = [
-  '经典优雅', '简约现代', '休闲自然',
-  '浪漫女性', '知性干练', '时尚前卫',
-  '复古格调', '运动活力',
-]
-
-const BUDGET_OPTIONS = [
-  { label: '轻度消费', sub: '单件 500 元以内' },
-  { label: '中度消费', sub: '单件 500–2000 元' },
-  { label: '品质消费', sub: '单件 2000–5000 元' },
-  { label: '高端消费', sub: '单件 5000 元以上' },
-]
-
-const SCENES = ['职场办公', '商务出行', '日常休闲', '社交聚会', '亲子活动', '旅行度假', '重要场合']
-
-const COLOR_PREFERENCES = [
-  { label: '暖色系', sub: '米、橙、棕、暖红、驼色' },
-  { label: '冷色系', sub: '宝蓝、冰粉、紫、灰蓝' },
-  { label: '中性色', sub: '黑、白、灰、深海军蓝' },
-  { label: '不确定', sub: '需要帮我判断' },
-]
-
-interface FormData {
-  ageRange: string
-  height: string
-  weight: string
-  scenes: string[]
-  concerns: string[]
-  bodyType: string
-  skinTone: string
-  hairColor: string
-  colorPreference: string
-  styleDirections: string[]
-  budget: string
+const C = {
+  h1: '#111111', h2: '#222222', sub: '#444444',
+  body: '#666666', muted: '#999999', gold: '#B8973A', border: '#e8e8e4',
 }
 
-const STEPS = ['基础信息', '体型判断', '色彩信息', '风格偏好', '专属档案']
+const TESTS = [
+  {
+    num: '01', tag: 'BODY TEST', title: '体型测试',
+    desc: '从谢尔顿三型、骨骼轮廓到脂肪分布，建立你的三层体型档案，生成复合体型代码。',
+    steps: ['体质底层识别', '骨骼轮廓判断', '脂肪分布自评', '三围数据输入', '气血态测试'],
+    duration: '约 8 分钟', to: '/test/body', available: true,
+  },
+  {
+    num: '02', tag: 'COLOR TEST', title: '色彩测试',
+    desc: '基于肤色、发色与眼色判断你的色彩季型，建立个人配色系统，减少买错颜色的概率。',
+    steps: ['肤色基调判断', '发色与眼色记录', '色彩季型匹配', '个人配色方案'],
+    duration: '约 6 分钟', to: '/test/color', available: false,
+  },
+  {
+    num: '03', tag: 'STYLE TEST', title: '风格测试',
+    desc: '结合体型与色彩底色，判断你的风格适合度。如已完成前两项测试，结论将更精准。',
+    steps: ['风格倾向问卷', '场景适配分析', '风格关键词生成', '穿搭方向建议'],
+    duration: '约 10 分钟', to: '/test/style', available: false,
+  },
+  {
+    num: '04', tag: 'FASHION TEST', title: '时尚个性测试',
+    desc: '通过生活方式、消费态度与审美向往，挖掘你的后天风格基因，生成专属个性标签。',
+    steps: ['生活方式问卷', '消费态度判断', '审美向往分析', '个性标签生成'],
+    duration: '约 8 分钟', to: '/test/fashion', available: false,
+  },
+]
 
-function BodyTypeImage({ src, alt }: { src: string; alt: string }) {
-  const [imgError, setImgError] = useState(false)
-  const [imgLoaded, setImgLoaded] = useState(false)
+function ConsentScreen({ onAgree }: { onAgree: () => void }) {
+  const [consent, setConsent] = useState({ basic: false, photo: false, stylist: false, ai: false })
+  const canProceed = consent.basic && consent.photo && consent.stylist
+
   return (
-    <div className="aspect-[3/5] overflow-hidden mb-3 bg-[#f0ede8] relative">
-      {!imgLoaded && !imgError && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-6 h-6 border border-[#ddd] border-t-[#999] rounded-full animate-spin" />
+    <div style={{ minHeight: '100vh', background: '#fafaf8' }}>
+      <div style={{ maxWidth: '680px', margin: '0 auto', padding: '64px 24px 96px' }}>
+        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '4px', color: C.gold, marginBottom: '12px' }}>AIFFD 智搭</p>
+        <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '28px', fontWeight: 400, color: C.h1, marginBottom: '8px' }}>数据使用授权</h1>
+        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginBottom: '40px' }}>风格测试将收集您的个人偏好与图像信息，请阅读并确认以下授权</p>
+
+        <div style={{ background: '#f7f4ef', padding: '20px 24px', borderLeft: `3px solid ${C.gold}`, marginBottom: '32px' }}>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.sub, lineHeight: '1.9', marginBottom: '12px' }}>
+            本平台依据《个人信息保护法》收集您的风格档案数据，用于生成专属 Style Profile、AI 商品分析，以及在您授权后共享给第三方造型师提供服务。数据存储于境外服务器，采用加密保护。
+          </p>
+          <Link to="/privacy" target="_blank" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.gold, letterSpacing: '1px' }}>
+            查看完整隐私政策 →
+          </Link>
         </div>
-      )}
-      {imgError ? (
-        <div className="w-full h-full flex items-center justify-center">
-          <span className="text-[10px] text-[#bbb]" style={{ fontFamily: 'Inter, sans-serif' }}>{alt}</span>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '32px' }}>
+          {[
+            { id: 'basic', label: '必选', text: '我已阅读并同意《AIFFD 用户隐私政策与数据使用协议》，同意 AIFFD 按协议约定收集和使用我的个人信息（含风格档案数据）。', key: 'basic' as const },
+            { id: 'photo', label: '必选', text: '我同意 AIFFD 收集我上传的照片（包括个人照片及服装图片），用于生成风格档案和 AI 商品分析。', key: 'photo' as const },
+            { id: 'stylist', label: '必选', text: '我同意在我选择造型师服务时，将我的风格档案及相关照片共享给为我提供服务的第三方造型师。', key: 'stylist' as const },
+            { id: 'ai', label: '可选', text: '我同意将我的风格数据（去标识化处理后）用于改进 AIFFD AI 模型。可随时在账户设置中撤回。', key: 'ai' as const },
+          ].map(item => (
+            <label key={item.id} htmlFor={item.id} style={{
+              display: 'flex', gap: '12px', alignItems: 'flex-start', cursor: 'pointer',
+              padding: '14px 16px',
+              border: `0.5px solid ${consent[item.key] ? C.gold : C.border}`,
+              background: consent[item.key] ? '#fdf8ee' : '#fff',
+              transition: 'all 0.2s',
+            }}>
+              <input id={item.id} type="checkbox" checked={consent[item.key]}
+                onChange={() => setConsent(c => ({ ...c, [item.key]: !c[item.key] }))}
+                style={{ marginTop: '3px', accentColor: C.gold, flexShrink: 0, width: '14px', height: '14px' }} />
+              <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.body, lineHeight: '1.7' }}>
+                <strong>【{item.label}】</strong>{item.text}
+              </span>
+            </label>
+          ))}
         </div>
-      ) : (
-        <img
-          src={src} alt={alt}
-          className={`w-full h-full object-cover object-top transition-opacity duration-300 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
-          onLoad={() => setImgLoaded(true)}
-          onError={() => { setImgError(true); setImgLoaded(true) }}
-        />
-      )}
+
+        {!canProceed && (
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, textAlign: 'center', marginBottom: '16px' }}>
+            请勾选所有必选项后继续
+          </p>
+        )}
+
+        <button onClick={() => canProceed && onAgree()} style={{
+          width: '100%', padding: '16px',
+          background: canProceed ? C.h1 : '#ccc',
+          color: '#fff', border: 'none',
+          cursor: canProceed ? 'pointer' : 'not-allowed',
+          fontFamily: 'Inter, sans-serif', fontSize: '13px', letterSpacing: '2px',
+          transition: 'background 0.2s',
+        }}>
+          同意并进入测试中心
+        </button>
+      </div>
     </div>
   )
 }
 
-export default function OnboardingPage() {
-  const navigate = useNavigate()
-  const [step, setStep] = useState(0)
-  const [consent, setConsent] = useState({ basic: false, photo: false, stylist: false, ai: false })
-  const [form, setForm] = useState<FormData>({
-    ageRange: '', height: '', weight: '',
-    scenes: [], concerns: [], bodyType: '',
-    skinTone: '', hairColor: '', colorPreference: '',
-    styleDirections: [], budget: '',
-  })
-
-  const toggle = (field: 'scenes' | 'concerns' | 'styleDirections', val: string) => {
-    setForm(prev => ({
-      ...prev,
-      [field]: prev[field].includes(val) ? prev[field].filter(v => v !== val) : [...prev[field], val],
-    }))
-  }
-
-  const canProceed = consent.basic && consent.photo && consent.stylist
-
-  const next = () => setStep(s => Math.min(s + 1, 4))
-  const prev = () => setStep(s => Math.max(s - 1, 0))
-  const finish = () => {
-    localStorage.setItem('aiffd_profile', JSON.stringify({ ...form, consent }))
-    navigate('/profile')
-  }
-
-  const Chip = ({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) => (
-    <button onClick={onClick}
-      className={`px-4 py-2 text-[12px] border transition-all cursor-pointer ${
-        active ? 'border-[#B8973A] text-[#B8973A] bg-[#fdf8ee]' : 'border-[#e8e8e4] text-[#666] hover:border-[#999]'
-      }`}
-      style={{ fontFamily: 'Inter, sans-serif', letterSpacing: '0.5px' }}>
-      {label}
-    </button>
-  )
-
-  const ConsentBox = ({
-    id, checked, onChange, children
-  }: { id: string; checked: boolean; onChange: () => void; children: React.ReactNode }) => (
-    <label htmlFor={id} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', cursor: 'pointer', padding: '14px 16px', border: `0.5px solid ${checked ? '#B8973A' : '#e8e8e4'}`, background: checked ? '#fdf8ee' : '#fff', transition: 'all 0.2s' }}>
-      <input
-        id={id} type="checkbox" checked={checked} onChange={onChange}
-        style={{ marginTop: '3px', accentColor: '#B8973A', flexShrink: 0, width: '14px', height: '14px' }}
-      />
-      <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: '#555', lineHeight: '1.7' }}>
-        {children}
-      </span>
-    </label>
-  )
-
+function TestCenter() {
   return (
-    <div className="min-h-screen bg-cream">
-      <div className="max-w-3xl mx-auto px-6 py-16">
+    <div style={{ minHeight: '100vh', background: '#fafaf8' }}>
+      <div style={{ maxWidth: '900px', margin: '0 auto', padding: '64px 24px 96px' }}>
 
-        {/* Progress — 只在 step > 0 显示 */}
-        {step > 0 && (
-          <div className="mb-16">
-            <div className="flex items-center justify-between">
-              {STEPS.map((s, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <div className={`w-6 h-6 flex items-center justify-center text-[10px] border transition-all
-                    ${i === step - 1 ? 'border-[#B8973A] text-[#B8973A]'
-                      : i < step - 1 ? 'border-[#1a1a1a] bg-[#1a1a1a] text-white'
-                      : 'border-[#ddd] text-[#ccc]'}`}
-                    style={{ fontFamily: 'Inter, sans-serif' }}>
-                    {i < step - 1 ? '✓' : i + 1}
-                  </div>
-                  <span className={`text-[10px] tracking-[1.5px] hidden md:block transition-colors ${
-                    i === step - 1 ? 'text-[#1a1a1a]' : 'text-[#bbb]'
-                  }`} style={{ fontFamily: 'Inter, sans-serif' }}>{s}</span>
-                  {i < 4 && <div className={`w-8 h-[0.5px] mx-2 ${i < step - 1 ? 'bg-[#1a1a1a]' : 'bg-[#e8e8e4]'}`} />}
-                </div>
-              ))}
+        <div style={{ textAlign: 'center', marginBottom: '56px' }}>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '4px', color: C.gold, marginBottom: '16px' }}>AIFFD 测试中心</p>
+          <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '32px', fontWeight: 400, color: C.h1, marginBottom: '12px', lineHeight: '1.3' }}>
+            建立你的<em style={{ color: C.gold, fontStyle: 'normal' }}>完整风格档案</em>
+          </h1>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '15px', color: C.sub, lineHeight: '1.8', maxWidth: '540px', margin: '0 auto' }}>
+            四项测试，从先天底色到后天个性，构建专属于你的风格判断系统。可按顺序完成，也可单独参加任意一项。
+          </p>
+        </div>
+
+        {/* 推荐顺序 */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '48px', flexWrap: 'wrap' }}>
+          {[
+            { label: '体型测试', active: true },
+            { label: '色彩测试', active: false },
+            { label: '风格测试', active: false },
+            { label: '时尚个性', active: false },
+          ].map((t, i) => (
+            <div key={t.label} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{
+                fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '1px',
+                color: t.active ? C.gold : C.muted,
+                padding: '4px 12px',
+                border: `0.5px solid ${t.active ? C.gold : C.border}`,
+              }}>{t.label}</span>
+              {i < 3 && <span style={{ color: C.border, fontSize: '12px' }}>→</span>}
             </div>
-          </div>
-        )}
+          ))}
+        </div>
 
-        {/* ── STEP 0: 隐私同意 ── */}
-        {step === 0 && (
-          <div className="space-y-10">
-            <div>
-              <p className="label-lux mb-2" style={{ color: '#B8973A' }}>开始之前</p>
-              <h2 className="text-[28px] font-normal" style={{ fontFamily: 'Georgia, serif' }}>数据使用授权</h2>
-              <p className="text-[13px] text-[#888] mt-2" style={{ fontFamily: 'Inter, sans-serif' }}>
-                风格测试将收集您的个人偏好与图像信息，请阅读并确认以下授权
-              </p>
-            </div>
-
-            <div style={{ background: '#f7f4ef', padding: '24px', borderLeft: '3px solid #B8973A' }}>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: '#666', lineHeight: '1.9' }}>
-                本平台依据《个人信息保护法》收集您的风格档案数据，用于生成专属 Style Profile、AI 商品分析，以及在您授权后共享给第三方造型师提供服务。数据存储于境外服务器，采用加密保护。
-              </p>
-              <Link to="/privacy" target="_blank"
-                style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: '#B8973A', letterSpacing: '1px', display: 'inline-block', marginTop: '12px' }}>
-                查看完整隐私政策 →
-              </Link>
-            </div>
-
-            <div className="space-y-3">
-              <ConsentBox id="consent-basic" checked={consent.basic} onChange={() => setConsent(c => ({ ...c, basic: !c.basic }))}>
-                <strong>【必选】</strong>我已阅读并同意《AIFFD 用户隐私政策与数据使用协议》，同意 AIFFD 按协议约定收集和使用我的个人信息（含风格档案数据）。
-              </ConsentBox>
-
-              <ConsentBox id="consent-photo" checked={consent.photo} onChange={() => setConsent(c => ({ ...c, photo: !c.photo }))}>
-                <strong>【必选】</strong>我同意 AIFFD 收集我上传的照片（包括个人照片及服装图片），用于生成风格档案和 AI 商品分析。
-              </ConsentBox>
-
-              <ConsentBox id="consent-stylist" checked={consent.stylist} onChange={() => setConsent(c => ({ ...c, stylist: !c.stylist }))}>
-                <strong>【必选】</strong>我同意在我选择造型师服务时，将我的风格档案及相关照片共享给为我提供服务的第三方造型师。
-              </ConsentBox>
-
-              <ConsentBox id="consent-ai" checked={consent.ai} onChange={() => setConsent(c => ({ ...c, ai: !c.ai }))}>
-                <strong>【可选】</strong>我同意将我的风格数据（去标识化处理后）用于改进 AIFFD AI 模型。可随时在账户设置中撤回。
-              </ConsentBox>
-            </div>
-
-            {!canProceed && (
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: '#999', textAlign: 'center' }}>
-                请勾选所有必选项后继续
-              </p>
-            )}
-
-            <div className="flex justify-end">
-              <button
-                onClick={() => canProceed && next()}
-                style={{
-                  fontFamily: 'Inter, sans-serif', fontSize: '13px', letterSpacing: '2px',
-                  padding: '14px 36px', border: 'none', cursor: canProceed ? 'pointer' : 'not-allowed',
-                  background: canProceed ? '#1a1a1a' : '#ccc', color: '#fff', transition: 'background 0.2s',
+        {/* 测试卡片 */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0', border: `1px solid ${C.border}` }}>
+          {TESTS.map((test, i) => (
+            <div key={test.num} style={{
+              borderRight: i % 2 === 0 ? `1px solid ${C.border}` : 'none',
+              borderBottom: i < 2 ? `1px solid ${C.border}` : 'none',
+              padding: '40px 36px',
+              background: test.available ? '#fff' : '#fafaf8',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '20px' }}>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '4px', color: C.gold }}>{test.tag}</p>
+                <span style={{
+                  fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '2px',
+                  color: test.available ? '#4a8c4a' : C.muted,
+                  border: `0.5px solid ${test.available ? '#4a8c4a' : C.border}`,
+                  padding: '3px 8px',
                 }}>
-                同意并开始测试
-              </button>
-            </div>
-          </div>
-        )}
+                  {test.available ? '可开始' : '即将上线'}
+                </span>
+              </div>
 
-        {/* ── STEP 1: 基础信息 ── */}
-        {step === 1 && (
-          <div className="space-y-10">
-            <div>
-              <p className="label-lux mb-2">Step 01</p>
-              <h2 className="text-[28px] font-normal" style={{ fontFamily: 'Georgia, serif' }}>基础信息</h2>
-              <p className="text-[13px] text-[#888] mt-2" style={{ fontFamily: 'Inter, sans-serif' }}>帮助我们了解你的基本情况</p>
-            </div>
-            <div className="space-y-8">
-              <div>
-                <p className="label-lux mb-4">年龄段</p>
-                <div className="flex flex-wrap gap-3">
-                  {['30岁以下', '30–39岁', '40–49岁', '50–59岁', '60岁以上'].map(a => (
-                    <Chip key={a} label={a} active={form.ageRange === a} onClick={() => setForm(f => ({ ...f, ageRange: a }))} />
-                  ))}
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <p className="label-lux mb-3">身高 (cm)</p>
-                  <input className="input-lux" placeholder="例：165" value={form.height}
-                    onChange={e => setForm(f => ({ ...f, height: e.target.value }))} />
-                </div>
-                <div>
-                  <p className="label-lux mb-3">体重 (kg)</p>
-                  <input className="input-lux" placeholder="例：55" value={form.weight}
-                    onChange={e => setForm(f => ({ ...f, weight: e.target.value }))} />
-                </div>
-              </div>
-              <div>
-                <p className="label-lux mb-4">常见生活场景（可多选）</p>
-                <div className="flex flex-wrap gap-3">
-                  {SCENES.map(s => (
-                    <Chip key={s} label={s} active={form.scenes.includes(s)} onClick={() => toggle('scenes', s)} />
-                  ))}
-                </div>
-              </div>
-              <div>
-                <p className="label-lux mb-4">当前最主要的穿衣困扰（可多选）</p>
-                <div className="flex flex-wrap gap-3">
-                  {STYLE_CONCERNS.map(c => (
-                    <Chip key={c} label={c} active={form.concerns.includes(c)} onClick={() => toggle('concerns', c)} />
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ── STEP 2: 体型判断 ── */}
-        {step === 2 && (
-          <div className="space-y-10">
-            <div>
-              <p className="label-lux mb-2">Step 02</p>
-              <h2 className="text-[28px] font-normal" style={{ fontFamily: 'Georgia, serif' }}>体型与比例判断</h2>
-              <p className="text-[13px] text-[#888] mt-2" style={{ fontFamily: 'Inter, sans-serif' }}>选择最接近你身形特征的类型</p>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-              {BODY_TYPES.map(bt => (
-                <button key={bt.id} onClick={() => setForm(f => ({ ...f, bodyType: bt.id }))}
-                  className={`border p-3 text-left transition-all cursor-pointer ${
-                    form.bodyType === bt.id ? 'border-[#B8973A] bg-[#fdf8ee]' : 'border-[#e8e8e4] hover:border-[#ccc]'
-                  }`}>
-                  <BodyTypeImage src={bt.img} alt={bt.name} />
-                  <p className={`text-[12px] mb-1 ${form.bodyType === bt.id ? 'text-[#B8973A]' : 'text-[#1a1a1a]'}`}
-                    style={{ fontFamily: 'Inter, sans-serif', letterSpacing: '1px' }}>{bt.name}</p>
-                  <p className="text-[10px] text-[#999] leading-[1.6]" style={{ fontFamily: 'Inter, sans-serif' }}>{bt.desc}</p>
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {bt.keywords.map(k => (
-                      <span key={k} className="text-[9px] text-[#B8973A] border border-[#e8c97a] px-1"
-                        style={{ fontFamily: 'Inter, sans-serif' }}>{k}</span>
-                    ))}
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* ── STEP 3: 色彩信息 ── */}
-        {step === 3 && (
-          <div className="space-y-10">
-            <div>
-              <p className="label-lux mb-2">Step 03</p>
-              <h2 className="text-[28px] font-normal" style={{ fontFamily: 'Georgia, serif' }}>色彩与外貌信息</h2>
-              <p className="text-[13px] text-[#888] mt-2" style={{ fontFamily: 'Inter, sans-serif' }}>帮助 AI 判断你的色彩季型</p>
-            </div>
-            <div className="space-y-8">
-              <div>
-                <p className="label-lux mb-4">肤色倾向</p>
-                <div className="flex flex-wrap gap-3">
-                  {['冷白皮', '自然黄', '小麦色', '偏深色', '混合型'].map(s => (
-                    <Chip key={s} label={s} active={form.skinTone === s} onClick={() => setForm(f => ({ ...f, skinTone: s }))} />
-                  ))}
-                </div>
-              </div>
-              <div>
-                <p className="label-lux mb-4">发色</p>
-                <div className="flex flex-wrap gap-3">
-                  {['纯黑', '深棕', '浅棕', '暖棕', '染色（冷色系）', '染色（暖色系）'].map(h => (
-                    <Chip key={h} label={h} active={form.hairColor === h} onClick={() => setForm(f => ({ ...f, hairColor: h }))} />
-                  ))}
-                </div>
-              </div>
-              <div>
-                <p className="label-lux mb-4">你觉得自己穿哪类颜色更好看？</p>
-                <div className="grid grid-cols-2 gap-4">
-                  {COLOR_PREFERENCES.map(opt => (
-                    <button key={opt.label}
-                      onClick={() => setForm(f => ({ ...f, colorPreference: opt.label }))}
-                      className={`border p-4 text-left transition-all cursor-pointer ${
-                        form.colorPreference === opt.label ? 'border-[#B8973A] bg-[#fdf8ee]' : 'border-[#e8e8e4] hover:border-[#ccc]'
-                      }`} style={{ fontFamily: 'Inter, sans-serif' }}>
-                      <p className={`text-[13px] mb-1 ${form.colorPreference === opt.label ? 'text-[#B8973A]' : 'text-[#1a1a1a]'}`}>{opt.label}</p>
-                      <p className="text-[11px] text-[#999]">{opt.sub}</p>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ── STEP 4: 风格偏好 ── */}
-        {step === 4 && (
-          <div className="space-y-10">
-            <div>
-              <p className="label-lux mb-2">Step 04</p>
-              <h2 className="text-[28px] font-normal" style={{ fontFamily: 'Georgia, serif' }}>风格偏好与预算</h2>
-              <p className="text-[13px] text-[#888] mt-2" style={{ fontFamily: 'Inter, sans-serif' }}>帮助系统为你匹配最合适的建议</p>
-            </div>
-            <div className="space-y-8">
-              <div>
-                <p className="label-lux mb-4">喜欢的风格方向（可多选）</p>
-                <div className="flex flex-wrap gap-3">
-                  {STYLE_DIRECTIONS.map(s => (
-                    <Chip key={s} label={s} active={form.styleDirections.includes(s)} onClick={() => toggle('styleDirections', s)} />
-                  ))}
-                </div>
-              </div>
-              <div>
-                <p className="label-lux mb-4">单件服装常用预算</p>
-                <div className="grid grid-cols-2 gap-4">
-                  {BUDGET_OPTIONS.map(b => (
-                    <button key={b.label} onClick={() => setForm(f => ({ ...f, budget: b.label }))}
-                      className={`border p-4 text-left transition-all cursor-pointer ${
-                        form.budget === b.label ? 'border-[#B8973A] bg-[#fdf8ee]' : 'border-[#e8e8e4] hover:border-[#ccc]'
-                      }`} style={{ fontFamily: 'Inter, sans-serif' }}>
-                      <p className={`text-[13px] mb-1 ${form.budget === b.label ? 'text-[#B8973A]' : 'text-[#1a1a1a]'}`}>{b.label}</p>
-                      <p className="text-[11px] text-[#999]">{b.sub}</p>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ── STEP 5: 结果 ── */}
-        {step === 5 && (
-          <div className="space-y-10">
-            <div>
-              <p className="label-lux mb-2" style={{ color: '#B8973A' }}>Style Profile 1.0</p>
-              <h2 className="text-[32px] font-normal" style={{ fontFamily: 'Georgia, serif' }}>你的专属风格档案</h2>
-              <p className="text-[13px] text-[#888] mt-2" style={{ fontFamily: 'Inter, sans-serif' }}>
-                基于你的信息，AI 已生成初始风格档案
+              <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', fontWeight: 400, color: test.available ? C.h1 : C.muted, marginBottom: '10px' }}>
+                {test.title}
+              </h2>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.body, lineHeight: '1.8', marginBottom: '20px' }}>
+                {test.desc}
               </p>
-            </div>
-            <div className="border border-[#B8973A] p-8 space-y-6">
-              <div className="flex items-start justify-between border-b border-[#e8e8e4] pb-6">
-                <div>
-                  <p className="label-lux mb-2">体型风格</p>
-                  <p className="text-[22px] font-normal" style={{ fontFamily: 'Georgia, serif', color: '#B8973A' }}>
-                    {BODY_TYPES.find(b => b.id === form.bodyType)?.name || '待完善'}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="label-lux mb-2">档案版本</p>
-                  <p className="text-[13px] text-[#888]" style={{ fontFamily: 'Inter, sans-serif' }}>
-                    v1.0 · {new Date().toLocaleDateString('zh-CN')}
-                  </p>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <p className="label-lux mb-2">风格关键词</p>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {form.styleDirections.length > 0
-                      ? form.styleDirections.map(s => (
-                        <span key={s} className="text-[11px] border border-[#B8973A] px-3 py-1"
-                          style={{ fontFamily: 'Inter, sans-serif', color: '#B8973A' }}>{s}</span>
-                      ))
-                      : <span className="text-[12px] text-[#999]">请返回补充风格偏好</span>
-                    }
-                  </div>
-                </div>
-                <div>
-                  <p className="label-lux mb-2">肤色 / 配色偏好</p>
-                  <p className="text-[13px] text-[#1a1a1a] mt-2" style={{ fontFamily: 'Inter, sans-serif' }}>
-                    {[form.skinTone, form.colorPreference].filter(Boolean).join(' · ') || '未填写'}
-                  </p>
-                </div>
-              </div>
-              <div>
-                <p className="label-lux mb-2">预算区间</p>
-                <p className="text-[14px] text-[#1a1a1a]" style={{ fontFamily: 'Inter, sans-serif' }}>
-                  {form.budget || '未填写'}
-                </p>
-              </div>
-              <div className="border-t border-[#e8e8e4] pt-6">
-                <p className="label-lux mb-3">主要穿衣困扰</p>
-                <div className="flex flex-wrap gap-2">
-                  {form.concerns.length > 0
-                    ? form.concerns.map(c => (
-                      <span key={c} className="text-[11px] bg-[#f5f5f3] text-[#666] px-3 py-1"
-                        style={{ fontFamily: 'Inter, sans-serif' }}>{c}</span>
-                    ))
-                    : <span className="text-[12px] text-[#999]">未填写</span>
-                  }
-                </div>
-              </div>
-              <div className="border-t border-[#e8e8e4] pt-6 bg-[#fdf8ee] -mx-8 -mb-8 px-8 py-6">
-                <p className="label-lux mb-3" style={{ color: '#B8973A' }}>推荐下一步</p>
-                <div className="space-y-2">
-                  {[
-                    '上传一套满意的穿搭，帮系统更精准了解你',
-                    '上传想购买的商品，获得 AI 购买建议',
-                    '开通会员，解锁造型师人工服务',
-                  ].map((r, i) => (
-                    <p key={i} className="text-[12px] text-[#666] flex gap-2" style={{ fontFamily: 'Inter, sans-serif' }}>
-                      <span style={{ color: '#B8973A' }}>→</span> {r}
-                    </p>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
-        {/* Navigation */}
-        <div className="flex justify-between items-center mt-12 pt-8 border-t border-[#e8e8e4]">
-          <button onClick={prev}
-            className={`btn-outline py-2 px-6 ${step === 0 ? 'opacity-0 pointer-events-none' : ''}`}>
-            上一步
-          </button>
-          <span className="label-lux">{step} / 5</span>
-          {step > 0 && step < 5 ? (
-            <button onClick={next} className="btn-primary py-2 px-6">下一步</button>
-          ) : step === 5 ? (
-            <button onClick={finish} className="btn-primary py-2 px-8">进入我的档案</button>
-          ) : (
-            <div />
-          )}
+              <div style={{ marginBottom: '24px' }}>
+                {test.steps.map((s, j) => (
+                  <div key={j} style={{
+                    display: 'flex', gap: '10px', alignItems: 'baseline',
+                    padding: '6px 0',
+                    borderBottom: j < test.steps.length - 1 ? `0.5px solid ${C.border}` : 'none',
+                  }}>
+                    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', color: C.gold, flexShrink: 0 }}>0{j + 1}</span>
+                    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted }}>{s}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted }}>{test.duration}</p>
+                {test.available ? (
+                  <Link to={test.to} style={{
+                    fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '2px',
+                    color: '#fff', background: C.h1, padding: '10px 20px', textDecoration: 'none',
+                  }}>
+                    开始测试 →
+                  </Link>
+                ) : (
+                  <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted }}>敬请期待</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* 底部说明 */}
+        <div style={{ marginTop: '48px', padding: '28px 32px', background: '#f7f4ef', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '24px' }}>
+          {[
+            { label: '先天底色', desc: '体型 + 色彩测试构成你不会轻易改变的客观条件' },
+            { label: '后天个性', desc: '风格 + 时尚个性测试反映你真实的自我表达方式' },
+            { label: '完整档案', desc: '四项全部完成后，生成你的专属 Style Profile 完整版' },
+          ].map(item => (
+            <div key={item.label}>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.gold, marginBottom: '8px' }}>{item.label}</p>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.body, lineHeight: '1.7' }}>{item.desc}</p>
+            </div>
+          ))}
         </div>
 
       </div>
     </div>
   )
+}
+
+export default function OnboardingPage() {
+  const [agreed, setAgreed] = useState(false)
+  if (!agreed) return <ConsentScreen onAgree={() => setAgreed(true)} />
+  return <TestCenter />
 }
