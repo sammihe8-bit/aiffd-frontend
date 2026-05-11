@@ -28,70 +28,50 @@ function PlaceholderImg({ color, no, label }: { color: string; no: string; label
   )
 }
 
-function HeroPlaceholder() {
-  return (
-    <div style={{ width: '100%', height: '100%', minHeight: '600px', background: '#EAE4DC', position: 'relative', overflow: 'hidden' }}>
-      <div style={{ position: 'absolute', top: '80px', left: '10%', right: '10%', height: '1px', background: '#C4B8A8' }} />
-      {[0,1,2,3,4,5,6].map(i => (
-        <div key={i} style={{ position: 'absolute', top: '81px', left: `${14 + i * 11}%`, width: '1px', height: `${180 + Math.sin(i) * 30}px`, background: '#B4A898' }} />
-      ))}
-      <div style={{ position: 'absolute', bottom: '48px', right: '24px' }}>
-        <p style={{ fontFamily: 'Georgia, serif', fontSize: '11px', color: '#8A7A6A', letterSpacing: '1px' }}>春日 SS26</p>
-        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', color: '#AAA09A', letterSpacing: '2px', marginTop: '2px' }}>NO. 14</p>
-      </div>
-    </div>
-  )
-}
-
 export default function HomePage() {
   return (
     <div style={{ background: C.bg, minHeight: '100vh' }}>
 
-      {/* ── HERO ── */}
       <section style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', minHeight: '100vh' }}>
-        <div style={{ padding: '120px 64px 80px', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: C.bg }}>
-          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.gold, marginBottom: '32px' }}>
-            NO. 01 — 春日 SS26
-          </p>
-          <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '42px', fontWeight: 400, lineHeight: 1.2, color: C.h1, marginBottom: '24px' }}>
-            为今天<br />
-            <em style={{ color: C.accent, fontStyle: 'italic' }}>试一件。</em>
+        <div style={{ padding: '0 32px 0 64px', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: C.bg }}>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.gold, marginBottom: '28px' }}>NO. 01 — 春日 SS26</p>
+          <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '42px', fontWeight: 400, lineHeight: 1.2, color: C.h1, marginBottom: '20px' }}>
+            为今天<br /><em style={{ color: C.accent, fontStyle: 'italic' }}>试一件。</em>
           </h1>
-          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '17px', color: C.sub, lineHeight: '1.9', maxWidth: '360px', marginBottom: '48px' }}>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '17px', color: C.sub, lineHeight: '1.9', maxWidth: '340px', marginBottom: '44px' }}>
             智搭是一个为衣橱而生的 AI 工作室 — 虚拟试穿你已经拥有的、想象你尚未穿过的。
           </p>
           <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-            <Link to="/onboarding" style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', letterSpacing: '2px', color: '#fff', background: C.h1, padding: '14px 32px', textDecoration: 'none' }}>
-              开始试衣
-            </Link>
-            <Link to="/onboarding" style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: C.sub, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              了解智搭 →
-            </Link>
+            <Link to="/onboarding" style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', letterSpacing: '2px', color: '#fff', background: C.h1, padding: '14px 32px', textDecoration: 'none' }}>开始试衣</Link>
+            <Link to="/onboarding" style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: C.sub, textDecoration: 'none' }}>了解智搭 →</Link>
           </div>
         </div>
-        <div style={{ position: 'relative', overflow: 'hidden' }}>
-          <HeroPlaceholder />
+        <div style={{ position: 'relative', overflow: 'hidden', minHeight: '600px' }}>
+          <img src="/hero-wardrobe.jpg" alt="春日衣架" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block', position: 'absolute', inset: 0 }} />
+          <div style={{ position: 'absolute', bottom: '48px', right: '24px' }}>
+            <p style={{ fontFamily: 'Georgia, serif', fontSize: '11px', color: 'rgba(255,255,255,0.7)', letterSpacing: '1px' }}>春日 SS26</p>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', color: 'rgba(255,255,255,0.5)', letterSpacing: '2px', marginTop: '2px' }}>NO. 14</p>
+          </div>
         </div>
       </section>
 
       <div style={{ height: '1px', background: C.border }} />
 
-      {/* ── 三个工作室 ── */}
       <section style={{ padding: '80px 64px', background: C.cream }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <div style={{ marginBottom: '56px' }}>
             <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.gold, marginBottom: '12px' }}>三件事</p>
             <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '32px', fontWeight: 400, lineHeight: 1.3, color: C.h1 }}>
-              三个工作室，<em style={{ color: C.accent, fontStyle: 'italic' }}>一个衣橱。</em>
+              拥有你的<em style={{ color: C.accent, fontStyle: 'italic' }}>风格系统。</em>
             </h2>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', borderTop: `1px solid ${C.border}` }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', borderTop: \`1px solid \${C.border}\` }}>
             {[
               { num: '01', title: '虚拟试衣', en: 'FITTING ROOM', desc: '上传一张全身照，在屏幕里试穿你尚未拥有的每一件。光感、垂坠、剪裁，都被精准还原。' },
               { num: '02', title: '搭配方案', en: 'DAILY OUTFITS', desc: '为今日的天气、心情、场合提出一组方案。三件可能，而不是三十。我们相信选择越少，越自由。' },
-              { num: '03', title: '衣橱',     en: 'WARDROBE',     desc: '将你的衣物收入数字衣橱。按色温、材质、季节自动归档。重新发现你已经拥有的。' },
+              { num: '03', title: '衣橱', en: 'WARDROBE', desc: '将你的衣物收入数字衣橱。按色温、材质、季节自动归档。重新发现你已经拥有的。' },
             ].map((item, i) => (
-              <div key={item.num} style={{ padding: '40px 36px', borderRight: i < 2 ? `1px solid ${C.border}` : 'none' }}>
+              <div key={item.num} style={{ padding: '40px 36px', borderRight: i < 2 ? \`1px solid \${C.border}\` : 'none' }}>
                 <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.gold, marginBottom: '16px' }}>{item.num}</p>
                 <h3 style={{ fontFamily: 'Georgia, serif', fontSize: '20px', fontWeight: 400, color: C.h2, marginBottom: '4px' }}>{item.title}</h3>
                 <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '2px', color: C.muted, marginBottom: '16px' }}>{item.en}</p>
@@ -104,7 +84,6 @@ export default function HomePage() {
 
       <div style={{ height: '1px', background: C.border }} />
 
-      {/* ── 本季精选 ── */}
       <section style={{ padding: '80px 64px', background: C.bg }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '40px' }}>
@@ -117,7 +96,7 @@ export default function HomePage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '24px' }}>
             {ITEMS.map((item, i) => (
               <Link key={item.no} to="/onboarding" style={{ textDecoration: 'none', display: 'block' }}>
-                <div style={{ marginBottom: '12px', overflow: 'hidden' }}>
+                <div style={{ marginBottom: '12px' }}>
                   <PlaceholderImg color={PLACEHOLDER_COLORS[i]} no={item.no} label={item.name} />
                 </div>
                 <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
@@ -130,7 +109,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── 主编手记 ── */}
       <section style={{ background: '#1C1612', padding: '80px 64px' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '3px', color: 'rgba(255,255,255,0.35)', marginBottom: '32px' }}>— 智搭 · 主编手记</p>
@@ -140,20 +118,15 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── 风格系统入口 ── */}
       <section style={{ background: C.cream, padding: '80px 64px' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '64px', alignItems: 'center' }}>
           <div>
             <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.gold, marginBottom: '16px' }}>我的风格系统</p>
-            <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '32px', fontWeight: 400, color: C.h1, lineHeight: 1.3, marginBottom: '16px' }}>
-              先了解自己，<br />再购买任何一件。
-            </h2>
+            <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '32px', fontWeight: 400, color: C.h1, lineHeight: 1.3, marginBottom: '16px' }}>先了解自己，<br />再购买任何一件。</h2>
             <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '17px', color: C.sub, lineHeight: '1.9', marginBottom: '32px' }}>
               体型 · 色彩 · 风格 · 时尚个性，四项测试构成你的专属风格档案，让每一次购买都成为精准决策。
             </p>
-            <Link to="/onboarding" style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', letterSpacing: '2px', color: '#fff', background: C.h1, padding: '14px 28px', textDecoration: 'none', display: 'inline-block' }}>
-              建立我的风格档案
-            </Link>
+            <Link to="/onboarding" style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', letterSpacing: '2px', color: '#fff', background: C.h1, padding: '14px 28px', textDecoration: 'none', display: 'inline-block' }}>建立我的风格档案</Link>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1px', background: C.border }}>
             {[
@@ -172,18 +145,15 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── Footer ── */}
-      <footer style={{ background: '#1C1612', padding: '64px 64px 40px' }}>
+      <footer style={{ background: '#1C1612', padding: '80px 64px 48px' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '48px', marginBottom: '56px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 1fr', gap: '64px', marginBottom: '72px' }}>
             <div>
-              <h3 style={{ fontFamily: 'Georgia, serif', fontSize: '20px', fontWeight: 400, color: '#fafaf8', marginBottom: '12px' }}>智搭信件</h3>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: 'rgba(255,255,255,0.45)', lineHeight: '1.7', marginBottom: '20px' }}>
-                每月一封 — 一组当季搭配、一篇专栏、一段穿衣的私想。
-              </p>
+              <h3 style={{ fontFamily: 'Georgia, serif', fontSize: '20px', fontWeight: 400, color: '#fafaf8', marginBottom: '16px' }}>订阅我们的 Newsletter</h3>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: 'rgba(255,255,255,0.45)', lineHeight: '1.8', marginBottom: '28px' }}>每月一封 — 一组当季搭配、一篇专栏、一段穿衣的私想。</p>
               <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.2)' }}>
-                <input placeholder="you@email.com" style={{ flex: 1, background: 'none', border: 'none', outline: 'none', fontFamily: 'Inter, sans-serif', fontSize: '13px', color: '#fafaf8', padding: '8px 0' }} />
-                <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '1px', color: 'rgba(255,255,255,0.5)', padding: '8px 0' }}>订阅</button>
+                <input placeholder="you@email.com" style={{ flex: 1, background: 'none', border: 'none', outline: 'none', fontFamily: 'Inter, sans-serif', fontSize: '13px', color: '#fafaf8', padding: '10px 0' }} />
+                <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '2px', color: '#B8973A', padding: '10px 0', flexShrink: 0 }}>订阅</button>
               </div>
             </div>
             {[
@@ -192,14 +162,14 @@ export default function HomePage() {
               { title: '支持', items: ['帮助中心', '联系我们', '尺码指引', '隐私'] },
             ].map(col => (
               <div key={col.title}>
-                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '3px', color: 'rgba(255,255,255,0.35)', marginBottom: '20px' }}>{col.title}</p>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '3px', color: 'rgba(255,255,255,0.35)', marginBottom: '24px' }}>{col.title}</p>
                 {col.items.map(t => (
-                  <p key={t} style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: 'rgba(255,255,255,0.55)', marginBottom: '12px', cursor: 'pointer' }}>{t}</p>
+                  <p key={t} style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: 'rgba(255,255,255,0.55)', marginBottom: '16px', cursor: 'pointer' }}>{t}</p>
                 ))}
               </div>
             ))}
           </div>
-          <div style={{ borderTop: '0.5px solid rgba(255,255,255,0.1)', paddingTop: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ borderTop: '0.5px solid rgba(255,255,255,0.1)', paddingTop: '28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: 'rgba(255,255,255,0.3)', letterSpacing: '1px' }}>© 2026 智搭 · ZHIDA STUDIO</p>
             <p style={{ fontFamily: 'Georgia, serif', fontSize: '12px', fontStyle: 'italic', color: 'rgba(255,255,255,0.3)' }}>上海 — 米兰 — 东京</p>
           </div>
