@@ -6,11 +6,11 @@ export default function Navbar() {
   const location = useLocation()
 
   const navLinks = [
-    { to: '/', label: '首页' },
-    { to: '/onboarding', label: '我的风格系统' },
-    { to: '/about', label: '关于' },
-    { to: '/column', label: '专栏' },
-    { to: '/subscribe', label: '订阅' },
+    { to: '/', label: '首页', external: false },
+    { to: '/onboarding', label: '我的风格系统', external: false },
+    { to: '/about', label: '关于', external: false },
+    { to: '/column', label: '专栏', external: false },
+    { to: '/subscribe', label: '订阅', external: false },
   ]
 
   return (
@@ -33,15 +33,24 @@ export default function Navbar() {
         {/* Nav links */}
         <nav style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
           {navLinks.map(link => (
-            <Link key={link.to} to={link.to} style={{
-              fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '1.5px',
-              color: location.pathname === link.to ? '#1a1a1a' : '#888',
-              textDecoration: 'none', transition: 'color 0.2s',
-              borderBottom: location.pathname === link.to ? '1px solid #1a1a1a' : 'none',
-              paddingBottom: '2px',
-            }}>
-              {link.label}
-            </Link>
+            link.external ? (
+              <a key={link.to} href={link.to} target="_blank" rel="noopener noreferrer" style={{
+                fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '1.5px',
+                color: '#888', textDecoration: 'none', transition: 'color 0.2s',
+              }}>
+                {link.label}
+              </a>
+            ) : (
+              <Link key={link.to} to={link.to} style={{
+                fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '1.5px',
+                color: location.pathname === link.to ? '#1a1a1a' : '#888',
+                textDecoration: 'none', transition: 'color 0.2s',
+                borderBottom: location.pathname === link.to ? '1px solid #1a1a1a' : 'none',
+                paddingBottom: '2px',
+              }}>
+                {link.label}
+              </Link>
+            )
           ))}
         </nav>
 
