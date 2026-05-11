@@ -171,8 +171,6 @@ export default function BodyTestPage() {
 
   const btnDisabled = { ...btnPrimary, background: '#ccc', cursor: 'not-allowed' as const }
 
-  const phaseIndex: Record<Phase, number> = { method: 0, data: 1, sheldon: 2, bone: 3, fat: 4, qi: 5, report: 6 }
-
   return (
     <div style={{ minHeight: '100vh', background: '#fafaf8' }}>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
@@ -265,7 +263,28 @@ export default function BodyTestPage() {
 
             <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
               <BackBtn onClick={() => setPhase('method')} />
-              <button onClick={() => setPhase('sheldon')}
+              <button onClick={() => {
+                // 根据三围数据自动预填推荐答案
+                const bustN = parseFloat(bust), waistN = parseFloat(waist), hipN = parseFloat(hip)
+                const shoulderN = parseFloat(shoulder), hipBoneN = parseFloat(hipBone)
+                const whr = waistN / hipN
+                const bwd = bustN - waistN
+                const shDiff = shoulderN - hipBoneN
+                // 谢尔顿预填
+                if (whr > 0.85) setSheldon('Endomorph')
+                else if (bwd > 22) setSheldon('Mesomorph')
+                else setSheldon('Ectomorph')
+                // 骨骼预填
+                if (shDiff > 2) setBoneShape('V')
+                else if (shDiff < -2) setBoneShape('A')
+                else if (bwd > 20) setBoneShape('X')
+                else setBoneShape('H')
+                // 脂肪预填
+                if (whr > 0.85) setVisual('O')
+                else if (bwd > 22) setVisual('S')
+                else setVisual('none')
+                setPhase('sheldon')
+              }}
                 disabled={!bust || !waist || !hip || !shoulder || !hipBone}
                 style={{ ...(!bust || !waist || !hip || !shoulder || !hipBone ? btnDisabled : btnPrimary) }}>
                 继续
@@ -362,8 +381,10 @@ export default function BodyTestPage() {
                   padding: '20px 16px', cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s',
                   position: 'relative',
                 }}>
-                  {method === 'ai' && t.id === AI_SHELDON_SUGGESTION && (
-                    <div style={{ position: 'absolute', top: '8px', right: '8px', background: C.gold, color: '#fff', fontFamily: 'Inter, sans-serif', fontSize: '9px', padding: '2px 6px', letterSpacing: '1px' }}>AI 推荐</div>
+                  {t.id === (method === 'ai' ? AI_SHELDON_SUGGESTION : sheldon) && sheldon === t.id && (
+                    <div style={{ position: 'absolute', top: '8px', right: '8px', background: C.gold, color: '#fff', fontFamily: 'Inter, sans-serif', fontSize: '9px', padding: '2px 6px', letterSpacing: '1px' }}>
+                      {method === 'ai' ? 'AI 推荐' : '系统推荐'}
+                    </div>
                   )}
                   <div style={{ height: '80px', background: '#f5f2ed', marginBottom: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '9px', color: C.muted, letterSpacing: '2px' }}>{t.en.toUpperCase()}</span>
@@ -415,8 +436,10 @@ export default function BodyTestPage() {
                   padding: '20px', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s',
                   position: 'relative',
                 }}>
-                  {method === 'ai' && b.id === AI_BONE_SUGGESTION && (
-                    <div style={{ position: 'absolute', top: '8px', right: '8px', background: C.gold, color: '#fff', fontFamily: 'Inter, sans-serif', fontSize: '9px', padding: '2px 6px', letterSpacing: '1px' }}>AI 推荐</div>
+                  {b.id === boneShape && (
+                    <div style={{ position: 'absolute', top: '8px', right: '8px', background: C.gold, color: '#fff', fontFamily: 'Inter, sans-serif', fontSize: '9px', padding: '2px 6px', letterSpacing: '1px' }}>
+                      {method === 'ai' ? 'AI 推荐' : '系统推荐'}
+                    </div>
                   )}
                   <p style={{ fontFamily: 'Georgia, serif', fontSize: '24px', color: boneShape === b.id ? C.gold : C.h1, marginBottom: '8px' }}>{b.label}</p>
                   <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, lineHeight: '1.6' }}>{b.desc}</p>
@@ -470,7 +493,7 @@ export default function BodyTestPage() {
             <ProgressBar current={4} total={6} label="BODY TEST · STEP 04" />
             <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '4px', color: C.gold, marginBottom: '12px' }}>Step 04 · 脂肪分布</p>
             <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '28px', fontWeight: 400, color: C.h1, marginBottom: '8px' }}>在骨骼地基上，脂肪如何分布？</h2>
-            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginBottom: '40px' }}>忽略骨架，只看脂肪的分布方式与感觉</p>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginBottom: '40px' }}>忽略骨架，只看脂肪的分布方式与感觉。系统已根据你的数据预填推荐，可直接修改。</p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
               {[
