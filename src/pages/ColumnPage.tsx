@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom'
 
 const C = {
   h1: '#111111', h2: '#222222', sub: '#444444',
