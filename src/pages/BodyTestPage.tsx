@@ -497,9 +497,9 @@ export default function BodyTestPage() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
               {[
-                { id: 'O', label: 'O 型 · 内胚脂肪' },
-                { id: 'S', label: 'S 型 · 中胚脂肪' },
-                { id: 'none', label: '无 · 外胚脂肪' },
+                { id: 'O', label: '· 内胚脂肪' },
+                { id: 'S', label: '· 中胚脂肪' },
+                { id: 'none', label: '· 外胚脂肪' },
               ].map(v => (
                 <button key={v.id} onClick={() => setVisual(v.id)} style={{
                   border: `1px solid ${visual === v.id ? C.gold : C.border}`,
