@@ -1,11 +1,9 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import { useState } from 'react'
 
 export default function Navbar() {
   const { token, logout } = useAuth()
   const location = useLocation()
-  const [menuOpen, setMenuOpen] = useState(false)
 
   const navLinks = [
     { to: '/', label: '首页' },
