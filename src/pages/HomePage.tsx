@@ -34,7 +34,7 @@ export default function HomePage() {
     <div style={{ background: C.bg, minHeight: '100vh' }}>
 
       <section style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', minHeight: '100vh' }}>
-        <div style={{ padding: '0 32px 0 100px', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: C.bg }}>
+        <div style={{ padding: '0 32px 0 160px', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: C.bg }}>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.gold, marginBottom: '28px' }}>NO. 01 — 春日 SS26</p>
           <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '42px', fontWeight: 400, lineHeight: 1.2, color: C.h1, marginBottom: '20px' }}>
             为今天<br /><em style={{ color: C.accent, fontStyle: 'italic' }}>试一件。</em>
@@ -47,8 +47,8 @@ export default function HomePage() {
             <Link to='/onboarding' style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: C.sub, textDecoration: 'none' }}>了解智携 →</Link>
           </div>
         </div>
-        <div style={{ position: 'relative', overflow: 'hidden', minHeight: '600px' }}>
-          <img src='/hero-wardrobe.jpg' alt='春日衣架' style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block', position: 'absolute', inset: 0 }} />
+        <div style={{ position: 'relative', overflow: 'hidden', minHeight: '600px', background: '#EAE4DC' }}>
+          <img src='/hero-wardrobe.jpeg' alt='春日衣架' style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block', position: 'absolute', inset: 0 }} />
           <div style={{ position: 'absolute', bottom: '48px', right: '24px' }}>
             <p style={{ fontFamily: 'Georgia, serif', fontSize: '11px', color: 'rgba(255,255,255,0.7)', letterSpacing: '1px' }}>春日 SS26</p>
             <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', color: 'rgba(255,255,255,0.5)', letterSpacing: '2px', marginTop: '2px' }}>NO. 14</p>
