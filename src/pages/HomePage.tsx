@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom'
-import { useAuth } from '../hooks/useAuth'
 
 // 色彩系统
 const C = {
@@ -76,7 +75,6 @@ function HeroPlaceholder() {
 }
 
 export default function HomePage() {
-  const { token } = useAuth()
 
   return (
     <div style={{ background: C.bg, minHeight: '100vh' }}>
