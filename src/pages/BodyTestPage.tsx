@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+
 const C = {
   h1: '#111111', h2: '#222222', sub: '#444444',
   body: '#666666', muted: '#999999', gold: '#B8973A', border: '#e8e8e4',
@@ -496,17 +497,16 @@ export default function BodyTestPage() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
               {[
-                { id: 'O', label: 'O 型 · 内胚脂肪', desc: '腰腹圆润，四肢相对细；体型丰满，曲线优美；胸部较大或臀部较宽；新陈代谢较慢，肌肉线条不明显' },
-                { id: 'S', label: 'S 型 · 中胚脂肪', desc: '胸臀丰满、腰细曲线分明；较为精瘦且肌肉有感；胸部或臀部中等大小；肌肉线条较为明显' },
-                { id: 'none', label: '无 · 外胚脂肪', desc: '脂肪堆积极少，新陈代谢快；骨骼纤细清晰可见；身体线条垂直，整体流畅纤细' },
+                { id: 'O', label: 'O 型 · 内胚脂肪' },
+                { id: 'S', label: 'S 型 · 中胚脂肪' },
+                { id: 'none', label: '无 · 外胚脂肪' },
               ].map(v => (
                 <button key={v.id} onClick={() => setVisual(v.id)} style={{
                   border: `1px solid ${visual === v.id ? C.gold : C.border}`,
                   background: visual === v.id ? '#fdf8ee' : '#fff',
                   padding: '20px 24px', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s',
                 }}>
-                  <p style={{ fontFamily: 'Georgia, serif', fontSize: '16px', color: visual === v.id ? C.gold : C.h2, marginBottom: '8px' }}>{v.label}</p>
-                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, lineHeight: '1.7' }}>{v.desc}</p>
+                  <p style={{ fontFamily: 'Georgia, serif', fontSize: '16px', color: visual === v.id ? C.gold : C.h2 }}>{v.label}</p>
                 </button>
               ))}
             </div>
