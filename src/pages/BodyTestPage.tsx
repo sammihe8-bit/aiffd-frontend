@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 const C = {
   h1: '#111111', h2: '#222222', sub: '#444444',
@@ -84,6 +84,7 @@ function ProgressBar({ current, total, label }: { current: number; total: number
 }
 
 export default function BodyTestPage() {
+  const navigate = useNavigate()
   const [step, setStep] = useState(0)
   const [method, setMethod] = useState<'manual' | 'ai' | ''>('')
   const [sheldon, setSheldon] = useState('')
@@ -259,24 +260,45 @@ export default function BodyTestPage() {
             </div>
             {showXTrap && (
               <div style={{ border: `1px solid ${C.gold}`, background: '#fdf8ee', padding: '24px', marginBottom: '24px' }}>
-                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '3px', color: C.gold, marginBottom: '12px' }}>⚠ X 型陷阱检测</p>
-                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: C.sub, lineHeight: '1.8', marginBottom: '16px' }}>
-                  很多「X 型」其实是 H 型骨骼 + 内衣塑型 / 脂肪转移的假象。
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '3px', color: C.gold, marginBottom: '12px' }}>⚠ X 型验证</p>
+                <p style={{ fontFamily: 'Georgia, serif', fontSize: '16px', color: C.h2, marginBottom: '8px' }}>腰带测试</p>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.body, lineHeight: '1.8', marginBottom: '20px' }}>
+                  把一条腰带或绳子松松围在腰部最细处，放松站立，观察腹部状态：
                 </p>
-                <p style={{ fontFamily: 'Georgia, serif', fontSize: '15px', color: C.h2, marginBottom: '12px' }}>验证方法：用手摸肋骨最下端</p>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
-                  <div style={{ background: '#fff', padding: '14px', border: `0.5px solid ${C.border}` }}>
-                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.gold, marginBottom: '6px' }}>角度 &gt; 90°（向外张开）</p>
-                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.body }}>→ H 型骨架，X 型是假象</p>
-                  </div>
-                  <div style={{ background: '#fff', padding: '14px', border: `0.5px solid ${C.border}` }}>
-                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.gold, marginBottom: '6px' }}>角度 &lt; 90°（向内收）</p>
-                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.body }}>→ 真 X 型</p>
-                  </div>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                  <button onClick={() => { setBoneShape('H'); setShowXTrap(false); next() }} style={{ border: `1px solid ${C.border}`, background: '#fff', padding: '12px', cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.body }}>肋骨外张 → 我是 H 型</button>
-                  <button onClick={() => { setShowXTrap(false); next() }} style={{ border: 'none', background: C.h1, padding: '12px', cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontSize: '13px', color: '#fff' }}>肋骨内收 → 确认 X 型</button>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <button onClick={() => { setBoneShape('H'); setShowXTrap(false); next() }} style={{
+                    border: `1px solid ${C.border}`, background: '#fff', padding: '16px 18px',
+                    cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s',
+                    display: 'flex', gap: '14px', alignItems: 'flex-start',
+                  }}>
+                    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, flexShrink: 0, marginTop: '2px' }}>A</span>
+                    <div>
+                      <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.h2, marginBottom: '3px' }}>我的肚子外凸，腰带往外撑</p>
+                      <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted }}>→ 自动修正为 H 型骨架（X 型是假象）</p>
+                    </div>
+                  </button>
+                  <button onClick={() => { setShowXTrap(false); next() }} style={{
+                    border: `1px solid ${C.border}`, background: '#fff', padding: '16px 18px',
+                    cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s',
+                    display: 'flex', gap: '14px', alignItems: 'flex-start',
+                  }}>
+                    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, flexShrink: 0, marginTop: '2px' }}>B</span>
+                    <div>
+                      <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.h2, marginBottom: '3px' }}>我的肚子平坦，腰带自然贴合</p>
+                      <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted }}>→ 确认为真 X 型</p>
+                    </div>
+                  </button>
+                  <button onClick={() => { setShowXTrap(false); next() }} style={{
+                    border: `1px solid ${C.border}`, background: '#fff', padding: '16px 18px',
+                    cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s',
+                    display: 'flex', gap: '14px', alignItems: 'flex-start',
+                  }}>
+                    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted, flexShrink: 0, marginTop: '2px' }}>C</span>
+                    <div>
+                      <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.body, marginBottom: '3px' }}>我不想验证，直接继续</p>
+                      <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted }}>→ 保留 X 型选择，结论标记为存疑</p>
+                    </div>
+                  </button>
                 </div>
               </div>
             )}
@@ -344,19 +366,6 @@ export default function BodyTestPage() {
                     onChange={e => { f.set(e.target.value); checkConflict(bust, waist, hip) }} />
                 </div>
               ))}
-              <div>
-                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '2px', color: C.muted, marginBottom: '8px' }}>肋骨角度</p>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  {[{ id: 'over90', label: '>90° 外张' }, { id: 'under90', label: '<90° 内收' }].map(r => (
-                    <button key={r.id} onClick={() => setRibAngle(r.id)} style={{
-                      flex: 1, border: `1px solid ${ribAngle === r.id ? C.gold : C.border}`,
-                      background: ribAngle === r.id ? '#fdf8ee' : '#fff', padding: '12px 8px',
-                      cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontSize: '12px',
-                      color: ribAngle === r.id ? C.gold : C.body,
-                    }}>{r.label}</button>
-                  ))}
-                </div>
-              </div>
             </div>
             {bust && waist && hip && (
               <div style={{ background: '#f7f4ef', padding: '16px', marginBottom: '16px', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '12px' }}>
@@ -379,8 +388,8 @@ export default function BodyTestPage() {
             )}
             <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
               <button onClick={prev} style={{ border: `1px solid ${C.border}`, background: '#fff', padding: '16px 24px', cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.body }}>上一步</button>
-              <button onClick={next} disabled={!bust || !waist || !hip || !shoulder || !hipBone || !ribAngle}
-                style={{ flex: 1, ...(!bust || !waist || !hip || !shoulder || !hipBone || !ribAngle ? btnDisabled : btnPrimary) }}>
+              <button onClick={next} disabled={!bust || !waist || !hip || !shoulder || !hipBone}
+                style={{ flex: 1, ...(!bust || !waist || !hip || !shoulder || !hipBone ? btnDisabled : btnPrimary) }}>
                 继续
               </button>
             </div>
