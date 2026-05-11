@@ -314,7 +314,7 @@ export default function HomePage() {
             <em style={{ color: C.accent, fontStyle: 'italic' }}>试一件。</em>
           </h1>
           <p style={{
-            fontFamily: 'Inter, sans-serif', fontSize: '15px', color: C.mid,
+            fontFamily: 'Inter, sans-serif', fontSize: '15px', color: C.sub,
             lineHeight: '1.9', maxWidth: '360px', marginBottom: '56px',
           }}>
             智搭是一个为衣橱而生的 AI 工作室 — 虚拟试穿你已经拥有的、想象你尚未穿过的。
@@ -329,7 +329,7 @@ export default function HomePage() {
             </Link>
             <Link to="/onboarding" style={{
               fontFamily: 'Georgia, serif', fontSize: '14px',
-              color: C.mid, textDecoration: 'none',
+              color: C.sub, textDecoration: 'none',
               display: 'flex', alignItems: 'center', gap: '6px',
             }}>
               了解智搭 <span style={{ fontSize: '16px' }}>→</span>
@@ -382,7 +382,7 @@ export default function HomePage() {
                 <p style={{ fontFamily: 'Georgia, serif', fontSize: '13px', fontStyle: 'italic', color: C.muted, marginBottom: '20px' }}>{item.num}</p>
                 <h3 style={{ fontFamily: 'Georgia, serif', fontSize: '32px', fontWeight: 400, color: C.dark, marginBottom: '4px' }}>{item.title}</h3>
                 <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.muted, marginBottom: '20px' }}>{item.en}</p>
-                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: C.mid, lineHeight: '1.85' }}>{item.desc}</p>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: C.sub, lineHeight: '1.85' }}>{item.desc}</p>
               </div>
             ))}
           </div>
@@ -401,7 +401,7 @@ export default function HomePage() {
             </div>
             <Link to="/onboarding" style={{
               fontFamily: 'Georgia, serif', fontSize: '14px', fontStyle: 'italic',
-              color: C.mid, textDecoration: 'none',
+              color: C.sub, textDecoration: 'none',
               display: 'flex', alignItems: 'center', gap: '6px',
             }}>
               查看全部 →
@@ -448,7 +448,7 @@ export default function HomePage() {
             <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '40px', fontWeight: 400, color: C.dark, lineHeight: 1.2, marginBottom: '20px' }}>
               先了解自己，<br />再购买任何一件。
             </h2>
-            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: C.mid, lineHeight: '1.9', marginBottom: '36px' }}>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: C.sub, lineHeight: '1.9', marginBottom: '36px' }}>
               体型测试 · 色彩测试 · 风格测试 · 时尚个性测试。四项测试构成你的专属风格档案，让每一次购买都成为精准决策。
             </p>
             <Link to="/onboarding" style={{
