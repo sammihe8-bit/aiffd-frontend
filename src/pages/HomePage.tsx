@@ -41,11 +41,11 @@ export default function HomePage() {
             为今天<br /><em style={{ color: C.accent, fontStyle: 'italic' }}>试一件。</em>
           </h1>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '17px', color: C.sub, lineHeight: '1.9', maxWidth: '340px', marginBottom: '44px' }}>
-            智携是一个为衣橱而生的 AI 工作室 — 虚拟试穿你已经拥有的、想象你尚未穿过的。
+            AIFFD智搭是一个为衣橱而生的 AI 工作室 — 虚拟试穿你已经拥有的、想象你尚未穿过的。
           </p>
           <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
             <Link to='/onboarding' style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', letterSpacing: '2px', color: '#fff', background: C.h1, padding: '14px 32px', textDecoration: 'none' }}>开始试衣</Link>
-            <Link to='/onboarding' style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: C.sub, textDecoration: 'none' }}>了解智携 →</Link>
+            <Link to='/onboarding' style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: C.sub, textDecoration: 'none' }}>了解AIFFD →</Link>
           </div>
         </div>
         <div style={{ position: 'relative', overflow: 'hidden', minHeight: '600px', background: '#EAE4DC' }}>
@@ -113,7 +113,7 @@ export default function HomePage() {
 
       <section style={{ background: '#1C1612', padding: '80px 64px' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '3px', color: 'rgba(255,255,255,0.35)', marginBottom: '32px' }}>— 智携 · 主编手记</p>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '3px', color: 'rgba(255,255,255,0.35)', marginBottom: '32px' }}>— AIFFD · 主编手记</p>
           <blockquote style={{ fontFamily: 'Georgia, serif', fontSize: '32px', fontWeight: 400, lineHeight: 1.5, color: '#fafaf8', fontStyle: 'italic', margin: 0, maxWidth: '860px' }}>
             "我们不卖衣服。我们卖的是 — 在你按下购买前，先看见自己穿上它的那一刻。"
           </blockquote>
