@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Link, useNavigate } from 'react-router-dom'
+
 const C = {
   h1: '#111111', h2: '#222222', sub: '#444444',
   body: '#666666', muted: '#999999', gold: '#B8973A', border: '#e8e8e4',
@@ -27,13 +27,11 @@ const YIN_YANG_DESC: Record<string, { label: string; desc: string; style: string
   '阴阳和平':{ label: '阴阳和平型', desc: '平衡稳定，气质中正，风格包容性强',     style: '经典款式和百搭配色是最佳选择，可随场合灵活切换风格' },
 }
 
-function calcBoneCode(shoulderHipDiff: number, ribAngle: string): string {
+function calcBoneCode(shoulderHipDiff: number): string {
   let hScore = 0, xScore = 0, aScore = 0, vScore = 0
   if (shoulderHipDiff >= -2 && shoulderHipDiff <= 2) { hScore += 40; xScore += 20 }
   else if (shoulderHipDiff > 2) { vScore += 40; hScore += 10 }
   else { aScore += 40; hScore += 10 }
-  if (ribAngle === 'over90') { hScore += 30; vScore += 10 }
-  else { xScore += 30; aScore += 10 }
   const scores: Record<string, number> = { H: hScore, X: xScore, A: aScore, V: vScore }
   return Object.entries(scores).sort((a, b) => b[1] - a[1])[0][0]
 }
@@ -84,7 +82,6 @@ function ProgressBar({ current, total, label }: { current: number; total: number
 }
 
 export default function BodyTestPage() {
-  const navigate = useNavigate()
   const [step, setStep] = useState(0)
   const [method, setMethod] = useState<'manual' | 'ai' | ''>('')
   const [sheldon, setSheldon] = useState('')
@@ -128,7 +125,7 @@ export default function BodyTestPage() {
     const shoulderHipDiff = shoulderN - hipBoneN
     const whr = waistN / hipN
     const bustWaistDiff = bustN - waistN
-    const boneCode = boneShape || calcBoneCode(shoulderHipDiff, ribAngle)
+    const boneCode = boneShape || calcBoneCode(shoulderHipDiff)
     const fatCode = calcFatCode(whr, bustWaistDiff, visual, boneCode)
     const compositeCode = fatCode === '无' ? boneCode : `${boneCode}-${fatCode}`
     const codeData = COMPOSITE_CODES[compositeCode] || COMPOSITE_CODES[boneCode]
