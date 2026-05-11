@@ -34,7 +34,7 @@ export default function HomePage() {
     <div style={{ background: C.bg, minHeight: '100vh' }}>
 
       <section style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', minHeight: '100vh' }}>
-        <div style={{ padding: '0 32px 0 64px', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: C.bg }}>
+        <div style={{ padding: '0 32px 0 100px', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: C.bg }}>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.gold, marginBottom: '28px' }}>NO. 01 — 春日 SS26</p>
           <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '42px', fontWeight: 400, lineHeight: 1.2, color: C.h1, marginBottom: '20px' }}>
             为今天<br /><em style={{ color: C.accent, fontStyle: 'italic' }}>试一件。</em>
