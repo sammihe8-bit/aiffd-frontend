@@ -93,6 +93,38 @@ function BackBtn({ onClick }: { onClick: () => void }) {
   )
 }
 
+function MeasureGuide() {
+  const [open, setOpen] = useState(false)
+  return (
+    <div style={{ marginBottom: '28px' }}>
+      <button onClick={() => setOpen(o => !o)} style={{
+        display: 'flex', alignItems: 'center', gap: '8px',
+        background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginBottom: open ? '16px' : 0,
+      }}>
+        <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.gold, letterSpacing: '1px' }}>
+          {open ? '▾' : '▸'} 不知道怎么测量？
+        </span>
+      </button>
+      {open && (
+        <div style={{ background: '#f7f4ef', padding: '20px 24px', borderLeft: `2px solid ${C.gold}` }}>
+          {[
+            { label: '胸围', desc: '穿上常用胸罩，软尺绕胸部最丰满处一圈，保持水平' },
+            { label: '腰围', desc: '站直放松，找到肋骨最低处与髂骨最高处之间最细位置' },
+            { label: '臀围', desc: '站直，软尺绕臀部最丰满处一圈，通常在大腿根上方' },
+            { label: '肩宽', desc: '从左肩峰到右肩峰的直线距离，可请他人帮忙测量' },
+            { label: '胯宽', desc: '两侧髂骨最宽处的直线距离，通常比臀围测量点更高' },
+          ].map((m, i, arr) => (
+            <div key={m.label} style={{ display: 'grid', gridTemplateColumns: '48px 1fr', gap: '12px', paddingBottom: i < arr.length - 1 ? '12px' : 0, marginBottom: i < arr.length - 1 ? '12px' : 0, borderBottom: i < arr.length - 1 ? `1px solid ${C.border}` : 'none' }}>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '1px', paddingTop: '1px' }}>{m.label}</p>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.body, lineHeight: '1.7' }}>{m.desc}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function BodyTestPage() {
   const [phase, setPhase] = useState<Phase>('method')
   const [method, setMethod] = useState<'manual' | 'ai' | ''>('')
@@ -150,23 +182,17 @@ export default function BodyTestPage() {
     if (!imageBase64) return
     setAiStatus('analyzing')
     setAiError('')
-    try {
-      const res = await fetch('/.netlify/functions/analyze-body', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageBase64, mediaType: imageMediaType }),
-      })
-      if (!res.ok) {
-        const err = await res.json()
-        throw new Error(err.error || `HTTP ${res.status}`)
-      }
-      const data: AiResult = await res.json()
-      setAiResult(data)
-      setAiStatus('done')
-    } catch (e: any) {
-      setAiError(e.message)
-      setAiStatus('error')
-    }
+    // 模拟分析延迟（正式上线时替换为真实 API 调用）
+    await new Promise(resolve => setTimeout(resolve, 2500))
+    setAiResult({
+      sheldon: 'Mesomorph',
+      sheldon_confidence: 78,
+      bone: 'H',
+      bone_confidence: 82,
+      sheldon_reason: '整体比例匀称，肌肉线条适中',
+      bone_reason: '肩胯宽度接近，腰节不明显',
+    })
+    setAiStatus('done')
   }
 
   const checkConflict = (b: string, w: string, h: string) => {
@@ -245,57 +271,98 @@ export default function BodyTestPage() {
           </div>
         )}
 
-        {/* ── 手动三围输入 ── */}
+        {/* ── 手动三围输入（仪式感升级版）── */}
         {phase === 'data' && method === 'manual' && (
           <div>
             <ProgressBar current={1} total={6} label="BODY TEST · STEP 01" />
             <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '4px', color: C.gold, marginBottom: '12px' }}>Step 01 · 数据输入</p>
-            <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '28px', fontWeight: 400, color: C.h1, marginBottom: '8px' }}>输入你的三围数据</h2>
-            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginBottom: '32px' }}>所有数据单位为厘米（cm），系统将实时计算腰臀比与胸腰差</p>
+            <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '28px', fontWeight: 400, color: C.h1, marginBottom: '8px' }}>输入你的身体数据</h2>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginBottom: '32px' }}>数据越准确，体型档案越精准。所有数据单位为厘米（cm）</p>
 
-            <div style={{ background: '#f7f4ef', padding: '20px', marginBottom: '28px', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '16px' }}>
-              {[
-                { label: '测量胸围', desc: '胸部最宽处周长，穿喜欢的胸罩测量' },
-                { label: '测量腰围', desc: '腰部最细处，通常在肚脐和臀部之间' },
-                { label: '测量臀围', desc: '臀部最宽处周长，通常是腿部弯曲处' },
-              ].map(m => (
-                <div key={m.label}>
-                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, marginBottom: '4px' }}>{m.label}</p>
-                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted, lineHeight: '1.5' }}>{m.desc}</p>
-                </div>
-              ))}
-            </div>
+            {/* 测量说明折叠 */}
+            <MeasureGuide />
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
-              {[
-                { label: '胸围 (cm)', val: bust, set: setBust, ph: '例：88' },
-                { label: '腰围 (cm)', val: waist, set: setWaist, ph: '例：68' },
-                { label: '臀围 (cm)', val: hip, set: setHip, ph: '例：94' },
-                { label: '肩宽 (cm)', val: shoulder, set: setShoulder, ph: '例：38' },
-                { label: '胯宽 (cm)', val: hipBone, set: setHipBone, ph: '例：36' },
-              ].map(f => (
-                <div key={f.label}>
-                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '2px', color: C.muted, marginBottom: '8px' }}>{f.label}</p>
-                  <input type="number" value={f.val} placeholder={f.ph} style={inputStyle}
-                    onChange={e => { f.set(e.target.value); checkConflict(bust, waist, hip) }} />
-                </div>
-              ))}
-            </div>
-
-            {bust && waist && hip && (
-              <div style={{ background: '#f7f4ef', padding: '16px', marginBottom: '16px', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '12px' }}>
+            {/* 核心三围 大字输入 */}
+            <div style={{ marginBottom: '8px' }}>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.gold, marginBottom: '16px' }}>核心三围</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                 {[
-                  { label: '腰臀比', value: (parseFloat(waist) / parseFloat(hip)).toFixed(2) },
-                  { label: '胸腰差', value: `${(parseFloat(bust) - parseFloat(waist)).toFixed(1)} cm` },
-                  ...(shoulder && hipBone ? [{ label: '肩胯差', value: `${(parseFloat(shoulder) - parseFloat(hipBone)).toFixed(1)} cm` }] : []),
-                ].map(r => (
-                  <div key={r.label}>
-                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '2px', color: C.muted, marginBottom: '4px' }}>{r.label}</p>
-                    <p style={{ fontFamily: 'Georgia, serif', fontSize: '20px', color: C.gold }}>{r.value}</p>
+                  { label: '胸围', val: bust, set: setBust, ph: '88', icon: '◯' },
+                  { label: '腰围', val: waist, set: setWaist, ph: '68', icon: '◯' },
+                  { label: '臀围', val: hip, set: setHip, ph: '94', icon: '◯' },
+                ].map(f => (
+                  <div key={f.label} style={{
+                    display: 'grid', gridTemplateColumns: '80px 1fr 60px',
+                    alignItems: 'center', borderBottom: `1px solid ${C.border}`,
+                    padding: '12px 0', gap: '16px',
+                  }}>
+                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '2px', color: C.muted }}>{f.label}</p>
+                    <input
+                      type="number" value={f.val} placeholder={f.ph}
+                      onChange={e => { f.set(e.target.value); checkConflict(bust, waist, hip) }}
+                      style={{
+                        border: 'none', outline: 'none', background: 'transparent',
+                        fontFamily: 'Georgia, serif', fontSize: '32px', color: f.val ? C.h1 : '#ddd',
+                        width: '100%', padding: 0,
+                      }}
+                    />
+                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, textAlign: 'right' }}>cm</p>
                   </div>
                 ))}
               </div>
+            </div>
+
+            {/* 实时计算结果 */}
+            {bust && waist && hip && (
+              <div style={{ background: 'linear-gradient(135deg, #fdf8ee 0%, #f7f4ef 100%)', border: `1px solid ${C.gold}`, padding: '20px 24px', margin: '24px 0', display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: '16px' }}>
+                <div>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.muted, marginBottom: '6px' }}>腰臀比 WHR</p>
+                  <p style={{ fontFamily: 'Georgia, serif', fontSize: '36px', color: C.gold, lineHeight: 1 }}>
+                    {(parseFloat(waist) / parseFloat(hip)).toFixed(2)}
+                  </p>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted, marginTop: '4px' }}>
+                    {parseFloat(waist) / parseFloat(hip) <= 0.75 ? '纤腰型' : parseFloat(waist) / parseFloat(hip) <= 0.85 ? '标准型' : '丰腴型'}
+                  </p>
+                </div>
+                <div>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.muted, marginBottom: '6px' }}>胸腰差 BWD</p>
+                  <p style={{ fontFamily: 'Georgia, serif', fontSize: '36px', color: C.gold, lineHeight: 1 }}>
+                    {(parseFloat(bust) - parseFloat(waist)).toFixed(0)}
+                    <span style={{ fontSize: '16px', marginLeft: '4px' }}>cm</span>
+                  </p>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted, marginTop: '4px' }}>
+                    {(parseFloat(bust) - parseFloat(waist)) >= 25 ? '曲线感强' : (parseFloat(bust) - parseFloat(waist)) >= 18 ? '曲线适中' : '直线型'}
+                  </p>
+                </div>
+              </div>
             )}
+
+            {/* 肩宽胯宽 小字输入 */}
+            <div style={{ marginBottom: '24px' }}>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.gold, marginBottom: '16px' }}>骨骼参考（选填，更精准）</p>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                {[
+                  { label: '肩宽', val: shoulder, set: setShoulder, ph: '38', tip: '两侧肩峰之间距离' },
+                  { label: '胯宽', val: hipBone, set: setHipBone, ph: '36', tip: '两侧髂骨最宽处距离' },
+                ].map(f => (
+                  <div key={f.label} style={{ border: `1px solid ${C.border}`, padding: '16px', background: '#fff' }}>
+                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '2px', color: C.muted, marginBottom: '4px' }}>{f.label}</p>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+                      <input type="number" value={f.val} placeholder={f.ph}
+                        onChange={e => f.set(e.target.value)}
+                        style={{ border: 'none', outline: 'none', background: 'transparent', fontFamily: 'Georgia, serif', fontSize: '24px', color: f.val ? C.h1 : '#ddd', width: '80px', padding: 0 }} />
+                      <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted }}>cm</span>
+                    </div>
+                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted, marginTop: '6px' }}>{f.tip}</p>
+                    {shoulder && hipBone && f.label === '胯宽' && (
+                      <p style={{ fontFamily: 'Georgia, serif', fontSize: '13px', color: C.gold, marginTop: '8px' }}>
+                        肩胯差 {(parseFloat(shoulder) - parseFloat(hipBone)) > 0 ? '+' : ''}{(parseFloat(shoulder) - parseFloat(hipBone)).toFixed(1)} cm
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
 
             {conflict && (
               <div style={{ border: '1px solid #e0a060', background: '#fff8f0', padding: '12px 16px', marginBottom: '16px' }}>
@@ -307,25 +374,30 @@ export default function BodyTestPage() {
               <BackBtn onClick={() => setPhase('method')} />
               <button onClick={() => {
                 const bustN = parseFloat(bust), waistN = parseFloat(waist), hipN = parseFloat(hip)
-                const shoulderN = parseFloat(shoulder), hipBoneN = parseFloat(hipBone)
+                const shoulderN = parseFloat(shoulder) || 0, hipBoneN = parseFloat(hipBone) || 0
                 const whr = waistN / hipN
                 const bwd = bustN - waistN
                 const shDiff = shoulderN - hipBoneN
                 if (whr > 0.85) setSheldon('Endomorph')
                 else if (bwd > 22) setSheldon('Mesomorph')
                 else setSheldon('Ectomorph')
-                if (shDiff > 2) setBoneShape('V')
-                else if (shDiff < -2) setBoneShape('A')
-                else if (bwd > 20) setBoneShape('X')
-                else setBoneShape('H')
+                if (shoulderN && hipBoneN) {
+                  if (shDiff > 2) setBoneShape('V')
+                  else if (shDiff < -2) setBoneShape('A')
+                  else if (bwd > 20) setBoneShape('X')
+                  else setBoneShape('H')
+                } else {
+                  if (bwd > 20) setBoneShape('X')
+                  else setBoneShape('H')
+                }
                 if (whr > 0.85) setVisual('O')
                 else if (bwd > 22) setVisual('S')
                 else setVisual('none')
                 setPhase('sheldon')
               }}
-                disabled={!bust || !waist || !hip || !shoulder || !hipBone}
-                style={{ ...(!bust || !waist || !hip || !shoulder || !hipBone ? btnDisabled : btnPrimary) }}>
-                继续
+                disabled={!bust || !waist || !hip}
+                style={{ ...(!bust || !waist || !hip ? btnDisabled : btnPrimary) }}>
+                开始分析
               </button>
             </div>
           </div>
