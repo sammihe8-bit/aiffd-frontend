@@ -17,7 +17,7 @@ const TESTS = [
     num: '02', tag: 'COLOR TEST', title: '色彩测试',
     desc: '基于肤色、发色与眼色判断你的色彩季型，建立个人配色系统，减少买错颜色的概率。',
     steps: ['肤色基调判断', '发色与眼色记录', '色彩季型匹配', '个人配色方案'],
-    duration: '约 6 分钟', to: '/test/color', available: false,
+    duration: '约 6 分钟', to: '/test/color', available: true,
   },
   {
     num: '03', tag: 'STYLE TEST', title: '风格测试',
