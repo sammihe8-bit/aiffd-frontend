@@ -762,39 +762,43 @@ export default function BodyTestPage() {
           const imgSrc = BODY_IMAGES[result.compositeCode] || BODY_IMAGES[result.boneCode]
           return (
           <div>
-            {/* 体型图片 */}
-            {imgSrc && (
-              <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-                <img
-                  src={imgSrc}
-                  alt={result.compositeName}
-                  style={{ height: '220px', width: 'auto', objectFit: 'contain', opacity: 0.92 }}
-                />
+            {/* 顶部：左图 右标题+三层档案 */}
+            <div style={{ display: 'grid', gridTemplateColumns: imgSrc ? '180px 1fr' : '1fr', gap: '32px', alignItems: 'start', marginBottom: '40px' }}>
+              {imgSrc && (
+                <img src={imgSrc} alt={result.compositeName}
+                  style={{ width: '180px', height: 'auto', objectFit: 'contain', display: 'block' }} />
+              )}
+              <div>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '4px', color: C.gold, marginBottom: '12px' }}>BODY PROFILE · 体型档案</p>
+                <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '32px', fontWeight: 400, color: C.h1, marginBottom: '6px' }}>{result.compositeName}</h1>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginBottom: '28px' }}>{result.compositeCode} · {result.sheldonMap} · {result.yinYang}</p>
+
+                {/* 三层档案 */}
+                <div style={{ border: `1px solid ${C.gold}`, padding: '20px 24px' }}>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.gold, marginBottom: '16px' }}>三层档案</p>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '16px' }}>
+                    {[
+                      { label: '骨骼代码', value: result.boneCode, sub: '骨架结构' },
+                      { label: '脂肪代码', value: result.fatCode, sub: '脂肪分布' },
+                      { label: '气血态', value: result.yinYang, sub: YIN_YANG_DESC[result.yinYang]?.label },
+                    ].map(item => (
+                      <div key={item.label}>
+                        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '2px', color: C.muted, marginBottom: '6px' }}>{item.label}</p>
+                        <p style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.gold, marginBottom: '2px' }}>{item.value}</p>
+                        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted }}>{item.sub}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
-            )}
-            <div style={{ borderBottom: `1px solid ${C.border}`, paddingBottom: '32px', marginBottom: '40px' }}>
+            </div>
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '4px', color: C.gold, marginBottom: '12px' }}>BODY PROFILE · 体型档案</p>
               <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '32px', fontWeight: 400, color: C.h1, marginBottom: '6px' }}>{result.compositeName}</h1>
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted }}>{result.compositeCode} · {result.sheldonMap} · {result.yinYang}</p>
             </div>
 
+            {/* 气血态解读 */}
             <div style={{ border: `1px solid ${C.gold}`, marginBottom: '32px' }}>
-              <div style={{ padding: '24px 28px', borderBottom: `1px solid ${C.border}` }}>
-                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.gold, marginBottom: '20px' }}>三层档案</p>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '20px' }}>
-                  {[
-                    { label: '骨骼代码', value: result.boneCode, sub: '骨架结构' },
-                    { label: '脂肪代码', value: result.fatCode, sub: '脂肪分布' },
-                    { label: '气血态', value: result.yinYang, sub: YIN_YANG_DESC[result.yinYang]?.label },
-                  ].map(item => (
-                    <div key={item.label}>
-                      <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '2px', color: C.muted, marginBottom: '6px' }}>{item.label}</p>
-                      <p style={{ fontFamily: 'Georgia, serif', fontSize: '24px', color: C.gold, marginBottom: '2px' }}>{item.value}</p>
-                      <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted }}>{item.sub}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
               <div style={{ padding: '24px 28px', borderBottom: `1px solid ${C.border}`, background: '#fafaf8' }}>
                 <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.gold, marginBottom: '12px' }}>气血态解读</p>
                 <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: C.body, lineHeight: '1.8', marginBottom: '8px' }}>{YIN_YANG_DESC[result.yinYang]?.desc}</p>
