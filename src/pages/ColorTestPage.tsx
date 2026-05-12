@@ -327,9 +327,8 @@ function ColorSwatch({ color, size = 40 }: { color: { name: string; hex: string 
 }
 
 // ─── 报告组件 ────────────────────────────────────────────────
-function ColorReport({ result, answers, onReset }: {
+function ColorReport({ result, onReset }: {
   result: ColorResult
-  answers: Answers
   onReset: () => void
 }) {
   const profile = COLOR_PROFILES[result]
@@ -778,7 +777,7 @@ export default function ColorTestPage() {
 
         {/* ── 报告页 ── */}
         {step === 'report' && (
-          <ColorReport result={result} answers={answers} onReset={reset} />
+          <ColorReport result={result} onReset={reset} />
         )}
 
       </div>
