@@ -1,0 +1,93 @@
+import type { Handler } from '@netlify/functions'
+
+const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY
+
+export const handler: Handler = async (event) => {
+  if (event.httpMethod !== 'POST') {
+    return { statusCode: 405, body: 'Method Not Allowed' }
+  }
+
+  if (!ANTHROPIC_API_KEY) {
+    return { statusCode: 500, body: JSON.stringify({ error: 'Missing ANTHROPIC_API_KEY' }) }
+  }
+
+  let body: { imageBase64: string; mediaType: string }
+  try {
+    body = JSON.parse(event.body || '{}')
+  } catch {
+    return { statusCode: 400, body: JSON.stringify({ error: 'Invalid JSON' }) }
+  }
+
+  const { imageBase64, mediaType } = body
+  if (!imageBase64 || !mediaType) {
+    return { statusCode: 400, body: JSON.stringify({ error: 'Missing imageBase64 or mediaType' }) }
+  }
+
+  const prompt = `你是一位专业的体型分析师。请根据这张全身照，分析以下两项，只返回 JSON，不要任何解释文字：
+
+{
+  "sheldon": "Ectomorph" | "Mesomorph" | "Endomorph",
+  "sheldon_confidence": 0-100的整数,
+  "bone": "H" | "X" | "A" | "V",
+  "bone_confidence": 0-100的整数,
+  "sheldon_reason": "一句话说明判断依据，15字以内",
+  "bone_reason": "一句话说明判断依据，15字以内"
+}
+
+判断标准：
+- sheldon（谢尔顿体质）：Ectomorph=纤细骨感代谢快，Mesomorph=匀称肌肉感，Endomorph=圆润脂肪多代谢慢
+- bone（骨骼轮廓，忽略脂肪只看骨架）：H=肩胯等宽腰不明显，X=肩胯等宽腰内收，A=胯宽于肩，V=肩宽于胯
+
+如果图片不清晰或无法判断，confidence 填 50 以下。只返回 JSON，不要 markdown 代码块。`
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-opus-4-5',
+        max_tokens: 300,
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'image',
+                source: {
+                  type: 'base64',
+                  media_type: mediaType,
+                  data: imageBase64,
+                },
+              },
+              { type: 'text', text: prompt },
+            ],
+          },
+        ],
+      }),
+    })
+
+    if (!response.ok) {
+      const err = await response.text()
+      return { statusCode: response.status, body: JSON.stringify({ error: err }) }
+    }
+
+    const data = await response.json()
+    const text = data.content?.[0]?.text || '{}'
+
+    // 清理可能的 markdown 代码块
+    const cleaned = text.replace(/```json|```/g, '').trim()
+    const result = JSON.parse(cleaned)
+
+    return {
+      statusCode: 200,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(result),
+    }
+  } catch (e: any) {
+    return { statusCode: 500, body: JSON.stringify({ error: e.message }) }
+  }
+}
