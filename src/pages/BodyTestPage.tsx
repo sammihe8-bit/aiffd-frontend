@@ -125,6 +125,101 @@ function MeasureGuide() {
   )
 }
 
+const BODY_IMAGES: Record<string, string> = {
+  'H':   '/BodyH.png',
+  'X':   '/BodX.png',
+  'A':   '/BodyA.png',
+  'V':   '/BodyV.png',
+  'H-O': '/BodyO.png',
+  'X-O': '/BodyO.png',
+  'A-O': '/BodyO.png',
+  'V-O': '/BodyO.png',
+  'H-S': '/BodS.png',
+  'X-S': '/BodS.png',
+}
+
+function ReportView({ result, onReset }: {
+  result: { boneCode: string; fatCode: string; compositeCode: string; compositeName: string; sheldonMap: string; yinYang: string }
+  onReset: () => void
+}) {
+  const imgSrc = BODY_IMAGES[result.compositeCode] || BODY_IMAGES[result.boneCode]
+  return (
+    <div>
+      {/* 左图 右标题+三层档案 */}
+      <div style={{ display: 'grid', gridTemplateColumns: imgSrc ? '180px 1fr' : '1fr', gap: '32px', alignItems: 'start', marginBottom: '40px' }}>
+        {imgSrc && (
+          <img src={imgSrc} alt={result.compositeName}
+            style={{ width: '180px', height: 'auto', objectFit: 'contain', display: 'block' }} />
+        )}
+        <div>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '4px', color: C.gold, marginBottom: '12px' }}>BODY PROFILE · 体型档案</p>
+          <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '32px', fontWeight: 400, color: C.h1, marginBottom: '6px' }}>{result.compositeName}</h1>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginBottom: '28px' }}>{result.compositeCode} · {result.sheldonMap} · {result.yinYang}</p>
+          <div style={{ border: `1px solid ${C.gold}`, padding: '20px 24px' }}>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.gold, marginBottom: '16px' }}>三层档案</p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '16px' }}>
+              {[
+                { label: '骨骼代码', value: result.boneCode, sub: '骨架结构' },
+                { label: '脂肪代码', value: result.fatCode, sub: '脂肪分布' },
+                { label: '气血态', value: result.yinYang, sub: YIN_YANG_DESC[result.yinYang]?.label },
+              ].map(item => (
+                <div key={item.label}>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '2px', color: C.muted, marginBottom: '6px' }}>{item.label}</p>
+                  <p style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.gold, marginBottom: '2px' }}>{item.value}</p>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted }}>{item.sub}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 气血态解读 + 穿搭策略 */}
+      <div style={{ border: `1px solid ${C.gold}`, marginBottom: '32px' }}>
+        <div style={{ padding: '24px 28px', borderBottom: `1px solid ${C.border}`, background: '#fafaf8' }}>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.gold, marginBottom: '12px' }}>气血态解读</p>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: C.body, lineHeight: '1.8', marginBottom: '8px' }}>{YIN_YANG_DESC[result.yinYang]?.desc}</p>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.sub, lineHeight: '1.8' }}>{YIN_YANG_DESC[result.yinYang]?.style}</p>
+        </div>
+        <div style={{ padding: '24px 28px' }}>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.gold, marginBottom: '20px' }}>穿搭策略</p>
+          {[
+            { label: '骨骼策略', text: `针对 ${result.boneCode} 型骨架的廓形选择、肩线处理和腰节强调方式将在完整报告中呈现。` },
+            { label: '脂肪策略', text: `针对 ${result.fatCode} 型脂肪分布的面料选择、图案偏好和视觉修饰方向将在完整报告中呈现。` },
+            { label: '气质策略', text: `基于 ${result.yinYang} 气血态的色彩能量、配饰风格和整体气场营造将在完整报告中呈现。` },
+          ].map((s, i, arr) => (
+            <div key={s.label} style={{ marginBottom: i < arr.length - 1 ? '16px' : 0, paddingBottom: i < arr.length - 1 ? '16px' : 0, borderBottom: i < arr.length - 1 ? `0.5px solid ${C.border}` : 'none' }}>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '2px', color: C.muted, marginBottom: '6px' }}>{s.label}</p>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.body, lineHeight: '1.8' }}>{s.text}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ background: '#f7f4ef', padding: '24px', marginBottom: '24px' }}>
+        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.gold, marginBottom: '12px' }}>推荐下一步</p>
+        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.body, lineHeight: '1.8', marginBottom: '16px' }}>体型档案已建立。加入色彩测试后，系统将生成「体型 × 色彩」组合分析，结论更精准。</p>
+        <Link to="/test/color" style={{ display: 'inline-block', background: C.h1, color: '#fff', fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '2px', padding: '14px 28px', textDecoration: 'none' }}>
+          继续色彩测试 →
+        </Link>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '12px' }}>
+        <button onClick={onReset}
+          style={{ border: `1px solid ${C.border}`, background: '#fff', padding: '14px', cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.body }}>
+          重新测试
+        </button>
+        <Link to="/onboarding" style={{ border: `1px solid ${C.border}`, background: '#fff', padding: '14px', fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.body, textDecoration: 'none', textAlign: 'center' as const }}>
+          返回测试中心
+        </Link>
+        <Link to="/profile" style={{ border: 'none', background: C.h1, padding: '14px', fontFamily: 'Inter, sans-serif', fontSize: '12px', color: '#fff', textDecoration: 'none', textAlign: 'center' as const }}>
+          进入我的档案
+        </Link>
+      </div>
+    </div>
+  )
+}
+
 export default function BodyTestPage() {
   const [phase, setPhase] = useState<Phase>('method')
   const [method, setMethod] = useState<'manual' | 'ai' | ''>('')
@@ -746,104 +841,16 @@ export default function BodyTestPage() {
         )}
 
         {/* ── 报告页 ── */}
-        {phase === 'report' && result && (() => {
-          const BODY_IMAGES: Record<string, string> = {
-            'H':   '/BodyH.png',
-            'X':   '/BodX.png',
-            'A':   '/BodyA.png',
-            'V':   '/BodyV.png',
-            'H-O': '/BodyO.png',
-            'X-O': '/BodyO.png',
-            'A-O': '/BodyO.png',
-            'V-O': '/BodyO.png',
-            'H-S': '/BodS.png',
-            'X-S': '/BodS.png',
-          }
-          const imgSrc = BODY_IMAGES[result.compositeCode] || BODY_IMAGES[result.boneCode]
-          return (
-          <div>
-            {/* 顶部：左图 右标题+三层档案 */}
-            <div style={{ display: 'grid', gridTemplateColumns: imgSrc ? '180px 1fr' : '1fr', gap: '32px', alignItems: 'start', marginBottom: '40px' }}>
-              {imgSrc && (
-                <img src={imgSrc} alt={result.compositeName}
-                  style={{ width: '180px', height: 'auto', objectFit: 'contain', display: 'block' }} />
-              )}
-              <div>
-                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '4px', color: C.gold, marginBottom: '12px' }}>BODY PROFILE · 体型档案</p>
-                <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '32px', fontWeight: 400, color: C.h1, marginBottom: '6px' }}>{result.compositeName}</h1>
-                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginBottom: '28px' }}>{result.compositeCode} · {result.sheldonMap} · {result.yinYang}</p>
-
-                {/* 三层档案 */}
-                <div style={{ border: `1px solid ${C.gold}`, padding: '20px 24px' }}>
-                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.gold, marginBottom: '16px' }}>三层档案</p>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '16px' }}>
-                    {[
-                      { label: '骨骼代码', value: result.boneCode, sub: '骨架结构' },
-                      { label: '脂肪代码', value: result.fatCode, sub: '脂肪分布' },
-                      { label: '气血态', value: result.yinYang, sub: YIN_YANG_DESC[result.yinYang]?.label },
-                    ].map(item => (
-                      <div key={item.label}>
-                        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '2px', color: C.muted, marginBottom: '6px' }}>{item.label}</p>
-                        <p style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.gold, marginBottom: '2px' }}>{item.value}</p>
-                        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted }}>{item.sub}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '4px', color: C.gold, marginBottom: '12px' }}>BODY PROFILE · 体型档案</p>
-              <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '32px', fontWeight: 400, color: C.h1, marginBottom: '6px' }}>{result.compositeName}</h1>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted }}>{result.compositeCode} · {result.sheldonMap} · {result.yinYang}</p>
-            </div>
-
-            {/* 气血态解读 */}
-            <div style={{ border: `1px solid ${C.gold}`, marginBottom: '32px' }}>
-              <div style={{ padding: '24px 28px', borderBottom: `1px solid ${C.border}`, background: '#fafaf8' }}>
-                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.gold, marginBottom: '12px' }}>气血态解读</p>
-                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: C.body, lineHeight: '1.8', marginBottom: '8px' }}>{YIN_YANG_DESC[result.yinYang]?.desc}</p>
-                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.sub, lineHeight: '1.8' }}>{YIN_YANG_DESC[result.yinYang]?.style}</p>
-              </div>
-              <div style={{ padding: '24px 28px' }}>
-                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.gold, marginBottom: '20px' }}>穿搭策略</p>
-                {[
-                  { label: '骨骼策略', text: `针对 ${result.boneCode} 型骨架的廓形选择、肩线处理和腰节强调方式将在完整报告中呈现。` },
-                  { label: '脂肪策略', text: `针对 ${result.fatCode} 型脂肪分布的面料选择、图案偏好和视觉修饰方向将在完整报告中呈现。` },
-                  { label: '气质策略', text: `基于 ${result.yinYang} 气血态的色彩能量、配饰风格和整体气场营造将在完整报告中呈现。` },
-                ].map((s, i, arr) => (
-                  <div key={s.label} style={{ marginBottom: i < arr.length - 1 ? '16px' : 0, paddingBottom: i < arr.length - 1 ? '16px' : 0, borderBottom: i < arr.length - 1 ? `0.5px solid ${C.border}` : 'none' }}>
-                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '2px', color: C.muted, marginBottom: '6px' }}>{s.label}</p>
-                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.body, lineHeight: '1.8' }}>{s.text}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div style={{ background: '#f7f4ef', padding: '24px', marginBottom: '24px' }}>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.gold, marginBottom: '12px' }}>推荐下一步</p>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.body, lineHeight: '1.8', marginBottom: '16px' }}>体型档案已建立。加入色彩测试后，系统将生成「体型 × 色彩」组合分析，结论更精准。</p>
-              <Link to="/test/color" style={{ display: 'inline-block', background: C.h1, color: '#fff', fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '2px', padding: '14px 28px', textDecoration: 'none' }}>
-                继续色彩测试 →
-              </Link>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '12px' }}>
-              <button onClick={() => {
-                setPhase('method'); setResult(null); setSheldon(''); setBoneShape(''); setVisual('')
-                setQ1(''); setQ2(''); setQ3(''); setQ4('')
-                setPreviewUrl(''); setImageBase64(''); setAiStatus('idle'); setAiResult(null)
-              }} style={{ border: `1px solid ${C.border}`, background: '#fff', padding: '14px', cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.body }}>
-                重新测试
-              </button>
-              <Link to="/onboarding" style={{ border: `1px solid ${C.border}`, background: '#fff', padding: '14px', fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.body, textDecoration: 'none', textAlign: 'center' as const }}>
-                返回测试中心
-              </Link>
-              <Link to="/profile" style={{ border: 'none', background: C.h1, padding: '14px', fontFamily: 'Inter, sans-serif', fontSize: '12px', color: '#fff', textDecoration: 'none', textAlign: 'center' as const }}>
-                进入我的档案
-              </Link>
-            </div>
-          </div>
-        )})()}
+        {phase === 'report' && result && (
+          <ReportView
+            result={result}
+            onReset={() => {
+              setPhase('method'); setResult(null); setSheldon(''); setBoneShape(''); setVisual('')
+              setQ1(''); setQ2(''); setQ3(''); setQ4('')
+              setPreviewUrl(''); setImageBase64(''); setAiStatus('idle'); setAiResult(null)
+            }}
+          />
+        )}
 
       </div>
     </div>
