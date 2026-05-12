@@ -146,16 +146,20 @@ function ReportView({ result, onReset }: {
   return (
     <div>
       {/* 左图 右标题+三层档案 */}
-      <div style={{ display: 'grid', gridTemplateColumns: imgSrc ? '180px 1fr' : '1fr', gap: '32px', alignItems: 'start', marginBottom: '40px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: imgSrc ? '160px 1fr' : '1fr', gap: '32px', alignItems: 'stretch', marginBottom: '40px' }}>
         {imgSrc && (
-          <img src={imgSrc} alt={result.compositeName}
-            style={{ width: '180px', height: 'auto', objectFit: 'contain', display: 'block' }} />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f7f4ef', padding: '16px 8px' }}>
+            <img src={imgSrc} alt={result.compositeName}
+              style={{ width: '140px', height: 'auto', objectFit: 'contain', display: 'block' }} />
+          </div>
         )}
-        <div>
-          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '4px', color: C.gold, marginBottom: '12px' }}>BODY PROFILE · 体型档案</p>
-          <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '32px', fontWeight: 400, color: C.h1, marginBottom: '6px' }}>{result.compositeName}</h1>
-          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginBottom: '28px' }}>{result.compositeCode} · {result.sheldonMap} · {result.yinYang}</p>
-          <div style={{ border: `1px solid ${C.gold}`, padding: '20px 24px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '4px', color: C.gold, marginBottom: '12px' }}>BODY PROFILE · 体型档案</p>
+            <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '32px', fontWeight: 400, color: C.h1, marginBottom: '6px' }}>{result.compositeName}</h1>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginBottom: '24px' }}>{result.compositeCode} · {result.sheldonMap} · {result.yinYang}</p>
+          </div>
+          <div style={{ border: `1px solid ${C.gold}`, padding: '20px 24px', flex: 1 }}>
             <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.gold, marginBottom: '16px' }}>三层档案</p>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '16px' }}>
               {[
