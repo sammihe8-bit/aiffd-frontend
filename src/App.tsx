@@ -9,7 +9,9 @@ import PrivacyPage from './pages/PrivacyPage'
 import BodyTestPage from './pages/BodyTestPage'
 import ColumnPage from './pages/ColumnPage'
 import { useAuth } from './hooks/useAuth'
-
+import ColorTestPage from './pages/ColorTestPage'
+// 路由里加：
+<Route path="/test/color" element={<ColorTestPage />} />
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { token } = useAuth()
   return token ? <>{children}</> : <Navigate to="/auth" replace />
