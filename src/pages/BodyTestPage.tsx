@@ -140,7 +140,6 @@ export default function BodyTestPage() {
   // AI 上传
   const [previewUrl, setPreviewUrl] = useState('')
   const [imageBase64, setImageBase64] = useState('')
-  const [imageMediaType, setImageMediaType] = useState('')
   const [aiStatus, setAiStatus] = useState<'idle' | 'analyzing' | 'done' | 'error'>('idle')
   const [aiResult, setAiResult] = useState<AiResult | null>(null)
   const [aiError, setAiError] = useState('')
@@ -173,7 +172,6 @@ export default function BodyTestPage() {
       // 提取 base64 数据（去掉 data:image/xxx;base64, 前缀）
       const base64 = dataUrl.split(',')[1]
       setImageBase64(base64)
-      setImageMediaType(file.type as 'image/jpeg' | 'image/png' | 'image/webp')
     }
     reader.readAsDataURL(file)
   }
@@ -220,12 +218,6 @@ export default function BodyTestPage() {
       yinYang,
     })
     setPhase('report')
-  }
-
-  const inputStyle = {
-    width: '100%', border: `1px solid ${C.border}`, padding: '12px 14px',
-    fontFamily: 'Inter, sans-serif', fontSize: '14px', background: '#fff',
-    outline: 'none', boxSizing: 'border-box' as const,
   }
 
   const btnPrimary = {
