@@ -188,12 +188,17 @@ function calcColorResult(a: Answers): ColorResult {
     '冷白皮': 0, '暖白皮': 0,
   }
 
-  // Q1 基础肤色
-  if (a.q1 === 'A') { scores['冷白皮'] += 3; scores['暖白皮'] += 2 }
-  if (a.q1 === 'B') { scores['暖白皮'] += 3; scores['暖黄皮'] += 1 }
-  if (a.q1 === 'C') { scores['暖黄皮'] += 2; scores['中性黄皮'] += 2 }
-  if (a.q1 === 'D') { scores['橄榄黄皮'] += 2; scores['冷黄皮'] += 1 }
-  if (a.q1 === 'E') { scores['橄榄黄皮'] += 3; scores['冷黄皮'] += 2 }
+  // Q1 基础肤色（明度判断，不判断冷暖）
+  if (a.q1 === 'A') {
+    // 偏白 → 白皮可能性高，黄皮也可能
+    scores['冷白皮'] += 2; scores['暖白皮'] += 2
+    scores['冷黄皮'] += 1; scores['暖黄皮'] += 1
+  }
+  if (a.q1 === 'B') {
+    // 偏黄偏深 → 黄皮和橄榄皮可能性高
+    scores['暖黄皮'] += 2; scores['冷黄皮'] += 2
+    scores['橄榄黄皮'] += 2; scores['中性黄皮'] += 1
+  }
 
   // Q2 肤色底色
   if (a.q2 === 'A') { scores['暖黄皮'] += 3; scores['暖白皮'] += 2 }
@@ -570,17 +575,50 @@ export default function ColorTestPage() {
 
         {/* ── Q1 基础肤色 ── */}
         {step === 'q1' && (
-          <QuestionStep step={1} total={14} tag="Step 01 · 基础肤色"
-            title="你觉得自己的肤色更接近哪一种？"
-            options={[
-              { id: 'A', label: '白皙偏粉', sub: '皮肤白，带粉调或玫瑰感' },
-              { id: 'B', label: '白皙偏黄', sub: '皮肤白，但带奶油或蜜桃感' },
-              { id: 'C', label: '自然偏黄', sub: '正常黄色调，不深不浅' },
-              { id: 'D', label: '小麦色', sub: '肤色较深，健康感' },
-              { id: 'E', label: '偏暗沉', sub: '肤色暗沉，偏灰或偏黄' },
-              { id: 'F', label: '不确定', sub: '因光线或化妆很难判断' },
-            ]}
-            value={answers.q1} onChange={set('q1')} onNext={next} onBack={back} />
+          <div>
+            <ProgressBar current={1} total={14} label="COLOR TEST · STEP 01" />
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '4px', color: C.gold, marginBottom: '12px' }}>Step 01 · 基础肤色</p>
+            <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '26px', fontWeight: 400, color: C.h1, marginBottom: '8px', lineHeight: 1.4 }}>你的肤色更接近哪一种？</h2>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginBottom: '32px', lineHeight: '1.7' }}>不考虑冷暖，只看深浅明度</p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '36px' }}>
+              {[
+                { id: 'A', img: '/whiteface.png', label: '偏白 / 白皙', sub: '白皙、粉白、自然黄但整体偏白' },
+                { id: 'B', img: '/yellowface.png', label: '偏黄 / 偏深', sub: '自然黄偏黄、暗黄、褐黄、小麦色' },
+              ].map(o => (
+                <button key={o.id} onClick={() => set('q1')(o.id)} style={{
+                  border: `1px solid ${answers.q1 === o.id ? C.gold : C.border}`,
+                  background: answers.q1 === o.id ? '#fdf8ee' : '#fff',
+                  padding: 0, cursor: 'pointer', textAlign: 'left',
+                  transition: 'all 0.2s', overflow: 'hidden',
+                  boxShadow: answers.q1 === o.id ? `0 0 0 1px ${C.gold}` : 'none',
+                }}>
+                  <img src={o.img} alt={o.label}
+                    style={{ width: '100%', height: '200px', objectFit: 'cover', display: 'block' }} />
+                  <div style={{ padding: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+                      <span style={{
+                        width: '28px', height: '28px', borderRadius: '6px', flexShrink: 0,
+                        background: answers.q1 === o.id ? C.gold : C.h1,
+                        color: '#fff', fontFamily: 'Inter, sans-serif', fontSize: '13px', fontWeight: 600,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>{o.id}</span>
+                      <p style={{ fontFamily: 'Georgia, serif', fontSize: '16px', color: answers.q1 === o.id ? C.gold : C.h1 }}>{o.label}</p>
+                    </div>
+                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, lineHeight: '1.6', paddingLeft: '38px' }}>{o.sub}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <BackBtn onClick={back} />
+              <button onClick={next} disabled={!answers.q1}
+                style={{ ...(!answers.q1 ? { flex: 1, padding: '16px', background: '#ccc', color: '#fff', border: 'none', cursor: 'not-allowed', fontFamily: 'Inter, sans-serif', fontSize: '13px', letterSpacing: '2px' } : { flex: 1, padding: '16px', background: C.h1, color: '#fff', border: 'none', cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontSize: '13px', letterSpacing: '2px' }) }}>
+                继续
+              </button>
+            </div>
+          </div>
         )}
 
         {/* ── Q2 肤色底色 ── */}
