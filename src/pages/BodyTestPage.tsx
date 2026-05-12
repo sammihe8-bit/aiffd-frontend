@@ -1,14 +1,10 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 
 const C = {
   h1: '#111111', h2: '#222222', sub: '#444444',
   body: '#666666', muted: '#999999', gold: '#B8973A', border: '#e8e8e4',
 }
-
-// ── 流程说明 ──
-// AI 路径:    0(方式选择) → 4AI(拍照) → 1(谢尔顿确认) → 2(骨骼确认) → 3(脂肪) → 5(气血态) → 6(报告)
-// 手动路径:   0(方式选择) → 4M(三围输入) → 1(谢尔顿) → 2(骨骼) → 3(脂肪) → 5(气血态) → 6(报告)
 
 const PHASES = ['method', 'data', 'sheldon', 'bone', 'fat', 'qi', 'report'] as const
 type Phase = typeof PHASES[number]
@@ -34,9 +30,14 @@ const YIN_YANG_DESC: Record<string, { label: string; desc: string; style: string
   '阴阳和平': { label: '阴阳和平型', desc: '平衡稳定，气质中正，风格包容性强',     style: '经典款式和百搭配色是最佳选择，可随场合灵活切换风格' },
 }
 
-// AI 模拟给出的谢尔顿预判（实际接入后由模型返回）
-const AI_SHELDON_SUGGESTION = 'Mesomorph'
-const AI_BONE_SUGGESTION = 'H'
+interface AiResult {
+  sheldon: 'Ectomorph' | 'Mesomorph' | 'Endomorph'
+  sheldon_confidence: number
+  bone: 'H' | 'X' | 'A' | 'V'
+  bone_confidence: number
+  sheldon_reason: string
+  bone_reason: string
+}
 
 function calcFatCode(whr: number, bustWaistDiff: number, visual: string, boneCode: string): string {
   let oScore = 0, sScore = 0, noneScore = 0
@@ -103,7 +104,15 @@ export default function BodyTestPage() {
   const [shoulder, setShoulder] = useState('')
   const [hipBone, setHipBone] = useState('')
   const [conflict, setConflict] = useState('')
-  const [aiStatus, setAiStatus] = useState<'idle' | 'analyzing' | 'done'>('idle')
+
+  // AI 上传
+  const [previewUrl, setPreviewUrl] = useState('')
+  const [imageBase64, setImageBase64] = useState('')
+  const [imageMediaType, setImageMediaType] = useState('')
+  const [aiStatus, setAiStatus] = useState<'idle' | 'analyzing' | 'done' | 'error'>('idle')
+  const [aiResult, setAiResult] = useState<AiResult | null>(null)
+  const [aiError, setAiError] = useState('')
+  const [isDragOver, setIsDragOver] = useState(false)
 
   // 确认层
   const [sheldon, setSheldon] = useState('')
@@ -117,11 +126,48 @@ export default function BodyTestPage() {
   const [q3, setQ3] = useState('')
   const [q4, setQ4] = useState('')
 
-  // 报告
   const [result, setResult] = useState<{
     boneCode: string; fatCode: string; compositeCode: string;
     compositeName: string; sheldonMap: string; yinYang: string;
   } | null>(null)
+
+  // 处理图片文件：读取为 base64 + 生成预览
+  const handleImageFile = (file: File) => {
+    if (!file.type.startsWith('image/')) return
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const dataUrl = e.target?.result as string
+      setPreviewUrl(dataUrl)
+      // 提取 base64 数据（去掉 data:image/xxx;base64, 前缀）
+      const base64 = dataUrl.split(',')[1]
+      setImageBase64(base64)
+      setImageMediaType(file.type as 'image/jpeg' | 'image/png' | 'image/webp')
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const startAiAnalysis = async () => {
+    if (!imageBase64) return
+    setAiStatus('analyzing')
+    setAiError('')
+    try {
+      const res = await fetch('/.netlify/functions/analyze-body', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageBase64, mediaType: imageMediaType }),
+      })
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error || `HTTP ${res.status}`)
+      }
+      const data: AiResult = await res.json()
+      setAiResult(data)
+      setAiStatus('done')
+    } catch (e: any) {
+      setAiError(e.message)
+      setAiStatus('error')
+    }
+  }
 
   const checkConflict = (b: string, w: string, h: string) => {
     const bN = parseFloat(b), wN = parseFloat(w), hN = parseFloat(h)
@@ -150,13 +196,6 @@ export default function BodyTestPage() {
     setPhase('report')
   }
 
-  const startAiAnalysis = () => {
-    setAiStatus('analyzing')
-    setTimeout(() => {
-      setAiStatus('done')
-    }, 3000)
-  }
-
   const inputStyle = {
     width: '100%', border: `1px solid ${C.border}`, padding: '12px 14px',
     fontFamily: 'Inter, sans-serif', fontSize: '14px', background: '#fff',
@@ -170,6 +209,9 @@ export default function BodyTestPage() {
   }
 
   const btnDisabled = { ...btnPrimary, background: '#ccc', cursor: 'not-allowed' as const }
+
+  const sheldonLabel = (s: string) =>
+    s === 'Ectomorph' ? '外胚型 (Ectomorph)' : s === 'Mesomorph' ? '中胚型 (Mesomorph)' : '内胚型 (Endomorph)'
 
   return (
     <div style={{ minHeight: '100vh', background: '#fafaf8' }}>
@@ -203,7 +245,7 @@ export default function BodyTestPage() {
           </div>
         )}
 
-        {/* ── 数据输入：手动三围 ── */}
+        {/* ── 手动三围输入 ── */}
         {phase === 'data' && method === 'manual' && (
           <div>
             <ProgressBar current={1} total={6} label="BODY TEST · STEP 01" />
@@ -264,22 +306,18 @@ export default function BodyTestPage() {
             <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
               <BackBtn onClick={() => setPhase('method')} />
               <button onClick={() => {
-                // 根据三围数据自动预填推荐答案
                 const bustN = parseFloat(bust), waistN = parseFloat(waist), hipN = parseFloat(hip)
                 const shoulderN = parseFloat(shoulder), hipBoneN = parseFloat(hipBone)
                 const whr = waistN / hipN
                 const bwd = bustN - waistN
                 const shDiff = shoulderN - hipBoneN
-                // 谢尔顿预填
                 if (whr > 0.85) setSheldon('Endomorph')
                 else if (bwd > 22) setSheldon('Mesomorph')
                 else setSheldon('Ectomorph')
-                // 骨骼预填
                 if (shDiff > 2) setBoneShape('V')
                 else if (shDiff < -2) setBoneShape('A')
                 else if (bwd > 20) setBoneShape('X')
                 else setBoneShape('H')
-                // 脂肪预填
                 if (whr > 0.85) setVisual('O')
                 else if (bwd > 22) setVisual('S')
                 else setVisual('none')
@@ -293,7 +331,7 @@ export default function BodyTestPage() {
           </div>
         )}
 
-        {/* ── 数据输入：AI 拍照 ── */}
+        {/* ── AI 拍照上传 ── */}
         {phase === 'data' && method === 'ai' && (
           <div>
             <ProgressBar current={1} total={6} label="BODY TEST · STEP 01" />
@@ -301,19 +339,63 @@ export default function BodyTestPage() {
             <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '28px', fontWeight: 400, color: C.h1, marginBottom: '8px' }}>上传正面全身照</h2>
             <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginBottom: '40px' }}>建议穿贴身衣物，背景简洁，光线均匀，站直面对镜头</p>
 
+            {/* idle：上传区 */}
             {aiStatus === 'idle' && (
               <div>
-                <div style={{ border: `1px dashed ${C.border}`, padding: '64px 32px', textAlign: 'center', marginBottom: '24px', background: '#f7f4ef' }}>
-                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '2px', color: C.muted, marginBottom: '8px' }}>点击上传或拖拽图片</p>
-                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted }}>支持 JPG / PNG，建议全身正面照</p>
+                <div
+                  onClick={() => document.getElementById('body-upload')?.click()}
+                  onDragOver={e => { e.preventDefault(); setIsDragOver(true) }}
+                  onDragLeave={() => setIsDragOver(false)}
+                  onDrop={e => {
+                    e.preventDefault(); setIsDragOver(false)
+                    const file = e.dataTransfer.files[0]
+                    if (file) handleImageFile(file)
+                  }}
+                  style={{
+                    border: `1px dashed ${isDragOver ? C.gold : C.border}`,
+                    padding: previewUrl ? '16px' : '64px 32px',
+                    textAlign: 'center', marginBottom: '16px',
+                    background: isDragOver ? '#fdf8ee' : '#f7f4ef',
+                    cursor: 'pointer', transition: 'all 0.2s',
+                    minHeight: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                  {previewUrl ? (
+                    <img src={previewUrl} alt="预览" style={{ maxHeight: '360px', maxWidth: '100%', objectFit: 'contain' }} />
+                  ) : (
+                    <div>
+                      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={C.muted} strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" style={{ margin: '0 auto 16px', display: 'block' }}>
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <polyline points="21,15 16,10 5,21"/>
+                      </svg>
+                      <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '2px', color: C.muted, marginBottom: '8px' }}>点击上传或拖拽图片</p>
+                      <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted }}>支持 JPG / PNG，建议全身正面照</p>
+                    </div>
+                  )}
                 </div>
+
+                <input id="body-upload" type="file" accept="image/jpeg,image/png,image/webp"
+                  style={{ display: 'none' }}
+                  onChange={e => { const f = e.target.files?.[0]; if (f) handleImageFile(f) }} />
+
+                {previewUrl && (
+                  <button onClick={(e) => { e.stopPropagation(); setPreviewUrl(''); setImageBase64(''); setImageMediaType('') }}
+                    style={{ display: 'block', margin: '0 auto 16px', background: 'none', border: 'none', color: C.muted, cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontSize: '12px', textDecoration: 'underline' }}>
+                    重新选择图片
+                  </button>
+                )}
+
                 <div style={{ display: 'flex', gap: '12px' }}>
                   <BackBtn onClick={() => setPhase('method')} />
-                  <button onClick={startAiAnalysis} style={btnPrimary}>开始 AI 分析</button>
+                  <button onClick={startAiAnalysis} disabled={!imageBase64}
+                    style={{ ...(!imageBase64 ? btnDisabled : btnPrimary) }}>
+                    开始 AI 分析
+                  </button>
                 </div>
               </div>
             )}
 
+            {/* analyzing：加载中 */}
             {aiStatus === 'analyzing' && (
               <div style={{ textAlign: 'center', padding: '80px 0' }}>
                 <div style={{ width: '40px', height: '40px', border: `1px solid ${C.border}`, borderTop: `1px solid ${C.gold}`, borderRadius: '50%', margin: '0 auto 24px', animation: 'spin 1s linear infinite' }} />
@@ -322,31 +404,80 @@ export default function BodyTestPage() {
               </div>
             )}
 
-            {aiStatus === 'done' && (
+            {/* error：失败提示 */}
+            {aiStatus === 'error' && (
               <div>
+                <div style={{ border: '1px solid #e0a060', background: '#fff8f0', padding: '20px 24px', marginBottom: '24px' }}>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: '#a06020', lineHeight: '1.7' }}>
+                    ⚠ AI 分析失败：{aiError}<br />
+                    请检查图片格式（JPG/PNG），或切换到手动输入方式。
+                  </p>
+                </div>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button onClick={() => { setAiStatus('idle') }}
+                    style={{ border: `1px solid ${C.border}`, background: '#fff', padding: '12px 24px', cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.body }}>
+                    重新上传
+                  </button>
+                  <button onClick={() => { setMethod('manual'); setAiStatus('idle'); setPreviewUrl(''); setImageBase64('') }} style={btnPrimary}>
+                    改用手动输入
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* done：AI 结果 */}
+            {aiStatus === 'done' && aiResult && (
+              <div>
+                {previewUrl && (
+                  <div style={{ marginBottom: '20px', textAlign: 'center' }}>
+                    <img src={previewUrl} alt="已分析" style={{ maxHeight: '200px', maxWidth: '100%', objectFit: 'contain', border: `1px solid ${C.border}` }} />
+                  </div>
+                )}
                 <div style={{ border: `1px solid ${C.gold}`, padding: '24px', marginBottom: '20px', background: '#fdf8ee' }}>
                   <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '3px', color: C.gold, marginBottom: '16px' }}>AI 初步识别结果</p>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: '16px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: '20px' }}>
                     {[
-                      { label: '体质类型推测', value: '中胚型 (Mesomorph)', conf: '79%' },
-                      { label: '骨骼轮廓推测', value: 'H 型', conf: '82%' },
+                      {
+                        label: '体质类型推测',
+                        value: sheldonLabel(aiResult.sheldon),
+                        conf: aiResult.sheldon_confidence,
+                        reason: aiResult.sheldon_reason,
+                      },
+                      {
+                        label: '骨骼轮廓推测',
+                        value: `${aiResult.bone} 型`,
+                        conf: aiResult.bone_confidence,
+                        reason: aiResult.bone_reason,
+                      },
                     ].map(r => (
                       <div key={r.label}>
                         <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '2px', color: C.muted, marginBottom: '6px' }}>{r.label}</p>
-                        <p style={{ fontFamily: 'Georgia, serif', fontSize: '20px', color: C.gold, marginBottom: '2px' }}>{r.value}</p>
-                        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted }}>置信度 {r.conf}</p>
+                        <p style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.gold, marginBottom: '4px' }}>{r.value}</p>
+                        {/* 置信度进度条 */}
+                        <div style={{ height: '3px', background: C.border, marginBottom: '4px', borderRadius: '2px' }}>
+                          <div style={{ height: '3px', background: r.conf >= 70 ? C.gold : '#ccc', width: `${r.conf}%`, borderRadius: '2px', transition: 'width 0.6s' }} />
+                        </div>
+                        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted, marginBottom: '4px' }}>置信度 {r.conf}%</p>
+                        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.body }}>{r.reason}</p>
                       </div>
                     ))}
                   </div>
+                  {(aiResult.sheldon_confidence < 60 || aiResult.bone_confidence < 60) && (
+                    <div style={{ marginTop: '16px', padding: '12px', background: '#fff8f0', border: '1px solid #e0a060' }}>
+                      <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: '#a06020', lineHeight: '1.6' }}>
+                        ⚠ 部分结果置信度较低，建议在下一步仔细确认或修改 AI 的判断
+                      </p>
+                    </div>
+                  )}
                 </div>
-                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, marginBottom: '16px', lineHeight: '1.7' }}>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, marginBottom: '20px', lineHeight: '1.7' }}>
                   下一步将展示完整选项供你确认或修改 AI 的判断。
                 </p>
                 <div style={{ display: 'flex', gap: '12px' }}>
-                  <BackBtn onClick={() => { setAiStatus('idle'); setPhase('method') }} />
+                  <BackBtn onClick={() => setAiStatus('idle')} />
                   <button onClick={() => {
-                    setSheldon(AI_SHELDON_SUGGESTION)
-                    setBoneShape(AI_BONE_SUGGESTION)
+                    setSheldon(aiResult.sheldon)
+                    setBoneShape(aiResult.bone)
                     setPhase('sheldon')
                   }} style={btnPrimary}>
                     确认并继续
@@ -368,7 +499,6 @@ export default function BodyTestPage() {
             <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginBottom: '40px' }}>
               {method === 'ai' ? '以下是 AI 的初步判断，你可以直接确认，也可以选择更接近你实际情况的类型' : '选择最接近你天生体质倾向的类型（非当前体重状态）'}
             </p>
-
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '16px', marginBottom: '32px' }}>
               {[
                 { id: 'Ectomorph', label: '外胚型', en: 'Ectomorph', keywords: ['纤细', '骨骼清晰', '代谢快'], desc: '身体线条垂直纤细，骨骼可见，脂肪极少，新陈代谢快' },
@@ -381,9 +511,9 @@ export default function BodyTestPage() {
                   padding: '20px 16px', cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s',
                   position: 'relative',
                 }}>
-                  {t.id === (method === 'ai' ? AI_SHELDON_SUGGESTION : sheldon) && sheldon === t.id && (
+                  {method === 'ai' && aiResult?.sheldon === t.id && (
                     <div style={{ position: 'absolute', top: '8px', right: '8px', background: C.gold, color: '#fff', fontFamily: 'Inter, sans-serif', fontSize: '9px', padding: '2px 6px', letterSpacing: '1px' }}>
-                      {method === 'ai' ? 'AI 推荐' : '系统推荐'}
+                      AI 推荐
                     </div>
                   )}
                   <div style={{ height: '80px', background: '#f5f2ed', marginBottom: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -398,13 +528,10 @@ export default function BodyTestPage() {
                 </button>
               ))}
             </div>
-
             <div style={{ display: 'flex', gap: '12px' }}>
               <BackBtn onClick={() => setPhase('data')} />
               <button onClick={() => setPhase('bone')} disabled={!sheldon}
-                style={{ ...(!sheldon ? btnDisabled : btnPrimary) }}>
-                继续
-              </button>
+                style={{ ...(!sheldon ? btnDisabled : btnPrimary) }}>继续</button>
             </div>
           </div>
         )}
@@ -418,7 +545,6 @@ export default function BodyTestPage() {
               {method === 'ai' ? 'AI 判断你的骨骼轮廓，请确认或修改' : '你的骨骼轮廓更接近哪种？'}
             </h2>
             <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginBottom: '40px' }}>忽略脂肪，只看骨架结构——肩宽、胯宽与腰节的关系</p>
-
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '24px' }}>
               {[
                 { id: 'H', label: 'H 型', desc: '肩胯等宽，腰节不明显，整体呈直筒状' },
@@ -428,17 +554,16 @@ export default function BodyTestPage() {
               ].map(b => (
                 <button key={b.id} onClick={() => {
                   setBoneShape(b.id)
-                  if (b.id === 'X') setShowXTrap(true)
-                  else setShowXTrap(false)
+                  setShowXTrap(b.id === 'X')
                 }} style={{
                   border: `1px solid ${boneShape === b.id ? C.gold : C.border}`,
                   background: boneShape === b.id ? '#fdf8ee' : '#fff',
                   padding: '20px', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s',
                   position: 'relative',
                 }}>
-                  {b.id === boneShape && (
+                  {method === 'ai' && aiResult?.bone === b.id && (
                     <div style={{ position: 'absolute', top: '8px', right: '8px', background: C.gold, color: '#fff', fontFamily: 'Inter, sans-serif', fontSize: '9px', padding: '2px 6px', letterSpacing: '1px' }}>
-                      {method === 'ai' ? 'AI 推荐' : '系统推荐'}
+                      AI 推荐
                     </div>
                   )}
                   <p style={{ fontFamily: 'Georgia, serif', fontSize: '24px', color: boneShape === b.id ? C.gold : C.h1, marginBottom: '8px' }}>{b.label}</p>
@@ -447,7 +572,6 @@ export default function BodyTestPage() {
               ))}
             </div>
 
-            {/* X 型腰带验证 */}
             {showXTrap && (
               <div style={{ border: `1px solid ${C.gold}`, background: '#fdf8ee', padding: '24px', marginBottom: '24px' }}>
                 <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '3px', color: C.gold, marginBottom: '12px' }}>⚠ X 型验证</p>
@@ -463,8 +587,7 @@ export default function BodyTestPage() {
                   ].map((o, i) => (
                     <button key={i} onClick={o.action} style={{
                       border: `1px solid ${C.border}`, background: '#fff', padding: '16px 18px',
-                      cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s',
-                      display: 'flex', gap: '14px', alignItems: 'flex-start',
+                      cursor: 'pointer', textAlign: 'left', display: 'flex', gap: '14px', alignItems: 'flex-start',
                     }}>
                       <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, flexShrink: 0, marginTop: '2px' }}>{String.fromCharCode(65 + i)}</span>
                       <div>
@@ -480,9 +603,7 @@ export default function BodyTestPage() {
             <div style={{ display: 'flex', gap: '12px' }}>
               <BackBtn onClick={() => setPhase('sheldon')} />
               <button onClick={() => setPhase('fat')} disabled={!boneShape || showXTrap}
-                style={{ ...(!boneShape || showXTrap ? btnDisabled : btnPrimary) }}>
-                继续
-              </button>
+                style={{ ...(!boneShape || showXTrap ? btnDisabled : btnPrimary) }}>继续</button>
             </div>
           </div>
         )}
@@ -493,30 +614,27 @@ export default function BodyTestPage() {
             <ProgressBar current={4} total={6} label="BODY TEST · STEP 04" />
             <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '4px', color: C.gold, marginBottom: '12px' }}>Step 04 · 脂肪分布</p>
             <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '28px', fontWeight: 400, color: C.h1, marginBottom: '8px' }}>在骨骼地基上，脂肪如何分布？</h2>
-            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginBottom: '40px' }}>忽略骨架，只看脂肪的分布方式与感觉。系统已根据你的数据预填推荐，可直接修改。</p>
-
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginBottom: '40px' }}>忽略骨架，只看脂肪的分布方式与感觉。</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
               {[
-                { id: 'O', label: '· 内胚脂肪' },
-                { id: 'S', label: '· 中胚脂肪' },
-                { id: 'none', label: '· 外胚脂肪' },
+                { id: 'O', label: '· 内胚脂肪', desc: '脂肪均匀分布全身，腹部较多，整体圆润' },
+                { id: 'S', label: '· 中胚脂肪', desc: '脂肪主要在胸、臀，腰部相对纤细，曲线感强' },
+                { id: 'none', label: '· 外胚脂肪', desc: '全身脂肪极少，骨骼和肌肉线条可见' },
               ].map(v => (
                 <button key={v.id} onClick={() => setVisual(v.id)} style={{
                   border: `1px solid ${visual === v.id ? C.gold : C.border}`,
                   background: visual === v.id ? '#fdf8ee' : '#fff',
                   padding: '20px 24px', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s',
                 }}>
-                  <p style={{ fontFamily: 'Georgia, serif', fontSize: '16px', color: visual === v.id ? C.gold : C.h2 }}>{v.label}</p>
+                  <p style={{ fontFamily: 'Georgia, serif', fontSize: '16px', color: visual === v.id ? C.gold : C.h2, marginBottom: '4px' }}>{v.label}</p>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted }}>{v.desc}</p>
                 </button>
               ))}
             </div>
-
             <div style={{ display: 'flex', gap: '12px' }}>
               <BackBtn onClick={() => setPhase('bone')} />
               <button onClick={() => setPhase('qi')} disabled={!visual}
-                style={{ ...(!visual ? btnDisabled : btnPrimary) }}>
-                继续
-              </button>
+                style={{ ...(!visual ? btnDisabled : btnPrimary) }}>继续</button>
             </div>
           </div>
         )}
@@ -528,7 +646,6 @@ export default function BodyTestPage() {
             <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '4px', color: C.gold, marginBottom: '12px' }}>Step 05 · 气血态</p>
             <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '28px', fontWeight: 400, color: C.h1, marginBottom: '8px' }}>气血态测试</h2>
             <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginBottom: '40px' }}>4 道题，判断你的气质底层倾向，影响穿搭的「精气神」维度</p>
-
             <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', marginBottom: '40px' }}>
               {[
                 { q: 'Q1 · 你的精力模式？', val: q1, set: setQ1, opts: [{ id: 'A', t: '持续稳定，不易累也不易亢奋' }, { id: 'B', t: '爆发力强，但易透支' }, { id: 'C', t: '温和持久，不喜剧烈变动' }, { id: 'D', t: '敏感细腻，易消耗' }] },
@@ -554,7 +671,6 @@ export default function BodyTestPage() {
                 </div>
               ))}
             </div>
-
             <div style={{ display: 'flex', gap: '12px' }}>
               <BackBtn onClick={() => setPhase('fat')} />
               <button onClick={computeResult} disabled={!q1 || !q2 || !q3}
@@ -591,13 +707,11 @@ export default function BodyTestPage() {
                   ))}
                 </div>
               </div>
-
               <div style={{ padding: '24px 28px', borderBottom: `1px solid ${C.border}`, background: '#fafaf8' }}>
                 <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.gold, marginBottom: '12px' }}>气血态解读</p>
                 <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: C.body, lineHeight: '1.8', marginBottom: '8px' }}>{YIN_YANG_DESC[result.yinYang]?.desc}</p>
                 <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.sub, lineHeight: '1.8' }}>{YIN_YANG_DESC[result.yinYang]?.style}</p>
               </div>
-
               <div style={{ padding: '24px 28px' }}>
                 <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.gold, marginBottom: '20px' }}>穿搭策略</p>
                 {[
@@ -622,8 +736,11 @@ export default function BodyTestPage() {
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '12px' }}>
-              <button onClick={() => { setPhase('method'); setResult(null); setSheldon(''); setBoneShape(''); setVisual(''); setQ1(''); setQ2(''); setQ3(''); setQ4('') }}
-                style={{ border: `1px solid ${C.border}`, background: '#fff', padding: '14px', cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.body }}>
+              <button onClick={() => {
+                setPhase('method'); setResult(null); setSheldon(''); setBoneShape(''); setVisual('')
+                setQ1(''); setQ2(''); setQ3(''); setQ4('')
+                setPreviewUrl(''); setImageBase64(''); setAiStatus('idle'); setAiResult(null)
+              }} style={{ border: `1px solid ${C.border}`, background: '#fff', padding: '14px', cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.body }}>
                 重新测试
               </button>
               <Link to="/onboarding" style={{ border: `1px solid ${C.border}`, background: '#fff', padding: '14px', fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.body, textDecoration: 'none', textAlign: 'center' as const }}>
