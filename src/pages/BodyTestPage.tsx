@@ -746,8 +746,32 @@ export default function BodyTestPage() {
         )}
 
         {/* ── 报告页 ── */}
-        {phase === 'report' && result && (
+        {phase === 'report' && result && (() => {
+          const BODY_IMAGES: Record<string, string> = {
+            'H':   '/BodyH.png',
+            'X':   '/BodX.png',
+            'A':   '/BodyA.png',
+            'V':   '/BodyV.png',
+            'H-O': '/BodyO.png',
+            'X-O': '/BodyO.png',
+            'A-O': '/BodyO.png',
+            'V-O': '/BodyO.png',
+            'H-S': '/BodS.png',
+            'X-S': '/BodS.png',
+          }
+          const imgSrc = BODY_IMAGES[result.compositeCode] || BODY_IMAGES[result.boneCode]
+          return (
           <div>
+            {/* 体型图片 */}
+            {imgSrc && (
+              <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+                <img
+                  src={imgSrc}
+                  alt={result.compositeName}
+                  style={{ height: '220px', width: 'auto', objectFit: 'contain', opacity: 0.92 }}
+                />
+              </div>
+            )}
             <div style={{ borderBottom: `1px solid ${C.border}`, paddingBottom: '32px', marginBottom: '40px' }}>
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '4px', color: C.gold, marginBottom: '12px' }}>BODY PROFILE · 体型档案</p>
               <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '32px', fontWeight: 400, color: C.h1, marginBottom: '6px' }}>{result.compositeName}</h1>
@@ -815,7 +839,7 @@ export default function BodyTestPage() {
               </Link>
             </div>
           </div>
-        )}
+        )})()}
 
       </div>
     </div>
