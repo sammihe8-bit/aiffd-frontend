@@ -443,7 +443,7 @@ export default function BodyTestPage() {
                   onChange={e => { const f = e.target.files?.[0]; if (f) handleImageFile(f) }} />
 
                 {previewUrl && (
-                  <button onClick={(e) => { e.stopPropagation(); setPreviewUrl(''); setImageBase64(''); setImageMediaType('') }}
+                  <button onClick={(e) => { e.stopPropagation(); setPreviewUrl(''); setImageBase64('') }}
                     style={{ display: 'block', margin: '0 auto 16px', background: 'none', border: 'none', color: C.muted, cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontSize: '12px', textDecoration: 'underline' }}>
                     重新选择图片
                   </button>
