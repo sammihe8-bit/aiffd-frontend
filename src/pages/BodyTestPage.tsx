@@ -138,6 +138,15 @@ const BODY_IMAGES: Record<string, string> = {
   'X-S': '/BodS.png',
 }
 
+const BONE_DESC: Record<string, string> = {
+  'H': '你的所有尺寸都很均匀，彼此误差在5%以内；腰部线条笔直而非曲线优美，且略微凸起（比胸围小不到25%）；胸部可能较小，臀部也比较扁平。你的手臂和腿部是优势所在，应该着重突出它们，而不是刻意强调腰部线条。',
+  'V': '你的胸部比臀部宽（至少宽5%），肩宽臀平，臀部和腰部较窄，腰线不明显。倒三角形体型最具运动感。我们的目标是突出下半身的线条，同时弱化上半身。',
+  'O': '你的胸围、腰围和臀围尺寸相近，身材曲线优美，但腰线不够明显。肩膀圆润，腹部丰满，胸部丰满，臀部较窄，腿部纤细。需要将视线集中在靠近脸部的颈部或腿部。',
+  'A': '这是一种三角形身材，腰部和臀部比胸部宽（至少宽5%），腰部比臀部窄。肩膀较窄或略微倾斜；腿部和臀部较为丰满。可以尝试突出上半身，弱化下半身。',
+  'X': '你的胸部和臀部宽度相近，比例协调；腰线清晰（至少比标准腰围小25%），身材曲线优美，胸部和臀部丰满，肩部略微圆润。沙漏型身材的腰线是最大优势，应该加以突出。',
+  'S': '你的身材比例匀称，臀部、腰部、胸部和肩部宽度和比例都非常协调。腰部略微纤细，适合穿着贴合身形的服装，展现自然的曲线。',
+}
+
 function ReportView({ result, onReset }: {
   result: { boneCode: string; fatCode: string; compositeCode: string; compositeName: string; sheldonMap: string; yinYang: string }
   onReset: () => void
@@ -148,9 +157,9 @@ function ReportView({ result, onReset }: {
       {/* 左图 右标题+三层档案 */}
       <div style={{ display: 'grid', gridTemplateColumns: imgSrc ? '160px 1fr' : '1fr', gap: '32px', alignItems: 'stretch', marginBottom: '40px' }}>
         {imgSrc && (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f7f4ef', padding: '16px 8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <img src={imgSrc} alt={result.compositeName}
-              style={{ width: '140px', height: 'auto', objectFit: 'contain', display: 'block' }} />
+              style={{ width: '160px', height: 'auto', objectFit: 'contain', display: 'block' }} />
           </div>
         )}
         <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
@@ -161,7 +170,7 @@ function ReportView({ result, onReset }: {
           </div>
           <div style={{ border: `1px solid ${C.gold}`, padding: '20px 24px', flex: 1 }}>
             <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.gold, marginBottom: '16px' }}>三层档案</p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '16px', marginBottom: '20px', paddingBottom: '20px', borderBottom: `0.5px solid ${C.border}` }}>
               {[
                 { label: '骨骼代码', value: result.boneCode, sub: '骨架结构' },
                 { label: '脂肪代码', value: result.fatCode, sub: '脂肪分布' },
@@ -174,6 +183,13 @@ function ReportView({ result, onReset }: {
                 </div>
               ))}
             </div>
+            {/* 体型介绍 */}
+            {BONE_DESC[result.boneCode] && (
+              <div>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.gold, marginBottom: '10px' }}>体型特征</p>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.body, lineHeight: '1.85' }}>{BONE_DESC[result.boneCode]}</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
