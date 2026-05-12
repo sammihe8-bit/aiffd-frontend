@@ -126,16 +126,12 @@ function MeasureGuide() {
 }
 
 const BODY_IMAGES: Record<string, string> = {
-  'H':   '/BodyH.png',
-  'X':   '/BodX.png',
-  'A':   '/BodyA.png',
-  'V':   '/BodyV.png',
-  'H-O': '/BodyO.png',
-  'X-O': '/BodyO.png',
-  'A-O': '/BodyO.png',
-  'V-O': '/BodyO.png',
-  'H-S': '/BodS.png',
-  'X-S': '/BodS.png',
+  'H': '/BodyH.png',
+  'X': '/BodX.png',
+  'A': '/BodyA.png',
+  'V': '/BodyV.png',
+  'O': '/BodyO.png',
+  'S': '/BodS.png',
 }
 
 const BONE_DESC: Record<string, string> = {
@@ -151,7 +147,7 @@ function ReportView({ result, onReset }: {
   result: { boneCode: string; fatCode: string; compositeCode: string; compositeName: string; sheldonMap: string; yinYang: string }
   onReset: () => void
 }) {
-  const imgSrc = BODY_IMAGES[result.compositeCode] || BODY_IMAGES[result.boneCode]
+  const imgSrc = BODY_IMAGES[result.boneCode]
   return (
     <div>
       {/* 左图 右标题+三层档案 */}
