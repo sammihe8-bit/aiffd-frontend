@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
 const C = {
@@ -6,866 +6,574 @@ const C = {
   body: '#666666', muted: '#999999', gold: '#B8973A', border: '#e8e8e4',
 }
 
-// ─── 结果类型 ───────────────────────────────────────────────
-type ColorResult = '暖黄皮' | '冷黄皮' | '中性黄皮' | '橄榄黄皮' | '冷白皮' | '暖白皮' | '需人工复核'
+// ── 流程
+// AI 路径:    method → data(AI拍照) → sheldon(AI预填) → bone → fat → qi → report
+// 手动路径:   method → data(三围输入) → sheldon → bone → fat → qi → report
+type Phase = 'method' | 'data' | 'sheldon' | 'bone' | 'fat' | 'qi' | 'report'
 
-type StepKey = 'intro' | 'q1' | 'q1b' | 'q1c' | 'q1d' | 'q2' | 'q3' | 'q3b' | 'q4' | 'q5' | 'report'
-
-type ContrastLevel = 'high' | 'mid' | 'low' | 'olive_check'
-
-interface Answers {
-  q1: string; q1b: string; q1c: string; q1d: string
-  q2: string; q3: string; q3b: string
-  q4: string; q5: string
+// ── 体型数据库
+const YIN_YANG_DESC: Record<string, { label: string; desc: string; style: string }> = {
+  '少阳': { label: '轻盈活力型', desc: '气血流动活跃，皮肤较薄，体型偏线条感，代谢较快。', style: '适合轻盈、流动、有活力的穿搭风格，避免过于厚重的廓形。' },
+  '太阳': { label: '饱满热情型', desc: '气血充盈，皮肤饱满，体型圆润有弧度，存在感强。', style: '适合结构感强、有支撑力的廓形，能承托饱满气场。' },
+  '少阴': { label: '细腻内敛型', desc: '气血偏内收，皮肤细腻，体型偏瘦削，气质内敛。', style: '适合柔软、贴身、有质感的面料，强调精致细节。' },
+  '太阴': { label: '沉稳厚重型', desc: '气血偏沉，皮肤较厚，体型偏实，稳重有分量感。', style: '适合有结构的廓形和沉稳色调，避免过于飘逸的面料。' },
 }
 
-function computeContrast(a: Answers): ContrastLevel | undefined {
-  if (a.q1c === 'D' && a.q1d === 'C') return 'olive_check'
-  let score = 0
-  if (a.q1b === 'A') score += 2
-  else if (a.q1b === 'B') score += 1
-  else if (a.q1b === 'C') score -= 1
-  if (a.q1c === 'A') score += 2
-  else if (a.q1c === 'B') score += 1
-  else if (a.q1c === 'C') score -= 1
-  if (a.q1d === 'A') score += 2
-  else if (a.q1d === 'B') score += 1
-  else if (a.q1d === 'C') score -= 1
-  if (score >= 4) return 'high'
-  if (score >= 1) return 'mid'
-  if (score <= -1) return 'low'
-  return undefined
+const BODY_IMAGES: Record<string, string> = {
+  'H': '/BodyH.png', 'X': '/BodX.png', 'A': '/BodyA.png', 'V': '/BodyV.png',
+  'H-O': '/BodyO.png', 'X-O': '/BodyO.png', 'A-O': '/BodyO.png', 'V-O': '/BodyO.png',
+  'H-S': '/BodS.png', 'X-S': '/BodS.png',
 }
 
-// ─── 色彩结果数据库 ──────────────────────────────────────────
-const COLOR_PROFILES: Record<ColorResult, {
-  desc: string
-  season: string
-  season12: string
-  goodColors: { name: string; hex: string }[]
-  avoidColors: { name: string; hex: string }[]
-  shopping: { category: string; advice: string }[]
-}> = {
-  '暖黄皮': {
-    desc: '你的皮肤底色带有金黄、蜜桃、阳光感，是典型的暖调肤色。穿暖色系时气色最佳，冷色系容易显灰。',
-    season: '春季 / 秋季',
-    season12: '浅春、暖春、明亮春、暖秋、深秋',
-    goodColors: [
-      { name: '奶油白', hex: '#F5F0E8' }, { name: '焦糖', hex: '#C68642' },
-      { name: '番茄红', hex: '#C0392B' }, { name: '橄榄绿', hex: '#6B7A3E' },
-      { name: '暖咖', hex: '#8B6347' }, { name: '芥末黄', hex: '#C8A83A' },
-      { name: '珊瑚橘', hex: '#E8734A' }, { name: '驼色', hex: '#C4A882' },
-    ],
-    avoidColors: [
-      { name: '冷灰', hex: '#8A9099' }, { name: '冰白', hex: '#F0F4F8' },
-      { name: '蓝紫', hex: '#6A5ACD' }, { name: '玫红', hex: '#C2185B' },
-    ],
-    shopping: [
-      { category: '上衣', advice: '选奶油白、焦糖、珊瑚橘，避开冷灰和冰白' },
-      { category: '外套', advice: '驼色、暖咖、橄榄绿是百搭首选' },
-      { category: '连衣裙', advice: '番茄红、暖黄、杏色显气色' },
-      { category: '围巾', advice: '芥末黄、焦糖色提亮肤色' },
-      { category: '口红', advice: '豆沙红、砖红、裸橘最显气色' },
-      { category: '首饰', advice: '金色首饰比银色更贴肤' },
-    ],
-  },
-  '冷黄皮': {
-    desc: '你的皮肤表层偏黄，但冷色调反而让你更干净清透。不要被表层肤色误导——你是冷调底色。',
-    season: '冬季 / 夏季',
-    season12: '深冬、冷冬、冷夏、柔夏',
-    goodColors: [
-      { name: '纯白', hex: '#FFFFFF' }, { name: '冷灰', hex: '#8A9099' },
-      { name: '宝蓝', hex: '#1A3A6B' }, { name: '玫红', hex: '#C2185B' },
-      { name: '紫色', hex: '#7B3FA0' }, { name: '酒红', hex: '#7B1A2A' },
-      { name: '藏蓝', hex: '#1C2E5A' }, { name: '银灰', hex: '#B0B8C4' },
-    ],
-    avoidColors: [
-      { name: '暖橘', hex: '#E8734A' }, { name: '焦糖', hex: '#C68642' },
-      { name: '芥末黄', hex: '#C8A83A' }, { name: '驼色', hex: '#C4A882' },
-    ],
-    shopping: [
-      { category: '上衣', advice: '纯白、冷灰、宝蓝最显肤色干净' },
-      { category: '外套', advice: '藏蓝、深灰、黑色是安全首选' },
-      { category: '连衣裙', advice: '玫红、紫色、酒红有高级感' },
-      { category: '围巾', advice: '冷调格纹、纯白或银灰提亮' },
-      { category: '口红', advice: '玫瑰红、莓果色、冷调裸色' },
-      { category: '首饰', advice: '银色、白金比黄金更衬肤' },
-    ],
-  },
-  '中性黄皮': {
-    desc: '你的肤色冷暖平衡，是难得的万能肤色。冷暖色系都能驾驭，重点在于饱和度和明度的搭配。',
-    season: '春夏秋冬均可',
-    season12: '中性春、中性秋，跨季型',
-    goodColors: [
-      { name: '白色', hex: '#F8F8F8' }, { name: '米色', hex: '#E8DCC8' },
-      { name: '裸粉', hex: '#D4A5A0' }, { name: '浅蓝', hex: '#7AA8C4' },
-      { name: '绿灰', hex: '#8AA89A' }, { name: '浅紫', hex: '#B09EC8' },
-      { name: '暖橘', hex: '#E8834A' }, { name: '墨绿', hex: '#2D5A3D' },
-    ],
-    avoidColors: [
-      { name: '荧光色', hex: '#FFFF00' }, { name: '高饱和橘', hex: '#FF5500' },
-    ],
-    shopping: [
-      { category: '上衣', advice: '冷暖都可，建议选中饱和度颜色' },
-      { category: '外套', advice: '驼色、墨绿、藏蓝都安全' },
-      { category: '连衣裙', advice: '裸粉、浅蓝、绿灰都显高级' },
-      { category: '口红', advice: '暖裸色或玫瑰色均可' },
-      { category: '首饰', advice: '金银均可，混搭也不出错' },
-    ],
-  },
-  '橄榄黄皮': {
-    desc: '你的皮肤含有绿灰调底色，是橄榄肤色。大多数粉色和亮色容易让你显脏，但对比色和大地色系会让你极具高级感。',
-    season: '秋季为主',
-    season12: '深秋、暖秋、浊秋',
-    goodColors: [
-      { name: '卡其绿', hex: '#7A8A5A' }, { name: '锈橘', hex: '#B85C38' },
-      { name: '深棕', hex: '#5A3A20' }, { name: '墨绿', hex: '#2D5A3D' },
-      { name: '暖咖', hex: '#8B6347' }, { name: '芥末黄', hex: '#C8A83A' },
-      { name: '焦糖', hex: '#C68642' }, { name: '象牙白', hex: '#F5F0E0' },
-    ],
-    avoidColors: [
-      { name: '冷粉', hex: '#F4A0B8' }, { name: '甜粉', hex: '#FF80C0' },
-      { name: '冷紫', hex: '#9B59B6' }, { name: '冰蓝', hex: '#AED6F1' },
-    ],
-    shopping: [
-      { category: '上衣', advice: '卡其绿、锈橘、芥末黄最显高级' },
-      { category: '外套', advice: '深棕、墨绿、暖咖是核心色' },
-      { category: '连衣裙', advice: '大地色系或焦糖色，避开粉色' },
-      { category: '口红', advice: '砖红、豆沙、焦糖色，避开粉调' },
-      { category: '首饰', advice: '黄金、古铜色最配橄榄肤色' },
-    ],
-  },
-  '冷白皮': {
-    desc: '你的皮肤白皙且带有冷调，是典型的冷白皮。冷色系和高对比色能让你更有气场，暖调容易让你显黄。',
-    season: '冬季 / 夏季',
-    season12: '深冬、冷冬、冷夏',
-    goodColors: [
-      { name: '纯白', hex: '#FFFFFF' }, { name: '宝蓝', hex: '#1A3A6B' },
-      { name: '正红', hex: '#CC0000' }, { name: '黑色', hex: '#1A1A1A' },
-      { name: '紫罗兰', hex: '#8B5CF6' }, { name: '冰粉', hex: '#F0C0D0' },
-      { name: '银灰', hex: '#B0B8C4' }, { name: '藏蓝', hex: '#1C2E5A' },
-    ],
-    avoidColors: [
-      { name: '芥末黄', hex: '#C8A83A' }, { name: '暖橘', hex: '#E8734A' },
-      { name: '驼色', hex: '#C4A882' }, { name: '暖咖', hex: '#8B6347' },
-    ],
-    shopping: [
-      { category: '上衣', advice: '纯白、宝蓝、正红最显气场' },
-      { category: '外套', advice: '黑色、藏蓝、深紫是经典首选' },
-      { category: '连衣裙', advice: '高对比色或冷调单色最出彩' },
-      { category: '口红', advice: '正红、玫瑰红、冷调莓果色' },
-      { category: '首饰', advice: '银色、铂金、钻石感强的款式' },
-    ],
-  },
-  '暖白皮': {
-    desc: '你的皮肤白皙且带有暖调，是暖白皮。暖色系能让你更加光彩动人，过冷的颜色容易让你显白过头或偏灰。',
-    season: '春季',
-    season12: '浅春、明亮春、暖春',
-    goodColors: [
-      { name: '奶油白', hex: '#F5F0E8' }, { name: '蜜桃', hex: '#FFBB99' },
-      { name: '珊瑚', hex: '#E8734A' }, { name: '杏色', hex: '#E8C4A0' },
-      { name: '金黄', hex: '#D4A017' }, { name: '浅暖绿', hex: '#A8C490' },
-      { name: '裸粉', hex: '#D4A5A0' }, { name: '浅橘', hex: '#F5A87A' },
-    ],
-    avoidColors: [
-      { name: '冷灰', hex: '#8A9099' }, { name: '冰白', hex: '#F0F4F8' },
-      { name: '藏蓝', hex: '#1C2E5A' }, { name: '黑色', hex: '#1A1A1A' },
-    ],
-    shopping: [
-      { category: '上衣', advice: '奶油白、蜜桃、珊瑚最衬肤' },
-      { category: '外套', advice: '杏色、驼色、暖米是核心' },
-      { category: '连衣裙', advice: '浅橘、裸粉、金黄提亮气色' },
-      { category: '口红', advice: '裸橘、珊瑚色、浅豆沙' },
-      { category: '首饰', advice: '黄金、玫瑰金最搭暖白皮' },
-    ],
-  },
-  '需人工复核': {
-    desc: '你的肤色信号较复杂，冷暖特征不够明显，建议进行专业色彩顾问的线下诊断，以获得最精准的结果。',
-    season: '待诊断',
-    season12: '待诊断',
-    goodColors: [
-      { name: '白色', hex: '#F8F8F8' }, { name: '米色', hex: '#E8DCC8' },
-      { name: '浅灰', hex: '#C8C8C8' }, { name: '裸粉', hex: '#D4A5A0' },
-    ],
-    avoidColors: [
-      { name: '荧光色', hex: '#FFFF00' },
-    ],
-    shopping: [
-      { category: '建议', advice: '暂时选择中性色调，等待专业诊断后再进行色彩投资' },
-    ],
-  },
+// ── 计算函数
+function calcFatCode(whr: number, bustWaistDiff: number, visual: string, boneCode: string): string {
+  if (visual === 'O' || whr > 0.85) return 'O'
+  if (visual === 'S' || (bustWaistDiff > 25 && (boneCode === 'H' || boneCode === 'A'))) return 'S'
+  return '无'
 }
 
-// ─── 评分逻辑 ────────────────────────────────────────────────
-function computeResult(a: Answers): ColorResult {
-  let warm = 0
-  let cold = 0
-  let olive = 0
-  let bright = 0 // 明度：白=+1，黄=-1
-
-  // Q1 明度（决定白皮/黄皮方向）
-  if (a.q1 === 'A') bright += 3      // 偏白
-  else if (a.q1 === 'B') bright -= 3 // 偏黄
-
-  // Q2 冷暖色卡（权重最高）
-  if (a.q2 === 'A') warm += 5
-  else if (a.q2 === 'B') cold += 5
-  else if (a.q2 === 'C') { warm += 1; cold += 1 }
-  else if (a.q2 === 'D') olive += 3
-
-  // Q3 粉色反应
-  if (a.q3 === 'A') warm += 2        // 蜜桃粉好看 → 暖
-  else if (a.q3 === 'B') cold += 2   // 玫瑰粉好看 → 冷
-  else if (a.q3 === 'C') {
-    // 进入 Q3b 橄榄确认
-    if (a.q3b === 'B') olive += 8    // 品红更好看 → 强橄榄信号
-    else if (a.q3b === 'A') warm += 1 // 橘色更好看 → 暖黄皮，非橄榄
-  } else if (a.q3 === 'D') { warm += 1; cold += 1 }
-
-  // Q4 粉底问题
-  if (a.q4 === 'A') cold += 1        // 太粉→偏冷
-  else if (a.q4 === 'B') warm += 1   // 太黄→偏暖
-  else if (a.q4 === 'C') olive += 3  // 太灰→橄榄信号
-  else if (a.q4 === 'D') olive += 2  // 氧化暗沉→橄榄信号
-
-  // Q5 金银首饰
-  if (a.q5 === 'A') warm += 2        // 金色衬→暖
-  else if (a.q5 === 'B') cold += 2   // 银色衬→冷
-  else if (a.q5 === 'D') olive += 2  // 都不衬→橄榄
-
-  // q1c=D + q1d=C → 橄榄/灰黄肤色复核信号
-  if (a.q1c === 'D' && a.q1d === 'C') olive += 3
-
-  // ── 判断橄榄 ──
-  if (olive >= 8) return '橄榄黄皮'
-
-  const diff = Math.abs(warm - cold)
-  const total = warm + cold
-
-  // ── 需人工复核 ──
-  if (diff <= 2 && total < 8) return '需人工复核'
-
-  // ── 白/黄 方向 ──
-  const isLight = bright > 0
-
-  if (warm > cold) {
-    return isLight ? '暖白皮' : '暖黄皮'
-  } else {
-    return isLight ? '冷白皮' : '冷黄皮'
+function calcYinYang(q1: string, q2: string, q3: string, q4: string): string {
+  const scores: Record<string, number> = { '少阳': 0, '太阳': 0, '少阴': 0, '太阴': 0 }
+  const map: Record<string, Record<string, string>> = {
+    q1: { A: '少阳', B: '太阳', C: '少阴', D: '太阴' },
+    q2: { A: '少阳', B: '太阳', C: '少阴', D: '太阴' },
+    q3: { A: '少阴', B: '少阳', C: '太阴', D: '太阳' },
+    q4: { A: '太阳', B: '少阳', C: '少阴', D: '太阴' },
   }
+  ;[['q1', q1], ['q2', q2], ['q3', q3], ['q4', q4]].forEach(([k, v]) => {
+    const t = map[k]?.[v]; if (t) scores[t]++
+  })
+  return Object.entries(scores).sort((a, b) => b[1] - a[1])[0][0]
 }
 
-// ─── 公共样式 ─────────────────────────────────────────────────
-const btnPrimaryStyle: React.CSSProperties = {
-  flex: 1, padding: '14px 0', background: C.gold, color: '#fff',
-  border: 'none', borderRadius: '6px', fontFamily: 'Inter, sans-serif',
-  fontSize: '14px', letterSpacing: '1px', cursor: 'pointer',
+// ── 公共样式
+const btnGold: React.CSSProperties = {
+  background: C.gold, color: '#fff', border: 'none', borderRadius: '4px',
+  padding: '14px 32px', fontFamily: 'Inter, sans-serif', fontSize: '13px',
+  letterSpacing: '1px', cursor: 'pointer',
 }
-const btnDisabledStyle: React.CSSProperties = {
-  ...btnPrimaryStyle, background: '#e0e0e0', color: '#aaa', cursor: 'not-allowed',
+const btnOutline: React.CSSProperties = {
+  background: 'transparent', color: C.body, border: `1px solid ${C.border}`,
+  borderRadius: '4px', padding: '14px 24px', fontFamily: 'Inter, sans-serif',
+  fontSize: '12px', cursor: 'pointer',
 }
-const BackBtn = ({ onClick }: { onClick: () => void }) => (
-  <button onClick={onClick} style={{
-    padding: '14px 20px', background: 'transparent', border: `1px solid ${C.border}`,
-    borderRadius: '6px', fontFamily: 'Inter, sans-serif', fontSize: '13px',
-    color: C.muted, cursor: 'pointer',
-  }}>← 返回</button>
-)
 
-// ─── QuestionStep 通用组件 ────────────────────────────────────
-function QuestionStep({ tag, title, subtitle, options, value, onChange, onNext, onBack }: {
-  tag: string; title: string; subtitle?: string
-  options: { id: string; label: string; sub?: string }[]
-  value: string; onChange: (v: string) => void
-  onNext: () => void; onBack: () => void
+function OptionCard({ label, sub, active, onClick }: {
+  label: string; sub?: string; active: boolean; onClick: () => void
 }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      <div>
-        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>{tag}</p>
-        <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>{title}</h2>
-        {subtitle && <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '8px' }}>{subtitle}</p>}
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        {options.map(o => (
-          <button key={o.id} onClick={() => onChange(o.id)} style={{
-            border: `1.5px solid ${value === o.id ? C.gold : C.border}`,
-            borderRadius: '8px',
-            background: value === o.id ? '#fdf8ee' : '#fff',
-            padding: '16px 20px', cursor: 'pointer', textAlign: 'left',
-            transition: 'all 0.2s', display: 'flex', gap: '14px', alignItems: 'flex-start',
-          }}>
-            <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: value === o.id ? C.gold : C.muted, letterSpacing: '1px', flexShrink: 0, marginTop: '2px' }}>{o.id}</span>
-            <div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: value === o.id ? C.h2 : C.body, margin: 0 }}>{o.label}</p>
-              {o.sub && <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted, marginTop: '3px', marginBottom: 0 }}>{o.sub}</p>}
-            </div>
-          </button>
-        ))}
-      </div>
-      <div style={{ display: 'flex', gap: '12px' }}>
-        <BackBtn onClick={onBack} />
-        <button onClick={onNext} disabled={!value} style={!value ? btnDisabledStyle : btnPrimaryStyle}>继续</button>
-      </div>
-    </div>
+    <button onClick={onClick} style={{
+      border: `1px solid ${active ? C.gold : C.border}`,
+      background: active ? '#fdf8ee' : '#fff',
+      padding: '16px 20px', textAlign: 'left', cursor: 'pointer',
+      transition: 'all 0.2s', width: '100%', borderRadius: '6px',
+    }}>
+      <p style={{ fontFamily: 'Georgia, serif', fontSize: '15px', color: active ? C.gold : C.h2, marginBottom: sub ? '4px' : 0 }}>{label}</p>
+      {sub && <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, margin: 0 }}>{sub}</p>}
+    </button>
   )
 }
 
-// ─── 报告组件 ─────────────────────────────────────────────────
-function ColorReport({ result, contrast, onReset }: { result: ColorResult; contrast: ContrastLevel | undefined; onReset: () => void }) {
-  const [tab, setTab] = useState<'judge' | 'good' | 'risk' | 'palette' | 'shopping' | 'season'>('judge')
-  const profile = COLOR_PROFILES[result]
-  const tabs: { key: typeof tab; label: string }[] = [
-    { key: 'judge', label: '肤色判断' },
-    { key: 'good', label: '色彩优势' },
-    { key: 'risk', label: '色彩风险' },
-    { key: 'palette', label: '推荐色盘' },
-    { key: 'shopping', label: '购物建议' },
-    { key: 'season', label: '四季参考' },
-  ]
+function ProgressBar({ current, total, label }: { current: number; total: number; label: string }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-      {/* 结果标题 */}
-      <div style={{ textAlign: 'center', padding: '24px 0 16px', borderBottom: `1px solid ${C.border}` }}>
-        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '3px', textTransform: 'uppercase', marginBottom: '8px' }}>您的色彩类型</p>
-        <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '36px', color: C.h1, fontWeight: 400, margin: '0 0 12px' }}>{result}</h1>
-        {contrast && (
-          <div style={{ display: 'inline-block', padding: '4px 14px', borderRadius: '20px', background: '#f5f0e8', border: `1px solid ${C.border}` }}>
-            <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.gold }}>
-              {contrast === 'high' ? '高对比型 · 适合深色、清晰色、高对比配色'
-                : contrast === 'mid' ? '中对比型 · 适合中等深浅、中等饱和度，选择空间较大'
-                : contrast === 'low' ? '低对比型 · 适合柔和、浅中明度、低饱和色'
-                : '需后续验证 · 结合方巾、金银测试、肤色反应继续判断'}
-            </span>
-          </div>
-        )}
+    <div style={{ marginBottom: '40px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '3px', color: C.gold, margin: 0 }}>{label}</p>
+        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted, margin: 0 }}>{current} / {total}</p>
       </div>
-      {/* Tab 导航 */}
-      <div style={{ display: 'flex', gap: '4px', overflowX: 'auto', paddingBottom: '4px' }}>
-        {tabs.map(t => (
-          <button key={t.key} onClick={() => setTab(t.key)} style={{
-            padding: '8px 14px', border: `1px solid ${tab === t.key ? C.gold : C.border}`,
-            borderRadius: '20px', background: tab === t.key ? C.gold : '#fff',
-            color: tab === t.key ? '#fff' : C.muted,
-            fontFamily: 'Inter, sans-serif', fontSize: '12px', cursor: 'pointer',
-            whiteSpace: 'nowrap', transition: 'all 0.2s',
-          }}>{t.label}</button>
-        ))}
-      </div>
-      {/* Tab 内容 */}
-      {tab === 'judge' && (
-        <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '15px', color: C.body, lineHeight: 1.8 }}>
-          <p>{profile.desc}</p>
-        </div>
-      )}
-      {tab === 'good' && (
-        <div>
-          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginBottom: '16px' }}>这些颜色最能提亮你的气色</p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
-            {profile.goodColors.map(c => (
-              <div key={c.name} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
-                <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: c.hex, border: `1px solid ${C.border}` }} />
-                <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted }}>{c.name}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-      {tab === 'risk' && (
-        <div>
-          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginBottom: '16px' }}>这些颜色容易让你显黄、显暗或显脏</p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
-            {profile.avoidColors.map(c => (
-              <div key={c.name} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', position: 'relative' }}>
-                <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: c.hex, border: `1px solid ${C.border}`, position: 'relative' }}>
-                  <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', color: 'rgba(255,255,255,0.9)' }}>✕</span>
-                </div>
-                <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted }}>{c.name}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-      {tab === 'palette' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <div>
-            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.gold, letterSpacing: '1px', marginBottom: '10px' }}>主色调</p>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              {profile.goodColors.slice(0, 4).map(c => (
-                <div key={c.name} style={{ flex: 1, height: '40px', background: c.hex, borderRadius: '4px' }} title={c.name} />
-              ))}
-            </div>
-          </div>
-          <div>
-            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.gold, letterSpacing: '1px', marginBottom: '10px' }}>辅助色</p>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              {profile.goodColors.slice(4).map(c => (
-                <div key={c.name} style={{ flex: 1, height: '40px', background: c.hex, borderRadius: '4px' }} title={c.name} />
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-      {tab === 'shopping' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {profile.shopping.map(s => (
-            <div key={s.category} style={{ padding: '14px 16px', border: `1px solid ${C.border}`, borderRadius: '8px' }}>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.gold, letterSpacing: '1px', marginBottom: '4px' }}>{s.category}</p>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: C.body, margin: 0 }}>{s.advice}</p>
-            </div>
-          ))}
-        </div>
-      )}
-      {tab === 'season' && (
-        <div style={{ fontFamily: 'Inter, sans-serif', color: C.body, lineHeight: 1.8 }}>
-          <p style={{ fontSize: '14px' }}><strong style={{ color: C.h2 }}>四季类型：</strong>{profile.season}</p>
-          <p style={{ fontSize: '14px' }}><strong style={{ color: C.h2 }}>12季参考：</strong>{profile.season12}</p>
-          <p style={{ fontSize: '12px', color: C.muted, marginTop: '12px' }}>* 四季/12季色彩体系仅供参考，实际结果因个体差异有所不同。</p>
-        </div>
-      )}
-      {/* 操作按钮 */}
-      <div style={{ display: 'flex', gap: '12px', paddingTop: '8px' }}>
-        <button onClick={onReset} style={{ flex: 1, padding: '14px 0', background: 'transparent', border: `1px solid ${C.border}`, borderRadius: '6px', fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, cursor: 'pointer' }}>重新测试</button>
-        <Link to="/test/body" style={{ flex: 1, padding: '14px 0', background: '#f5f0e8', border: 'none', borderRadius: '6px', fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.h2, cursor: 'pointer', textAlign: 'center', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>体型测试 →</Link>
+      <div style={{ height: '1px', background: C.border }}>
+        <div style={{ height: '1px', background: C.gold, width: `${(current / total) * 100}%`, transition: 'width 0.4s' }} />
       </div>
     </div>
   )
 }
 
-// ─── 主页面 ───────────────────────────────────────────────────
-export default function ColorTestPage() {
-  const [step, setStep] = useState<StepKey>('intro')
-  const [answers, setAnswers] = useState<Answers>({ q1: '', q1b: '', q1c: '', q1d: '', q2: '', q3: '', q3b: '', q4: '', q5: '' })
+// ── 报告组件
+function ReportView({ result, onReset }: {
+  result: { boneCode: string; fatCode: string; compositeCode: string; compositeName: string; sheldonMap: string; yinYang: string }
+  onReset: () => void
+}) {
+  const imgSrc = BODY_IMAGES[result.compositeCode] || BODY_IMAGES[result.boneCode]
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      {/* 标题 */}
+      <div style={{ textAlign: 'center', paddingBottom: '24px', borderBottom: `1px solid ${C.border}` }}>
+        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.gold, marginBottom: '8px' }}>体型档案</p>
+        <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '36px', color: C.h1, fontWeight: 400, margin: '0 0 4px' }}>{result.compositeName}</h1>
+        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, margin: 0 }}>{result.compositeCode} · {result.sheldonMap}</p>
+      </div>
 
-  const set = (key: keyof Answers) => (val: string) => setAnswers(prev => ({ ...prev, [key]: val }))
+      {/* 左图右档案 */}
+      <div style={{ display: 'grid', gridTemplateColumns: imgSrc ? '180px 1fr' : '1fr', gap: '24px', alignItems: 'start' }}>
+        {imgSrc && (
+          <img src={imgSrc} alt={result.compositeName} style={{ width: '100%', objectFit: 'contain' }} />
+        )}
+        <div style={{ border: `1px solid ${C.border}`, borderRadius: '8px', overflow: 'hidden' }}>
+          <div style={{ padding: '20px 24px', borderBottom: `1px solid ${C.border}` }}>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.gold, marginBottom: '16px' }}>三层档案</p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '16px' }}>
+              {[
+                { label: '骨骼代码', value: result.boneCode, sub: '骨架结构' },
+                { label: '脂肪代码', value: result.fatCode, sub: '脂肪分布' },
+                { label: '气血态', value: result.yinYang, sub: YIN_YANG_DESC[result.yinYang]?.label },
+              ].map(item => (
+                <div key={item.label}>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '2px', color: C.muted, marginBottom: '4px' }}>{item.label}</p>
+                  <p style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.gold, margin: '0 0 2px' }}>{item.value}</p>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted, margin: 0 }}>{item.sub}</p>
+                </div>
+              ))}
+            </div>
+          </div>
 
-  const next = () => {
-    const order: StepKey[] = ['intro', 'q1', 'q1b', 'q1c', 'q1d', 'q2', 'q3', 'q3b', 'q4', 'q5', 'report']
-    const i = order.indexOf(step)
-    if (i < order.length - 1) setStep(order[i + 1])
+          {/* 气血态解读 */}
+          <div style={{ padding: '20px 24px', borderBottom: `1px solid ${C.border}`, background: '#fafaf8' }}>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.gold, marginBottom: '10px' }}>气血态解读</p>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: C.body, lineHeight: 1.8, marginBottom: '6px' }}>
+              {YIN_YANG_DESC[result.yinYang]?.desc}
+            </p>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.sub, lineHeight: 1.8, margin: 0 }}>
+              {YIN_YANG_DESC[result.yinYang]?.style}
+            </p>
+          </div>
+
+          {/* 穿搭策略 */}
+          <div style={{ padding: '20px 24px' }}>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.gold, marginBottom: '16px' }}>穿搭策略</p>
+            {[
+              { label: '骨骼策略', text: `针对 ${result.boneCode} 型骨架的廓形选择、肩线处理和腰节强调方式。` },
+              { label: '脂肪策略', text: `针对 ${result.fatCode} 型脂肪分布的面料选择、图案偏好和视觉修饰方向。` },
+              { label: '气质策略', text: `基于 ${result.yinYang} 气血态的色彩能量、配饰风格和整体气场营造。` },
+            ].map((s, i, arr) => (
+              <div key={s.label} style={{
+                marginBottom: i < arr.length - 1 ? '14px' : 0,
+                paddingBottom: i < arr.length - 1 ? '14px' : 0,
+                borderBottom: i < arr.length - 1 ? `0.5px solid ${C.border}` : 'none',
+              }}>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '2px', color: C.muted, marginBottom: '4px' }}>{s.label}</p>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.body, lineHeight: 1.8, margin: 0 }}>{s.text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* 推荐下一步 */}
+      <div style={{ background: '#f7f4ef', padding: '24px', borderRadius: '8px' }}>
+        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.gold, marginBottom: '12px' }}>推荐下一步</p>
+        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.body, lineHeight: 1.8, marginBottom: '16px' }}>
+          体型档案已建立。加入色彩测试后，系统将为你生成「体型 × 色彩」组合分析，结论更精准。
+        </p>
+        <Link to="/test/color" style={{
+          display: 'inline-block', background: C.gold, color: '#fff', padding: '12px 24px',
+          fontFamily: 'Inter, sans-serif', fontSize: '12px', textDecoration: 'none', borderRadius: '4px',
+        }}>开始色彩测试 →</Link>
+      </div>
+
+      {/* 操作按钮 */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '12px' }}>
+        <button onClick={onReset} style={btnOutline}>重新测试</button>
+        <Link to="/onboarding" style={{ ...btnOutline, textDecoration: 'none', textAlign: 'center' as const, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>返回测试中心</Link>
+        <Link to="/profile" style={{ ...btnGold, textDecoration: 'none', textAlign: 'center' as const, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>进入我的档案</Link>
+      </div>
+    </div>
+  )
+}
+
+// ── 主页面
+export default function BodyTestPage() {
+  const [phase, setPhase] = useState<Phase>('method')
+  const [method, setMethod] = useState<'manual' | 'ai' | ''>('')
+
+  // 测量数据
+  const [bust, setBust] = useState('')
+  const [waist, setWaist] = useState('')
+  const [hip, setHip] = useState('')
+  const [shoulder, setShoulder] = useState('')
+  const [hipBone, setHipBone] = useState('')
+  const [conflict, setConflict] = useState('')
+  const [aiStatus, setAiStatus] = useState<'idle' | 'analyzing' | 'done'>('idle')
+  const [previewUrl, setPreviewUrl] = useState('')
+  const [aiResult, setAiResult] = useState<{ sheldon: string; bone: string; fat: string } | null>(null)
+
+  // 确认层
+  const [sheldon, setSheldon] = useState('')
+  const [boneShape, setBoneShape] = useState('')
+  const [showXTrap, setShowXTrap] = useState(false)
+  const [visual, setVisual] = useState('')
+
+  // 气血态
+  const [q1, setQ1] = useState('')
+  const [q2, setQ2] = useState('')
+  const [q3, setQ3] = useState('')
+  const [q4, setQ4] = useState('')
+
+  // 报告
+  const [result, setResult] = useState<{
+    boneCode: string; fatCode: string; compositeCode: string;
+    compositeName: string; sheldonMap: string; yinYang: string;
+  } | null>(null)
+
+  const checkConflict = (b: string, w: string, h: string) => {
+    const bN = parseFloat(b), wN = parseFloat(w), hN = parseFloat(h)
+    if (!bN || !wN || !hN) return
+    if ((wN / hN) > 0.9 && (bN - wN) > 25)
+      setConflict('腰臀比偏高但胸腰差较大，数据存在轻微冲突，建议重新测量腰围确认。')
+    else setConflict('')
   }
 
-  const back = () => {
-    const backMap: Partial<Record<StepKey, StepKey>> = {
-      q1: 'intro', q1b: 'q1', q1c: 'q1b', q1d: 'q1c',
-      q2: 'q1d', q3: 'q2', q3b: 'q3',
-      q4: 'q3', q5: 'q4', report: 'q5',
+  const computeResult = () => {
+    const bustN = parseFloat(bust) || 88
+    const waistN = parseFloat(waist) || 68
+    const hipN = parseFloat(hip) || 94
+    const whr = waistN / hipN
+    const bustWaistDiff = bustN - waistN
+    const boneCode = boneShape
+    const fatCode = calcFatCode(whr, bustWaistDiff, visual, boneCode)
+    const compositeCode = fatCode === '无' ? boneCode : `${boneCode}-${fatCode}`
+    const NAMES: Record<string, string> = {
+      'H': 'H型', 'X': 'X型', 'A': 'A型', 'V': 'V型',
+      'H-O': '苹果H型', 'X-O': '苹果X型', 'A-O': '梨形A型', 'V-O': '苹果V型',
+      'H-S': '沙漏H型', 'X-S': '沙漏X型',
     }
-    const prev = backMap[step]
-    if (prev) setStep(prev)
+    const SHELDON_MAP: Record<string, string> = {
+      '外胚层': 'Ectomorph · 线条感强', '中胚层': 'Mesomorph · 骨骼立体', '内胚层': 'Endomorph · 圆润饱满',
+    }
+    const yinYang = calcYinYang(q1, q2, q3, q4)
+    setResult({
+      boneCode, fatCode: fatCode === '无' ? '—' : fatCode,
+      compositeCode, compositeName: NAMES[compositeCode] || compositeCode,
+      sheldonMap: SHELDON_MAP[sheldon] || sheldon, yinYang,
+    })
+    setPhase('report')
   }
 
   const reset = () => {
-    setAnswers({ q1: '', q1b: '', q1c: '', q1d: '', q2: '', q3: '', q3b: '', q4: '', q5: '' })
-    setStep('intro')
+    setPhase('method'); setMethod(''); setResult(null)
+    setBust(''); setWaist(''); setHip(''); setShoulder(''); setHipBone('')
+    setConflict(''); setAiStatus('idle'); setPreviewUrl(''); setAiResult(null)
+    setSheldon(''); setBoneShape(''); setShowXTrap(false); setVisual('')
+    setQ1(''); setQ2(''); setQ3(''); setQ4('')
   }
 
-  const result = useMemo(() => computeResult(answers), [answers])
-
-  // 进度条（q3b 算在 q3 内，不单独计步）
-  const stepIndex: Record<StepKey, number> = {
-    intro: 0, q1: 1, q1b: 2, q1c: 2, q1d: 2, q2: 3, q3: 4, q3b: 4, q4: 5, q5: 6, report: 7,
+  const phaseStep: Record<Phase, number> = {
+    method: 0, data: 1, sheldon: 2, bone: 3, fat: 4, qi: 5, report: 6,
   }
-  const totalSteps = 6
-  const progress = step === 'intro' ? 0 : step === 'report' ? 100 : (stepIndex[step] / totalSteps) * 100
 
   return (
-    <div style={{ minHeight: '100vh', background: '#faf9f7', paddingBottom: '60px' }}>
-      {/* 顶部进度条 */}
-      {step !== 'intro' && step !== 'report' && (
-        <div style={{ height: '3px', background: C.border }}>
-          <div style={{ height: '100%', width: `${progress}%`, background: C.gold, transition: 'width 0.3s ease' }} />
-        </div>
-      )}
+    <div style={{ minHeight: '100vh', background: '#faf9f7' }}>
+      <div style={{ maxWidth: '680px', margin: '0 auto', padding: '48px 32px 80px' }}>
 
-      <div style={{ maxWidth: '680px', margin: '0 auto', padding: '40px 32px' }}>
+        {phase !== 'method' && phase !== 'report' && (
+          <ProgressBar current={phaseStep[phase]} total={5} label="BODY TEST" />
+        )}
 
-        {/* ── 介绍页 ── */}
-        {step === 'intro' && (
+        {/* ── Step 0: 选择测量方式 ── */}
+        {phase === 'method' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
             <div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '3px', textTransform: 'uppercase', marginBottom: '12px' }}>色彩测试</p>
-              <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '32px', color: C.h1, fontWeight: 400, lineHeight: 1.3, margin: 0 }}>找到属于你的色彩答案</h1>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: C.muted, marginTop: '16px', lineHeight: 1.8 }}>
-                9个问题，约5分钟，判断你的肤色底调与对比度——暖黄、冷黄、橄榄、冷白或暖白，给出专属色彩方向。
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '3px', color: C.gold, marginBottom: '12px' }}>体型测试</p>
+              <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '36px', color: C.h1, fontWeight: 400, lineHeight: 1.2, margin: '0 0 16px' }}>
+                了解你的<br />体型底色
+              </h1>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: C.muted, lineHeight: 1.8, margin: 0 }}>
+                通过骨骼轮廓、脂肪分布和气血态三个维度，建立专属体型档案。
               </p>
             </div>
-            <div style={{ background: '#fff', border: `1px solid ${C.border}`, borderRadius: '10px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {['自然光或室内白光下进行最准确', '准备几块不同颜色的布料或纸张', '素颜或淡妆状态效果更好'].map((tip, i) => (
-                <p key={i} style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.body, margin: 0 }}>
-                  <span style={{ color: C.gold, marginRight: '8px' }}>·</span>{tip}
-                </p>
-              ))}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <OptionCard
+                label="AI 拍照识别"
+                sub="上传正面照片，AI 自动判断体型并给出建议，可手动修正"
+                active={method === 'ai'}
+                onClick={() => setMethod('ai')}
+              />
+              <OptionCard
+                label="手动填写数据"
+                sub="输入胸围、腰围、臀围等数据，精准计算体型代码"
+                active={method === 'manual'}
+                onClick={() => setMethod('manual')}
+              />
             </div>
-            <button onClick={() => setStep('q1')} style={btnPrimaryStyle}>开始测试</button>
-          </div>
-        )}
-
-        {/* ── Q1 明度 ── */}
-        {step === 'q1' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-            <div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 01 · 明度判断</p>
-              <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>对比这两张图，你的肤色更接近哪一边？</h2>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '8px' }}>在自然光下，素颜观察手腕内侧或脸部</p>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              {[
-                { id: 'A', label: '偏白', img: '/whiteface.png' },
-                { id: 'B', label: '偏黄', img: '/yellowface.png' },
-              ].map(o => (
-                <button key={o.id} onClick={() => set('q1')(o.id)} style={{
-                  border: `2px solid ${answers.q1 === o.id ? C.gold : C.border}`,
-                  borderRadius: '8px', background: answers.q1 === o.id ? '#fdf8ee' : '#fff',
-                  padding: 0, cursor: 'pointer', overflow: 'hidden', transition: 'all 0.2s',
-                }}>
-                  <img src={o.img} alt={o.label} style={{ width: '100%', aspectRatio: '1/1', objectFit: 'cover', display: 'block' }} />
-                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: answers.q1 === o.id ? C.gold : C.body, padding: '10px 0', margin: 0, textAlign: 'center' }}>
-                    <span style={{ fontSize: '11px', color: C.muted, marginRight: '6px' }}>{o.id}</span>{o.label}
-                  </p>
-                </button>
-              ))}
-            </div>
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <BackBtn onClick={() => setStep('intro')} />
-              <button onClick={next} disabled={!answers.q1} style={!answers.q1 ? btnDisabledStyle : btnPrimaryStyle}>继续</button>
-            </div>
-          </div>
-        )}
-
-        {/* ── Q1b 眉眼对比度 ── */}
-        {step === 'q1b' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            <div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 02 · 面部对比度</p>
-              <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>素颜时，你的眉眼和皮肤对比明显吗？</h2>
-            </div>
-            <img src="/facehl.png" alt="面部对比度参考" style={{ width: '100%', borderRadius: '10px', objectFit: 'contain', background: '#f5f3ef' }} />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {[
-                { id: 'A', label: '很明显，黑发黑眉黑眼，五官存在感强', sub: '→ 高对比，可能适合深色、强色、清晰色' },
-                { id: 'B', label: '中等，有一定对比，但不强烈', sub: '→ 中对比，适合范围较宽' },
-                { id: 'C', label: '很柔和，眉眼颜色比较淡', sub: '→ 低对比，适合柔和、低饱和、浅中性色' },
-                { id: 'D', label: '不确定', sub: '' },
-              ].map(o => (
-                <button key={o.id} onClick={() => set('q1b')(o.id)} style={{
-                  border: `1.5px solid ${answers.q1b === o.id ? C.gold : C.border}`,
-                  borderRadius: '8px', background: answers.q1b === o.id ? '#fdf8ee' : '#fff',
-                  padding: '16px 20px', cursor: 'pointer', textAlign: 'left',
-                  transition: 'all 0.2s', display: 'flex', gap: '14px', alignItems: 'flex-start',
-                }}>
-                  <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: answers.q1b === o.id ? C.gold : C.muted, letterSpacing: '1px', flexShrink: 0, marginTop: '2px' }}>{o.id}</span>
-                  <div>
-                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: answers.q1b === o.id ? C.h2 : C.body, margin: 0 }}>{o.label}</p>
-                    {o.sub && <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted, marginTop: '3px', marginBottom: 0 }}>{o.sub}</p>}
-                  </div>
-                </button>
-              ))}
-            </div>
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <BackBtn onClick={back} />
-              <button onClick={next} disabled={!answers.q1b} style={!answers.q1b ? btnDisabledStyle : btnPrimaryStyle}>继续</button>
-            </div>
-          </div>
-        )}
-
-        {/* ── Q1c 发色瞳色 ── */}
-        {step === 'q1c' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            <div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 03 · 发色瞳色</p>
-              <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>你的自然发色和瞳色更接近哪一种？</h2>
-            </div>
-            {/* A/B/C/D 图片选项 2列 */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              {[
-                { id: 'A', label: '黑发黑瞳，颜色很深', sub: '→ 高对比、深色承受力强', img: '/Black_Eyes.png' },
-                { id: 'B', label: '深棕发 / 深棕瞳', sub: '→ 中对比，适合稳定色', img: '/Dark_brown.png' },
-                { id: 'C', label: '浅棕发 / 茶色瞳', sub: '→ 明度偏轻，适合柔和浅色', img: '/Light_brown.png' },
-                { id: 'D', label: '发色偏灰黑，瞳色不太亮', sub: '→ 可能偏冷、偏灰、橄榄方向', img: '/gray-black.png' },
-              ].map(o => (
-                <button key={o.id} onClick={() => set('q1c')(o.id)} style={{
-                  border: `2px solid ${answers.q1c === o.id ? C.gold : C.border}`,
-                  borderRadius: '8px', background: answers.q1c === o.id ? '#fdf8ee' : '#fff',
-                  padding: 0, cursor: 'pointer', overflow: 'hidden', transition: 'all 0.2s',
-                  textAlign: 'left',
-                }}>
-                  <img src={o.img} alt={o.label} style={{ width: '100%', aspectRatio: '3/2', objectFit: 'cover', display: 'block' }} />
-                  <div style={{ padding: '10px 12px 12px' }}>
-                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: answers.q1c === o.id ? C.h2 : C.body, margin: 0 }}>
-                      <span style={{ fontSize: '11px', color: answers.q1c === o.id ? C.gold : C.muted, marginRight: '6px' }}>{o.id}</span>
-                      {o.label}
-                    </p>
-                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted, margin: '4px 0 0' }}>{o.sub}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-            {/* E 选项纯文字 */}
-            <button onClick={() => set('q1c')('E')} style={{
-              border: `1.5px solid ${answers.q1c === 'E' ? C.gold : C.border}`,
-              borderRadius: '8px', background: answers.q1c === 'E' ? '#fdf8ee' : '#fff',
-              padding: '16px 20px', cursor: 'pointer', textAlign: 'left',
-              transition: 'all 0.2s', display: 'flex', gap: '14px', alignItems: 'center',
-            }}>
-              <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: answers.q1c === 'E' ? C.gold : C.muted, letterSpacing: '1px' }}>E</span>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: answers.q1c === 'E' ? C.h2 : C.body, margin: 0 }}>染发较多，不确定</p>
+            <button
+              onClick={() => setPhase('data')}
+              disabled={!method}
+              style={method ? btnGold : { ...btnGold, background: '#e0e0e0', cursor: 'not-allowed' }}
+            >
+              开始测试
             </button>
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <BackBtn onClick={back} />
-              <button onClick={next} disabled={!answers.q1c} style={!answers.q1c ? btnDisabledStyle : btnPrimaryStyle}>继续</button>
-            </div>
           </div>
         )}
 
-        {/* ── Q1d 黑色上衣 ── */}
-        {step === 'q1d' && (
-          <QuestionStep tag="Step 04 · 黑色上衣"
-            title="素颜时，你穿黑色上衣通常怎样？"
-            options={[
-              { id: 'A', label: '显得五官更清楚，很有气场', sub: '→ 高对比，可能偏冬季/戏剧感' },
-              { id: 'B', label: '可以穿，但有点沉重', sub: '→ 中对比，需要搭配妆容或配饰' },
-              { id: 'C', label: '显老、显累、显暗', sub: '→ 低对比，或橄榄/灰黄肤色信号' },
-              { id: 'D', label: '不确定', sub: '' },
-            ]}
-            value={answers.q1d} onChange={set('q1d')} onNext={next} onBack={back} />
-        )}
-
-        {/* ── Q2 冷暖色卡 ── */}
-        {step === 'q2' && (
+        {/* ── Step 1: 数据收集 ── */}
+        {phase === 'data' && method === 'ai' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-            <div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 05 · 冷暖色卡</p>
-              <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>哪一组颜色靠近脸时，更让你显得干净、有气色？</h2>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '8px' }}>准备几块纯色方巾、衣服或彩色纸，分别放在脸部下方对比</p>
+            <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '26px', color: C.h2, fontWeight: 400, margin: 0 }}>上传正面照片</h2>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, lineHeight: 1.8, margin: 0 }}>
+              穿贴身衣物或紧身裤，正面站立，双臂自然垂下。光线均匀效果最佳。
+            </p>
+            <div style={{
+              border: `2px dashed ${C.border}`, borderRadius: '8px', padding: '40px',
+              textAlign: 'center', cursor: 'pointer', background: '#fff',
+            }}
+              onClick={() => document.getElementById('photo-input')?.click()}
+            >
+              {previewUrl ? (
+                <img src={previewUrl} alt="预览" style={{ maxHeight: '300px', maxWidth: '100%', objectFit: 'contain' }} />
+              ) : (
+                <>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted }}>点击上传照片</p>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.border }}>支持 JPG / PNG</p>
+                </>
+              )}
+              <input id="photo-input" type="file" accept="image/*" style={{ display: 'none' }}
+                onChange={e => {
+                  const file = e.target.files?.[0]
+                  if (file) setPreviewUrl(URL.createObjectURL(file))
+                }}
+              />
             </div>
-            {/* 暖调色卡 */}
-            <div style={{ border: `1px solid ${C.border}`, borderRadius: '10px', padding: '16px', background: '#fff' }}>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, letterSpacing: '1px', marginBottom: '10px' }}>暖调组</p>
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                {[['奶油白','#F5F0E8'],['杏色','#E8C4A0'],['蜜桃','#FFBB99'],['焦糖','#C68642'],['橘红','#E8734A'],['暖咖','#8B6347']].map(([n,h]) => (
-                  <div key={n} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                    <div style={{ width: '36px', height: '36px', borderRadius: '6px', background: h, border: `1px solid ${C.border}` }} />
-                    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', color: C.muted }}>{n}</span>
-                  </div>
-                ))}
+            {previewUrl && aiStatus === 'idle' && (
+              <button onClick={() => {
+                setAiStatus('analyzing')
+                setTimeout(() => {
+                  setAiResult({ sheldon: '中胚层', bone: 'H', fat: '无' })
+                  setAiStatus('done')
+                  setSheldon('中胚层'); setBoneShape('H'); setVisual('无')
+                }, 2000)
+              }} style={btnGold}>AI 识别体型</button>
+            )}
+            {aiStatus === 'analyzing' && (
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.gold, textAlign: 'center' }}>正在分析中…</p>
+            )}
+            {aiStatus === 'done' && aiResult && (
+              <div style={{ background: '#fdf8ee', border: `1px solid ${C.gold}`, borderRadius: '8px', padding: '20px' }}>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', marginBottom: '12px' }}>AI 识别结果</p>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: C.h2, margin: 0 }}>
+                  体质类型：{aiResult.sheldon}　骨骼轮廓：{aiResult.bone} 型　脂肪分布：{aiResult.fat === '无' ? '均匀' : aiResult.fat}
+                </p>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, marginTop: '8px', marginBottom: 0 }}>
+                  以下步骤中你可以确认或手动修正
+                </p>
               </div>
-            </div>
-            {/* 冷调色卡 */}
-            <div style={{ border: `1px solid ${C.border}`, borderRadius: '10px', padding: '16px', background: '#fff' }}>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, letterSpacing: '1px', marginBottom: '10px' }}>冷调组</p>
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                {[['纯白','#FFFFFF'],['冷灰','#8A9099'],['玫瑰粉','#F4A0B8'],['藏蓝','#1C2E5A'],['蓝红','#C2185B'],['银灰','#B0B8C4']].map(([n,h]) => (
-                  <div key={n} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                    <div style={{ width: '36px', height: '36px', borderRadius: '6px', background: h, border: `1px solid ${C.border}` }} />
-                    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', color: C.muted }}>{n}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {[
-                { id: 'A', label: '暖调组更好看，更提气色', sub: '' },
-                { id: 'B', label: '冷调组更好看，更干净清透', sub: '' },
-                { id: 'C', label: '两组都可以，没有明显差别', sub: '' },
-                { id: 'D', label: '两组都一般，放上去都不太好看', sub: '→ 可能是橄榄或暗沉肤色的信号' },
-              ].map(o => (
-                <button key={o.id} onClick={() => set('q2')(o.id)} style={{
-                  border: `1.5px solid ${answers.q2 === o.id ? C.gold : C.border}`,
-                  borderRadius: '8px', background: answers.q2 === o.id ? '#fdf8ee' : '#fff',
-                  padding: '16px 20px', cursor: 'pointer', textAlign: 'left',
-                  transition: 'all 0.2s', display: 'flex', gap: '14px', alignItems: 'flex-start',
-                }}>
-                  <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: answers.q2 === o.id ? C.gold : C.muted, letterSpacing: '1px', flexShrink: 0, marginTop: '2px' }}>{o.id}</span>
-                  <div>
-                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: answers.q2 === o.id ? C.h2 : C.body, margin: 0 }}>{o.label}</p>
-                    {o.sub && <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted, marginTop: '3px', marginBottom: 0 }}>{o.sub}</p>}
-                  </div>
-                </button>
-              ))}
-            </div>
+            )}
             <div style={{ display: 'flex', gap: '12px' }}>
-              <BackBtn onClick={back} />
-              <button onClick={next} disabled={!answers.q2} style={!answers.q2 ? btnDisabledStyle : btnPrimaryStyle}>继续</button>
-            </div>
-          </div>
-        )}
-
-        {/* ── Q3 粉色反应（橄榄筛查）── */}
-        {step === 'q3' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-            <div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 06 · 橄榄筛查</p>
-              <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>如果让你自己选择，你会选哪一种颜色？</h2>
-            </div>
-            {/* 图片选项 A / B */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              {[
-                { id: 'A', label: '蜜桃粉', img: '/mitaofen.png' },
-                { id: 'B', label: '玫瑰粉', img: '/rosefen.png' },
-              ].map(o => (
-                <button key={o.id} onClick={() => set('q3')(o.id)} style={{
-                  border: `2px solid ${answers.q3 === o.id ? C.gold : C.border}`,
-                  borderRadius: '8px', background: answers.q3 === o.id ? '#fdf8ee' : '#fff',
-                  padding: 0, cursor: 'pointer', overflow: 'hidden', transition: 'all 0.2s',
-                }}>
-                  <img src={o.img} alt={o.label} style={{ width: '100%', aspectRatio: '1/1', objectFit: 'cover', display: 'block' }} />
-                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: answers.q3 === o.id ? C.gold : C.body, padding: '10px 0', margin: 0, textAlign: 'center' }}>
-                    <span style={{ fontSize: '11px', color: C.muted, marginRight: '6px' }}>{o.id}</span>{o.label}
-                  </p>
-                </button>
-              ))}
-            </div>
-            {/* 文字选项 C / D */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {[
-                { id: 'C', label: '大多数粉色让我显脏显土', sub: '→ 这是橄榄肤色的重要信号' },
-                { id: 'D', label: '暖粉冷粉都可以，没有明显差别', sub: '' },
-              ].map(o => (
-                <button key={o.id} onClick={() => set('q3')(o.id)} style={{
-                  border: `1.5px solid ${answers.q3 === o.id ? C.gold : C.border}`,
-                  borderRadius: '8px', background: answers.q3 === o.id ? '#fdf8ee' : '#fff',
-                  padding: '14px 18px', cursor: 'pointer', textAlign: 'left',
-                  transition: 'all 0.2s', display: 'flex', gap: '12px', alignItems: 'flex-start',
-                }}>
-                  <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: answers.q3 === o.id ? C.gold : C.muted, letterSpacing: '1px', flexShrink: 0, marginTop: '2px' }}>{o.id}</span>
-                  <div>
-                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: answers.q3 === o.id ? C.h2 : C.body, margin: 0 }}>{o.label}</p>
-                    {o.sub && <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted, marginTop: '3px', marginBottom: 0 }}>{o.sub}</p>}
-                  </div>
-                </button>
-              ))}
-            </div>
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <BackBtn onClick={back} />
+              <button onClick={() => setPhase('method')} style={btnOutline}>← 返回</button>
               <button
-                onClick={() => { if (answers.q3 === 'C') setStep('q3b'); else next() }}
-                disabled={!answers.q3}
-                style={!answers.q3 ? btnDisabledStyle : btnPrimaryStyle}
+                onClick={() => setPhase('sheldon')}
+                disabled={aiStatus !== 'done'}
+                style={aiStatus === 'done' ? { ...btnGold, flex: 1 } : { ...btnGold, flex: 1, background: '#e0e0e0', cursor: 'not-allowed' }}
               >继续</button>
             </div>
           </div>
         )}
 
-        {/* ── Q3b 橄榄确认（仅选C时进入）── */}
-        {step === 'q3b' && (
+        {phase === 'data' && method === 'manual' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+            <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '26px', color: C.h2, fontWeight: 400, margin: 0 }}>填写体型数据</h2>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, lineHeight: 1.8, margin: 0 }}>
+              用软尺测量，数值单位为厘米（cm）。站立姿态，自然呼吸状态下测量。
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {[
+                { label: '胸围', hint: '胸部最丰满处水平一圈', value: bust, set: setBust },
+                { label: '腰围', hint: '腰部最细处水平一圈', value: waist, set: setWaist },
+                { label: '臀围', hint: '臀部最丰满处水平一圈', value: hip, set: setHip },
+                { label: '肩宽', hint: '两肩峰之间的距离', value: shoulder, set: setShoulder },
+                { label: '髋骨宽', hint: '两侧髋骨最宽处', value: hipBone, set: setHipBone },
+              ].map(f => (
+                <div key={f.label}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                    <label style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.h2 }}>{f.label}</label>
+                    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted }}>{f.hint}</span>
+                  </div>
+                  <input
+                    type="number" value={f.value} placeholder="cm"
+                    onChange={e => {
+                      f.set(e.target.value)
+                      if (f.label === '胸围') checkConflict(e.target.value, waist, hip)
+                      if (f.label === '腰围') checkConflict(bust, e.target.value, hip)
+                      if (f.label === '臀围') checkConflict(bust, waist, e.target.value)
+                    }}
+                    style={{
+                      width: '100%', padding: '12px 14px', border: `1px solid ${C.border}`,
+                      borderRadius: '6px', fontFamily: 'Inter, sans-serif', fontSize: '14px',
+                      background: '#fff', boxSizing: 'border-box' as const,
+                    }}
+                  />
+                </div>
+              ))}
+              {conflict && (
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: '#c0392b', background: '#fef8f8', padding: '12px', borderRadius: '6px' }}>
+                  ⚠ {conflict}
+                </p>
+              )}
+            </div>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button onClick={() => setPhase('method')} style={btnOutline}>← 返回</button>
+              <button
+                onClick={() => setPhase('sheldon')}
+                disabled={!bust || !waist || !hip}
+                style={bust && waist && hip ? { ...btnGold, flex: 1 } : { ...btnGold, flex: 1, background: '#e0e0e0', cursor: 'not-allowed' }}
+              >继续</button>
+            </div>
+          </div>
+        )}
+
+        {/* ── Step 2: 谢尔顿三型 ── */}
+        {phase === 'sheldon' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
             <div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 06 · 橄榄筛查（确认）</p>
-              <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>把这两个颜色分别靠近脸部，哪一个让你看起来更高级、更干净、五官更清楚？</h2>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', marginBottom: '8px' }}>STEP 01 · 体质类型</p>
+              <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '26px', color: C.h2, fontWeight: 400, margin: 0 }}>
+                你的体质类型更接近哪种？
+              </h2>
+              {method === 'ai' && aiResult && (
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.gold, marginTop: '8px' }}>
+                  AI 建议：{aiResult.sheldon}（可手动修改）
+                </p>
+              )}
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              {[
-                { id: 'A', label: '橘色', img: '/orange.png' },
-                { id: 'B', label: '品红色', img: '/redold.png' },
-              ].map(o => (
-                <button key={o.id} onClick={() => set('q3b')(o.id)} style={{
-                  border: `2px solid ${answers.q3b === o.id ? C.gold : C.border}`,
-                  borderRadius: '8px', background: answers.q3b === o.id ? '#fdf8ee' : '#fff',
-                  padding: 0, cursor: 'pointer', overflow: 'hidden', transition: 'all 0.2s',
-                }}>
-                  <img src={o.img} alt={o.label} style={{ width: '100%', aspectRatio: '1/1', objectFit: 'cover', display: 'block' }} />
-                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: answers.q3b === o.id ? C.gold : C.body, padding: '10px 0', margin: 0, textAlign: 'center' }}>
-                    <span style={{ fontSize: '11px', color: C.muted, marginRight: '6px' }}>{o.id}</span>{o.label}
-                  </p>
-                </button>
-              ))}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <OptionCard label="外胚层 Ectomorph" sub="骨架纤细，四肢偏长，肌肉不易堆积，天生线条感强" active={sheldon === '外胚层'} onClick={() => setSheldon('外胚层')} />
+              <OptionCard label="中胚层 Mesomorph" sub="骨架适中，肌肉线条明显，体型匀称，容易塑形" active={sheldon === '中胚层'} onClick={() => setSheldon('中胚层')} />
+              <OptionCard label="内胚层 Endomorph" sub="骨架较宽，脂肪容易堆积，体型圆润，曲线丰满" active={sheldon === '内胚层'} onClick={() => setSheldon('内胚层')} />
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
-              <BackBtn onClick={() => setStep('q3')} />
-              <button onClick={() => setStep('q4')} disabled={!answers.q3b} style={!answers.q3b ? btnDisabledStyle : btnPrimaryStyle}>继续</button>
+              <button onClick={() => setPhase('data')} style={btnOutline}>← 返回</button>
+              <button onClick={() => setPhase('bone')} disabled={!sheldon}
+                style={sheldon ? { ...btnGold, flex: 1 } : { ...btnGold, flex: 1, background: '#e0e0e0', cursor: 'not-allowed' }}>
+                继续
+              </button>
             </div>
           </div>
         )}
 
-        {/* ── Q4 粉底问题 ── */}
-        {step === 'q4' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        {/* ── Step 3: 骨骼轮廓 ── */}
+        {phase === 'bone' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
             <div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 07 · 粉底经验</p>
-              <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>你买粉底最常遇到什么问题？</h2>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '8px' }}>不用粉底也可根据印象或朋友反馈作答</p>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', marginBottom: '8px' }}>STEP 02 · 骨骼轮廓</p>
+              <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '26px', color: C.h2, fontWeight: 400, margin: 0 }}>你的骨骼轮廓更接近哪种？</h2>
             </div>
-            <img src="/foundation.png" alt="粉底色号参考" style={{ width: '100%', borderRadius: '10px', objectFit: 'cover', maxHeight: '200px' }} />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {[
-                { id: 'A', label: '经常太粉，显得假白', sub: '' },
-                { id: 'B', label: '经常太黄，找对肤色号很难', sub: '' },
-                { id: 'C', label: '经常太灰，涂上去脸色更差', sub: '→ 橄榄/灰调肤色的典型问题' },
-                { id: 'D', label: '容易氧化发暗，过几小时变暗', sub: '→ 暗沉或橄榄肤色信号' },
-                { id: 'E', label: '很容易匹配，基本都适合', sub: '' },
-              ].map(o => (
-                <button key={o.id} onClick={() => set('q4')(o.id)} style={{
-                  border: `1.5px solid ${answers.q4 === o.id ? C.gold : C.border}`,
-                  borderRadius: '8px', background: answers.q4 === o.id ? '#fdf8ee' : '#fff',
-                  padding: '16px 20px', cursor: 'pointer', textAlign: 'left',
-                  transition: 'all 0.2s', display: 'flex', gap: '14px', alignItems: 'flex-start',
-                }}>
-                  <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: answers.q4 === o.id ? C.gold : C.muted, letterSpacing: '1px', flexShrink: 0, marginTop: '2px' }}>{o.id}</span>
-                  <div>
-                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: answers.q4 === o.id ? C.h2 : C.body, margin: 0 }}>{o.label}</p>
-                    {o.sub && <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted, marginTop: '3px', marginBottom: 0 }}>{o.sub}</p>}
-                  </div>
-                </button>
-              ))}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <OptionCard label="H 型" sub="肩宽≈髋宽，腰部不明显，整体较方正" active={boneShape === 'H'} onClick={() => { setBoneShape('H'); setShowXTrap(false) }} />
+              <OptionCard label="X 型" sub="肩宽≈髋宽，腰部明显收细，沙漏型轮廓" active={boneShape === 'X'} onClick={() => { setBoneShape('X'); setShowXTrap(true) }} />
+              <OptionCard label="A 型" sub="肩窄髋宽，重心偏下，梨形轮廓" active={boneShape === 'A'} onClick={() => { setBoneShape('A'); setShowXTrap(false) }} />
+              <OptionCard label="V 型" sub="肩宽髋窄，倒三角轮廓，上半身较壮" active={boneShape === 'V'} onClick={() => { setBoneShape('V'); setShowXTrap(false) }} />
             </div>
+            {showXTrap && (
+              <div style={{ background: '#fdf8ee', border: `1px solid ${C.gold}`, borderRadius: '8px', padding: '16px 20px' }}>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.gold, letterSpacing: '1px', marginBottom: '8px' }}>X 型陷阱检测</p>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.body, lineHeight: 1.8, margin: 0 }}>
+                  很多「X型」其实是H型骨骼+内衣塑型/脂肪转移的假象。<br />
+                  <strong>验证方法：</strong>用手摸肋骨最下端角度——<br />
+                  · 角度 &gt; 90°（向外张开）→ H型骨架<br />
+                  · 角度 &lt; 90°（向内收）→ 真X型
+                </p>
+              </div>
+            )}
             <div style={{ display: 'flex', gap: '12px' }}>
-              <BackBtn onClick={() => answers.q3 === 'C' ? setStep('q3b') : setStep('q3')} />
-              <button onClick={next} disabled={!answers.q4} style={!answers.q4 ? btnDisabledStyle : btnPrimaryStyle}>继续</button>
+              <button onClick={() => setPhase('sheldon')} style={btnOutline}>← 返回</button>
+              <button onClick={() => setPhase('fat')} disabled={!boneShape}
+                style={boneShape ? { ...btnGold, flex: 1 } : { ...btnGold, flex: 1, background: '#e0e0e0', cursor: 'not-allowed' }}>
+                继续
+              </button>
             </div>
           </div>
         )}
 
-        {/* ── Q5 金银首饰 ── */}
-        {step === 'q5' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        {/* ── Step 4: 脂肪视觉自评 ── */}
+        {phase === 'fat' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
             <div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 08 · 首饰测试</p>
-              <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>金色和银色靠近脸，哪种更好？</h2>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '8px' }}>可以用金色和银色首饰分别贴近脸部对比</p>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', marginBottom: '8px' }}>STEP 03 · 脂肪分布</p>
+              <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '26px', color: C.h2, fontWeight: 400, margin: 0 }}>你的脂肪分布更接近哪种？</h2>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <img src="/silver.png" alt="银色首饰" style={{ width: '100%', aspectRatio: '1/1', objectFit: 'cover', borderRadius: '8px' }} />
-                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted, textAlign: 'center', margin: 0 }}>银色 · 白金</p>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <img src="/gold.png" alt="金色首饰" style={{ width: '100%', aspectRatio: '1/1', objectFit: 'cover', borderRadius: '8px' }} />
-                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted, textAlign: 'center', margin: 0 }}>金色 · 黄金</p>
-              </div>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {[
-                { id: 'A', label: '金色显气色，更贴肤自然', sub: '黄金、香槟金让肤色更亮' },
-                { id: 'B', label: '银色显干净，更精致透亮', sub: '银色、白金让脸更清透' },
-                { id: 'C', label: '两种都可以，没有明显差别', sub: '' },
-                { id: 'D', label: '两种都一般，金银都不太衬我', sub: '→ 橄榄肤色的常见反馈' },
-              ].map(o => (
-                <button key={o.id} onClick={() => set('q5')(o.id)} style={{
-                  border: `1.5px solid ${answers.q5 === o.id ? C.gold : C.border}`,
-                  borderRadius: '8px', background: answers.q5 === o.id ? '#fdf8ee' : '#fff',
-                  padding: '16px 20px', cursor: 'pointer', textAlign: 'left',
-                  transition: 'all 0.2s', display: 'flex', gap: '14px', alignItems: 'flex-start',
-                }}>
-                  <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: answers.q5 === o.id ? C.gold : C.muted, letterSpacing: '1px', flexShrink: 0, marginTop: '2px' }}>{o.id}</span>
-                  <div>
-                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: answers.q5 === o.id ? C.h2 : C.body, margin: 0 }}>{o.label}</p>
-                    {o.sub && <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted, marginTop: '3px', marginBottom: 0 }}>{o.sub}</p>}
-                  </div>
-                </button>
-              ))}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <OptionCard label="均匀分布" sub="脂肪均匀分布，没有特别突出的部位" active={visual === '无'} onClick={() => setVisual('无')} />
+              <OptionCard label="O 型堆积" sub="腹部、腰部脂肪明显，中心肥胖倾向" active={visual === 'O'} onClick={() => setVisual('O')} />
+              <OptionCard label="S 型堆积" sub="胸部和臀部脂肪丰满，腰部相对细，曲线感强" active={visual === 'S'} onClick={() => setVisual('S')} />
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
-              <BackBtn onClick={back} />
-              <button onClick={next} disabled={!answers.q5} style={!answers.q5 ? btnDisabledStyle : btnPrimaryStyle}>继续</button>
+              <button onClick={() => setPhase('bone')} style={btnOutline}>← 返回</button>
+              <button onClick={() => setPhase('qi')} disabled={!visual}
+                style={visual ? { ...btnGold, flex: 1 } : { ...btnGold, flex: 1, background: '#e0e0e0', cursor: 'not-allowed' }}>
+                继续
+              </button>
             </div>
           </div>
         )}
 
+        {/* ── Step 5: 气血态 ── */}
+        {phase === 'qi' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+            <div>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', marginBottom: '8px' }}>STEP 04 · 气血态</p>
+              <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '26px', color: C.h2, fontWeight: 400, margin: 0 }}>4道题判断你的气血态</h2>
+            </div>
+            {[
+              {
+                q: q1, set: setQ1, title: '你的皮肤状态通常是？',
+                opts: [
+                  { id: 'A', text: '偏薄、透、毛孔细' }, { id: 'B', text: '饱满、有弹性、较厚' },
+                  { id: 'C', text: '偏干、细腻但缺乏光泽' }, { id: 'D', text: '偏油或混合，皮肤厚' },
+                ],
+              },
+              {
+                q: q2, set: setQ2, title: '你的骨骼感和线条感如何？',
+                opts: [
+                  { id: 'A', text: '骨感明显，线条清晰' }, { id: 'B', text: '肌肉有力，骨骼感强' },
+                  { id: 'C', text: '线条柔和，骨骼感弱' }, { id: 'D', text: '整体较厚实，线条不清晰' },
+                ],
+              },
+              {
+                q: q3, set: setQ3, title: '你的体重变化规律是？',
+                opts: [
+                  { id: 'A', text: '不容易胖，吃很多也不长肉' }, { id: 'B', text: '容易塑形，增肌减脂都较快' },
+                  { id: 'C', text: '容易胖但主要在特定部位' }, { id: 'D', text: '全身容易长肉，很难瘦下来' },
+                ],
+              },
+              {
+                q: q4, set: setQ4, title: '素颜时你的气色通常是？',
+                opts: [
+                  { id: 'A', text: '红润有光泽，很有气色' }, { id: 'B', text: '健康自然，不苍白不暗沉' },
+                  { id: 'C', text: '偏白或偏粉，有时显苍白' }, { id: 'D', text: '偏黄或偏暗，气色较差' },
+                ],
+              },
+            ].map((item, idx) => (
+              <div key={idx} style={{ borderBottom: `1px solid ${C.border}`, paddingBottom: '20px' }}>
+                <p style={{ fontFamily: 'Georgia, serif', fontSize: '16px', color: C.h2, marginBottom: '12px' }}>{idx + 1}. {item.title}</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {item.opts.map(o => (
+                    <button key={o.id} onClick={() => item.set(o.id)} style={{
+                      border: `1px solid ${item.q === o.id ? C.gold : C.border}`,
+                      background: item.q === o.id ? '#fdf8ee' : '#fff',
+                      padding: '12px 16px', textAlign: 'left', cursor: 'pointer',
+                      borderRadius: '6px', display: 'flex', gap: '12px', alignItems: 'center',
+                    }}>
+                      <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: item.q === o.id ? C.gold : C.muted }}>{o.id}</span>
+                      <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: item.q === o.id ? C.h2 : C.body }}>{o.text}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button onClick={() => setPhase('fat')} style={btnOutline}>← 返回</button>
+              <button
+                onClick={computeResult}
+                disabled={!q1 || !q2 || !q3 || !q4}
+                style={q1 && q2 && q3 && q4 ? { ...btnGold, flex: 1 } : { ...btnGold, flex: 1, background: '#e0e0e0', cursor: 'not-allowed' }}
+              >
+                生成体型档案
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* ── 报告页 ── */}
-        {step === 'report' && (
-          <ColorReport result={result} contrast={computeContrast(answers)} onReset={reset} />
+        {phase === 'report' && result && (
+          <ReportView result={result} onReset={reset} />
         )}
 
       </div>
