@@ -313,7 +313,7 @@ export default function ColorTestPage() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
               {[{ label: '金色 · 黄金', img: '/gold.png' }, { label: '银色 · 白金', img: '/silver.png' }].map(o => (
                 <div key={o.label} style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <img src={o.img} alt={o.label} style={{ width: '100%', objectFit: 'contain', borderRadius: '8px', background: '#f5f3ef' }} />
+                  <img src={o.img} alt={o.label} style={{ width: '100%', height: '220px', objectFit: 'cover', borderRadius: '8px', display: 'block' }} />
                   <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted, textAlign: 'center', margin: 0 }}>{o.label}</p>
                 </div>
               ))}
@@ -410,7 +410,7 @@ export default function ColorTestPage() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
               {[{ label: '蜜桃粉 · 珊瑚粉（暖调）', img: '/mitaofen.png' }, { label: '玫瑰粉 · 冷粉（冷调）', img: '/rosefen.png' }].map(o => (
                 <div key={o.label} style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <img src={o.img} alt={o.label} style={{ width: '100%', objectFit: 'contain', borderRadius: '8px', background: '#f5f3ef' }} />
+                  <img src={o.img} alt={o.label} style={{ width: '100%', height: '220px', objectFit: 'cover', borderRadius: '8px', display: 'block' }} />
                   <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted, textAlign: 'center', margin: 0 }}>{o.label}</p>
                 </div>
               ))}
