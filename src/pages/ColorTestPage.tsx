@@ -478,7 +478,7 @@ export default function ColorTestPage() {
         </div>
       )}
 
-      <div style={{ maxWidth: '520px', margin: '0 auto', padding: '40px 24px' }}>
+      <div style={{ maxWidth: '680px', margin: '0 auto', padding: '40px 32px' }}>
 
         {/* ── 介绍页 ── */}
         {step === 'intro' && (
@@ -540,7 +540,7 @@ export default function ColorTestPage() {
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 02 · 面部对比度</p>
               <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>素颜时，你的眉眼和皮肤对比明显吗？</h2>
             </div>
-            <img src="/facehl.png" alt="面部对比度参考" style={{ width: '100%', borderRadius: '10px', objectFit: 'cover' }} />
+            <img src="/facehl.png" alt="面部对比度参考" style={{ width: '100%', borderRadius: '10px', objectFit: 'contain', background: '#f5f3ef' }} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {[
                 { id: 'A', label: '很明显，黑发黑眉黑眼，五官存在感强', sub: '→ 高对比，可能适合深色、强色、清晰色' },
