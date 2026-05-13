@@ -9,14 +9,14 @@ const C = {
 // ─── 结果类型 ───────────────────────────────────────────────
 type ColorResult = '暖黄皮' | '冷黄皮' | '中性黄皮' | '橄榄黄皮' | '冷白皮' | '暖白皮' | '需人工复核'
 
-type StepKey = 'intro' | 'q1' | 'q1b' | 'q1c' | 'q1d' | 'q2' | 'q3' | 'q3b' | 'q4' | 'q5' | 'q6' | 'report'
+type StepKey = 'intro' | 'q1' | 'q1b' | 'q1c' | 'q1d' | 'q2' | 'q3' | 'q3b' | 'q4' | 'q5' | 'report'
 
 type ContrastLevel = 'high' | 'mid' | 'low' | 'olive_check'
 
 interface Answers {
   q1: string; q1b: string; q1c: string; q1d: string
   q2: string; q3: string; q3b: string
-  q4: string; q5: string; q6: string
+  q4: string; q5: string
 }
 
 function computeContrast(a: Answers): ContrastLevel | undefined {
@@ -233,10 +233,6 @@ function computeResult(a: Answers): ColorResult {
   else if (a.q5 === 'B') cold += 2   // 银色衬→冷
   else if (a.q5 === 'D') olive += 2  // 都不衬→橄榄
 
-  // Q6 面部对比度（深冬/柔夏区分）
-  if (a.q6 === 'A') bright += 1      // 高对比→偏深冬
-  else if (a.q6 === 'C') bright -= 1 // 柔和→偏柔夏
-
   // q1c=D + q1d=C → 橄榄/灰黄肤色复核信号
   if (a.q1c === 'D' && a.q1d === 'C') olive += 3
 
@@ -439,12 +435,12 @@ function ColorReport({ result, contrast, onReset }: { result: ColorResult; contr
 // ─── 主页面 ───────────────────────────────────────────────────
 export default function ColorTestPage() {
   const [step, setStep] = useState<StepKey>('intro')
-  const [answers, setAnswers] = useState<Answers>({ q1: '', q1b: '', q1c: '', q1d: '', q2: '', q3: '', q3b: '', q4: '', q5: '', q6: '' })
+  const [answers, setAnswers] = useState<Answers>({ q1: '', q1b: '', q1c: '', q1d: '', q2: '', q3: '', q3b: '', q4: '', q5: '' })
 
   const set = (key: keyof Answers) => (val: string) => setAnswers(prev => ({ ...prev, [key]: val }))
 
   const next = () => {
-    const order: StepKey[] = ['intro', 'q1', 'q1b', 'q1c', 'q1d', 'q2', 'q3', 'q3b', 'q4', 'q5', 'q6', 'report']
+    const order: StepKey[] = ['intro', 'q1', 'q1b', 'q1c', 'q1d', 'q2', 'q3', 'q3b', 'q4', 'q5', 'report']
     const i = order.indexOf(step)
     if (i < order.length - 1) setStep(order[i + 1])
   }
@@ -453,14 +449,14 @@ export default function ColorTestPage() {
     const backMap: Partial<Record<StepKey, StepKey>> = {
       q1: 'intro', q1b: 'q1', q1c: 'q1b', q1d: 'q1c',
       q2: 'q1d', q3: 'q2', q3b: 'q3',
-      q4: 'q3', q5: 'q4', q6: 'q5', report: 'q6',
+      q4: 'q3', q5: 'q4', report: 'q5',
     }
     const prev = backMap[step]
     if (prev) setStep(prev)
   }
 
   const reset = () => {
-    setAnswers({ q1: '', q1b: '', q1c: '', q1d: '', q2: '', q3: '', q3b: '', q4: '', q5: '', q6: '' })
+    setAnswers({ q1: '', q1b: '', q1c: '', q1d: '', q2: '', q3: '', q3b: '', q4: '', q5: '' })
     setStep('intro')
   }
 
@@ -468,7 +464,7 @@ export default function ColorTestPage() {
 
   // 进度条（q3b 算在 q3 内，不单独计步）
   const stepIndex: Record<StepKey, number> = {
-    intro: 0, q1: 1, q1b: 1, q1c: 1, q1d: 1, q2: 2, q3: 3, q3b: 3, q4: 4, q5: 5, q6: 6, report: 7,
+    intro: 0, q1: 1, q1b: 2, q1c: 2, q1d: 2, q2: 3, q3: 4, q3b: 4, q4: 5, q5: 6, report: 7,
   }
   const totalSteps = 6
   const progress = step === 'intro' ? 0 : step === 'report' ? 100 : (stepIndex[step] / totalSteps) * 100
@@ -539,20 +535,43 @@ export default function ColorTestPage() {
 
         {/* ── Q1b 眉眼对比度 ── */}
         {step === 'q1b' && (
-          <QuestionStep tag="Step 01 · 面部对比度 1/3"
-            title="素颜时，你的眉眼和皮肤对比明显吗？"
-            options={[
-              { id: 'A', label: '很明显，黑发黑眉黑眼，五官存在感强', sub: '→ 高对比，可能适合深色、强色、清晰色' },
-              { id: 'B', label: '中等，有一定对比，但不强烈', sub: '→ 中对比，适合范围较宽' },
-              { id: 'C', label: '很柔和，眉眼颜色比较淡', sub: '→ 低对比，适合柔和、低饱和、浅中性色' },
-              { id: 'D', label: '不确定', sub: '' },
-            ]}
-            value={answers.q1b} onChange={set('q1b')} onNext={next} onBack={back} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 02 · 面部对比度</p>
+              <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>素颜时，你的眉眼和皮肤对比明显吗？</h2>
+            </div>
+            <img src="/facehl.png" alt="面部对比度参考" style={{ width: '100%', borderRadius: '10px', objectFit: 'cover' }} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {[
+                { id: 'A', label: '很明显，黑发黑眉黑眼，五官存在感强', sub: '→ 高对比，可能适合深色、强色、清晰色' },
+                { id: 'B', label: '中等，有一定对比，但不强烈', sub: '→ 中对比，适合范围较宽' },
+                { id: 'C', label: '很柔和，眉眼颜色比较淡', sub: '→ 低对比，适合柔和、低饱和、浅中性色' },
+                { id: 'D', label: '不确定', sub: '' },
+              ].map(o => (
+                <button key={o.id} onClick={() => set('q1b')(o.id)} style={{
+                  border: `1.5px solid ${answers.q1b === o.id ? C.gold : C.border}`,
+                  borderRadius: '8px', background: answers.q1b === o.id ? '#fdf8ee' : '#fff',
+                  padding: '16px 20px', cursor: 'pointer', textAlign: 'left',
+                  transition: 'all 0.2s', display: 'flex', gap: '14px', alignItems: 'flex-start',
+                }}>
+                  <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: answers.q1b === o.id ? C.gold : C.muted, letterSpacing: '1px', flexShrink: 0, marginTop: '2px' }}>{o.id}</span>
+                  <div>
+                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: answers.q1b === o.id ? C.h2 : C.body, margin: 0 }}>{o.label}</p>
+                    {o.sub && <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted, marginTop: '3px', marginBottom: 0 }}>{o.sub}</p>}
+                  </div>
+                </button>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <BackBtn onClick={back} />
+              <button onClick={next} disabled={!answers.q1b} style={!answers.q1b ? btnDisabledStyle : btnPrimaryStyle}>继续</button>
+            </div>
+          </div>
         )}
 
         {/* ── Q1c 发色瞳色 ── */}
         {step === 'q1c' && (
-          <QuestionStep tag="Step 01 · 面部对比度 2/3"
+          <QuestionStep tag="Step 03 · 发色瞳色"
             title="你的自然发色和瞳色更接近哪一种？"
             options={[
               { id: 'A', label: '黑发黑瞳，颜色很深', sub: '→ 高对比、深色承受力强' },
@@ -566,7 +585,7 @@ export default function ColorTestPage() {
 
         {/* ── Q1d 黑色上衣 ── */}
         {step === 'q1d' && (
-          <QuestionStep tag="Step 01 · 面部对比度 3/3"
+          <QuestionStep tag="Step 04 · 黑色上衣"
             title="素颜时，你穿黑色上衣通常怎样？"
             options={[
               { id: 'A', label: '显得五官更清楚，很有气场', sub: '→ 高对比，可能偏冬季/戏剧感' },
@@ -581,7 +600,7 @@ export default function ColorTestPage() {
         {step === 'q2' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
             <div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 02 · 冷暖色卡</p>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 05 · 冷暖色卡</p>
               <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>哪一组颜色靠近脸时，更让你显得干净、有气色？</h2>
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '8px' }}>准备几块纯色方巾、衣服或彩色纸，分别放在脸部下方对比</p>
             </div>
@@ -641,7 +660,7 @@ export default function ColorTestPage() {
         {step === 'q3' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
             <div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 03 · 橄榄筛查</p>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 06 · 橄榄筛查</p>
               <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>如果让你自己选择，你会选哪一种颜色？</h2>
             </div>
             {/* 图片选项 A / B */}
@@ -697,7 +716,7 @@ export default function ColorTestPage() {
         {step === 'q3b' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
             <div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 03 · 橄榄确认</p>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 06 · 橄榄筛查（确认）</p>
               <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>把这两个颜色分别靠近脸部，哪一个让你看起来更高级、更干净、五官更清楚？</h2>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
@@ -728,7 +747,7 @@ export default function ColorTestPage() {
         {step === 'q4' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             <div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 04 · 粉底经验</p>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 07 · 粉底经验</p>
               <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>你买粉底最常遇到什么问题？</h2>
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '8px' }}>不用粉底也可根据印象或朋友反馈作答</p>
             </div>
@@ -766,7 +785,7 @@ export default function ColorTestPage() {
         {step === 'q5' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             <div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 05 · 首饰测试</p>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 08 · 首饰测试</p>
               <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>金色和银色靠近脸，哪种更好？</h2>
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '8px' }}>可以用金色和银色首饰分别贴近脸部对比</p>
             </div>
@@ -808,20 +827,6 @@ export default function ColorTestPage() {
           </div>
         )}
 
-        {/* ── Q6 面部对比度 ── */}
-        {step === 'q6' && (
-          <QuestionStep tag="Step 06 · 面部对比度"
-            title="素颜时，你的眉眼唇和皮肤对比明显吗？"
-            subtitle="不化妆、自然光下观察整体五官深浅"
-            options={[
-              { id: 'A', label: '很明显，五官立体，对比强烈', sub: '眉眼唇色深，肤色浅，黑白分明' },
-              { id: 'B', label: '中等，不强不弱', sub: '' },
-              { id: 'C', label: '很柔和，五官颜色淡，整体偏柔和', sub: '' },
-              { id: 'D', label: '不确定', sub: '' },
-            ]}
-            value={answers.q6} onChange={set('q6')}
-            onNext={() => setStep('report')} onBack={back} />
-        )}
 
         {/* ── 报告页 ── */}
         {step === 'report' && (
