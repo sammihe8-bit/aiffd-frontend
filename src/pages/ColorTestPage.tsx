@@ -689,16 +689,48 @@ export default function ColorTestPage() {
 
         {/* ── Q5 金银首饰 ── */}
         {step === 'q5' && (
-          <QuestionStep tag="Step 05 · 首饰测试"
-            title="金色和银色靠近脸，哪种更好？"
-            subtitle="可以用金色和银色首饰分别贴近脸部对比"
-            options={[
-              { id: 'A', label: '金色显气色，更贴肤自然', sub: '黄金、香槟金让肤色更亮' },
-              { id: 'B', label: '银色显干净，更精致透亮', sub: '银色、白金让脸更清透' },
-              { id: 'C', label: '两种都可以，没有明显差别', sub: '' },
-              { id: 'D', label: '两种都一般，金银都不太衬我', sub: '→ 橄榄肤色的常见反馈' },
-            ]}
-            value={answers.q5} onChange={set('q5')} onNext={next} onBack={back} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 05 · 首饰测试</p>
+              <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>金色和银色靠近脸，哪种更好？</h2>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '8px' }}>可以用金色和银色首饰分别贴近脸部对比</p>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <img src="/silver.png" alt="银色首饰" style={{ width: '100%', aspectRatio: '1/1', objectFit: 'cover', borderRadius: '8px' }} />
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted, textAlign: 'center', margin: 0 }}>银色 · 白金</p>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <img src="/gold.png" alt="金色首饰" style={{ width: '100%', aspectRatio: '1/1', objectFit: 'cover', borderRadius: '8px' }} />
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted, textAlign: 'center', margin: 0 }}>金色 · 黄金</p>
+              </div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {[
+                { id: 'A', label: '金色显气色，更贴肤自然', sub: '黄金、香槟金让肤色更亮' },
+                { id: 'B', label: '银色显干净，更精致透亮', sub: '银色、白金让脸更清透' },
+                { id: 'C', label: '两种都可以，没有明显差别', sub: '' },
+                { id: 'D', label: '两种都一般，金银都不太衬我', sub: '→ 橄榄肤色的常见反馈' },
+              ].map(o => (
+                <button key={o.id} onClick={() => set('q5')(o.id)} style={{
+                  border: `1.5px solid ${answers.q5 === o.id ? C.gold : C.border}`,
+                  borderRadius: '8px', background: answers.q5 === o.id ? '#fdf8ee' : '#fff',
+                  padding: '16px 20px', cursor: 'pointer', textAlign: 'left',
+                  transition: 'all 0.2s', display: 'flex', gap: '14px', alignItems: 'flex-start',
+                }}>
+                  <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: answers.q5 === o.id ? C.gold : C.muted, letterSpacing: '1px', flexShrink: 0, marginTop: '2px' }}>{o.id}</span>
+                  <div>
+                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: answers.q5 === o.id ? C.h2 : C.body, margin: 0 }}>{o.label}</p>
+                    {o.sub && <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted, marginTop: '3px', marginBottom: 0 }}>{o.sub}</p>}
+                  </div>
+                </button>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <BackBtn onClick={back} />
+              <button onClick={next} disabled={!answers.q5} style={!answers.q5 ? btnDisabledStyle : btnPrimaryStyle}>继续</button>
+            </div>
+          </div>
         )}
 
         {/* ── Q6 面部对比度 ── */}
