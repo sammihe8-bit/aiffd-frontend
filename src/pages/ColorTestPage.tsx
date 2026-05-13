@@ -253,8 +253,8 @@ const BackBtn = ({ onClick }: { onClick: () => void }) => (
 )
 
 // ─── QuestionStep 通用组件 ────────────────────────────────────
-function QuestionStep({ step, tag, title, subtitle, options, value, onChange, onNext, onBack }: {
-  step: number; tag: string; title: string; subtitle?: string
+function QuestionStep({ tag, title, subtitle, options, value, onChange, onNext, onBack }: {
+  tag: string; title: string; subtitle?: string
   options: { id: string; label: string; sub?: string }[]
   value: string; onChange: (v: string) => void
   onNext: () => void; onBack: () => void
@@ -651,7 +651,7 @@ export default function ColorTestPage() {
 
         {/* ── Q4 粉底问题 ── */}
         {step === 'q4' && (
-          <QuestionStep step={4} tag="Step 04 · 粉底经验"
+          <QuestionStep tag="Step 04 · 粉底经验"
             title="你买粉底最常遇到什么问题？"
             subtitle="不用粉底也可根据印象或朋友反馈作答"
             options={[
@@ -668,7 +668,7 @@ export default function ColorTestPage() {
 
         {/* ── Q5 金银首饰 ── */}
         {step === 'q5' && (
-          <QuestionStep step={5} tag="Step 05 · 首饰测试"
+          <QuestionStep tag="Step 05 · 首饰测试"
             title="金色和银色靠近脸，哪种更好？"
             subtitle="可以用金色和银色首饰分别贴近脸部对比"
             options={[
@@ -682,7 +682,7 @@ export default function ColorTestPage() {
 
         {/* ── Q6 面部对比度 ── */}
         {step === 'q6' && (
-          <QuestionStep step={6} tag="Step 06 · 面部对比度"
+          <QuestionStep tag="Step 06 · 面部对比度"
             title="素颜时，你的眉眼唇和皮肤对比明显吗？"
             subtitle="不化妆、自然光下观察整体五官深浅"
             options={[
