@@ -7,13 +7,14 @@ const C = {
 }
 
 type WarmCoolResult = 'warm' | 'cool' | 'neutral_warm' | 'neutral_cool' | 'olive'
-type StepKey = 'intro' | 'q1' | 'q2' | 'q3' | 'q4' | 'q5' | 'report'
+type StepKey = 'intro' | 'q0' | 'q1' | 'q2' | 'q3' | 'q4' | 'q5' | 'report'
 
 interface Answers {
-  q1: string; q2: string; q3: string; q4: string; q5: string
+  q0: string; q1: string; q2: string; q3: string; q4: string; q5: string
 }
 
 function computeWarmCool(a: Answers): WarmCoolResult {
+  // q0 明度方向：A=偏白 B=偏黄，影响后续四季层，本层暂记录不计分
   let warm = 0; let cool = 0; let olive = 0
   if (a.q1 === 'A') warm += 1
   else if (a.q1 === 'B') cool += 1
@@ -226,18 +227,18 @@ function ColorReport({ result, onReset }: { result: WarmCoolResult; onReset: () 
 
 export default function ColorTestPage() {
   const [step, setStep] = useState<StepKey>('intro')
-  const [answers, setAnswers] = useState<Answers>({ q1: '', q2: '', q3: '', q4: '', q5: '' })
+  const [answers, setAnswers] = useState<Answers>({ q0: '', q1: '', q2: '', q3: '', q4: '', q5: '' })
   const set = (key: keyof Answers) => (val: string) => setAnswers(prev => ({ ...prev, [key]: val }))
-  const stepOrder: StepKey[] = ['intro', 'q1', 'q2', 'q3', 'q4', 'q5', 'report']
+  const stepOrder: StepKey[] = ['intro', 'q0', 'q1', 'q2', 'q3', 'q4', 'q5', 'report']
   const next = () => { const i = stepOrder.indexOf(step); if (i < stepOrder.length - 1) setStep(stepOrder[i + 1]) }
   const back = () => {
-    const m: Partial<Record<StepKey, StepKey>> = { q1: 'intro', q2: 'q1', q3: 'q2', q4: 'q3', q5: 'q4', report: 'q5' }
+    const m: Partial<Record<StepKey, StepKey>> = { q0: 'intro', q1: 'q0', q2: 'q1', q3: 'q2', q4: 'q3', q5: 'q4', report: 'q5' }
     const p = m[step]; if (p) setStep(p)
   }
-  const reset = () => { setAnswers({ q1: '', q2: '', q3: '', q4: '', q5: '' }); setStep('intro') }
+  const reset = () => { setAnswers({ q0: '', q1: '', q2: '', q3: '', q4: '', q5: '' }); setStep('intro') }
   const result = computeWarmCool(answers)
-  const stepIndex: Record<StepKey, number> = { intro: 0, q1: 1, q2: 2, q3: 3, q4: 4, q5: 5, report: 6 }
-  const progress = step === 'intro' ? 0 : step === 'report' ? 100 : (stepIndex[step] / 5) * 100
+  const stepIndex: Record<StepKey, number> = { intro: 0, q0: 1, q1: 2, q2: 3, q3: 4, q4: 5, q5: 6, report: 7 }
+  const progress = step === 'intro' ? 0 : step === 'report' ? 100 : (stepIndex[step] / 6) * 100
 
   return (
     <div style={{ minHeight: '100vh', background: '#faf9f7', paddingBottom: '60px' }}>
@@ -252,12 +253,12 @@ export default function ColorTestPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
             <div>
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '3px', textTransform: 'uppercase', marginBottom: '12px' }}>色彩测试 · 第一层</p>
-              <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '34px', color: C.h1, fontWeight: 400, lineHeight: 1.3, margin: '0 0 16px' }}>先测冷暖，<br />再说四季</h1>
+              <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '34px', color: C.h1, fontWeight: 400, lineHeight: 1.3, margin: '0 0 16px' }}>找到你的<br />完美色调！</h1>
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: C.muted, lineHeight: 1.9, margin: 0 }}>很多人跳过冷暖直接测四季，结果越测越乱。AIFFD 的色彩测试从最底层开始——先判断你的肤色底调是暖、冷、中性还是橄榄，再逐层细化。</p>
             </div>
             <div style={{ background: '#fff', border: `1px solid ${C.border}`, borderRadius: '10px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.gold, letterSpacing: '1px', margin: 0 }}>测试说明</p>
-              {['5个问题，约3分钟', '准备金色和银色首饰各一件（或找图片）', '准备几块不同颜色的布料或纸张靠近脸部', '素颜或淡妆状态，自然光下效果最佳'].map((tip, i) => (
+              {['6个问题，约4分钟', '准备金色和银色首饰各一件（或找图片）', '准备几块不同颜色的布料或纸张靠近脸部', '素颜或淡妆状态，自然光下效果最佳'].map((tip, i) => (
                 <p key={i} style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.body, margin: 0 }}>
                   <span style={{ color: C.gold, marginRight: '8px' }}>·</span>{tip}
                 </p>
@@ -266,19 +267,51 @@ export default function ColorTestPage() {
             <div style={{ background: '#fdf8ee', borderRadius: '8px', padding: '16px 20px', borderLeft: `3px solid ${C.gold}` }}>
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.sub, margin: 0, lineHeight: 1.7 }}>💡 黄皮 ≠ 暖皮。这是亚洲女性色彩测试最常见的误区，本测试会帮你纠正。</p>
             </div>
-            <button onClick={() => setStep('q1')} style={btnPrimaryStyle}>开始冷暖测试</button>
+            <button onClick={() => setStep('q0')} style={btnPrimaryStyle}>开始冷暖测试</button>
+          </div>
+        )}
+
+
+        {step === 'q0' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+            <div>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 01 · 明度判断</p>
+              <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>对比这两张图，你的肤色更接近哪一边？</h2>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '8px' }}>在自然光下，素颜观察手腕内侧或脸部</p>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              {[
+                { id: 'A', label: '偏白', img: '/whiteface.png' },
+                { id: 'B', label: '偏黄', img: '/yellowface.png' },
+              ].map(o => (
+                <button key={o.id} onClick={() => set('q0')(o.id)} style={{
+                  border: `2px solid ${answers.q0 === o.id ? C.gold : C.border}`,
+                  borderRadius: '8px', background: answers.q0 === o.id ? '#fdf8ee' : '#fff',
+                  padding: 0, cursor: 'pointer', overflow: 'hidden', transition: 'all 0.2s',
+                }}>
+                  <img src={o.img} alt={o.label} style={{ width: '100%', objectFit: 'cover', display: 'block' }} />
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: answers.q0 === o.id ? C.gold : C.body, padding: '10px 0', margin: 0, textAlign: 'center' }}>
+                    <span style={{ fontSize: '11px', color: C.muted, marginRight: '6px' }}>{o.id}</span>{o.label}
+                  </p>
+                </button>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <BackBtn onClick={() => setStep('intro')} />
+              <button onClick={next} disabled={!answers.q0} style={!answers.q0 ? btnDisabledStyle : btnPrimaryStyle}>继续</button>
+            </div>
           </div>
         )}
 
         {step === 'q1' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
             <div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 01 · 首饰测试</p>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 02 · 首饰测试</p>
               <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>金色和银色靠近脸，哪种更好？</h2>
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '8px' }}>可以用金色和银色首饰分别贴近脸部对比</p>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-              {[{ label: '银色 · 白金', img: '/silver.png' }, { label: '金色 · 黄金', img: '/gold.png' }].map(o => (
+              {[{ label: '金色 · 黄金', img: '/gold.png' }, { label: '银色 · 白金', img: '/silver.png' }].map(o => (
                 <div key={o.label} style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   <img src={o.img} alt={o.label} style={{ width: '100%', objectFit: 'contain', borderRadius: '8px', background: '#f5f3ef' }} />
                   <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted, textAlign: 'center', margin: 0 }}>{o.label}</p>
@@ -303,7 +336,7 @@ export default function ColorTestPage() {
         {step === 'q2' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
             <div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 02 · 冷暖色卡</p>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 03 · 冷暖色卡</p>
               <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>哪一组颜色靠近脸时，更让你显得干净、有气色？</h2>
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '8px' }}>准备几块纯色布料或彩色纸，分别放在脸部下方对比</p>
             </div>
@@ -341,7 +374,7 @@ export default function ColorTestPage() {
         {step === 'q3' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
             <div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 03 · 橘色 / 驼色反应</p>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 04 · 橘色 / 驼色反应</p>
               <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>你穿橘色、南瓜色、焦糖色、驼色时，脸通常会怎样？</h2>
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '8px' }}>这一题专门纠正「黄皮 = 暖皮」的误区</p>
             </div>
@@ -371,7 +404,7 @@ export default function ColorTestPage() {
         {step === 'q4' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
             <div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 04 · 粉色反应</p>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 05 · 粉色反应</p>
               <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>你穿粉色时，哪一种更适合你？</h2>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
@@ -401,7 +434,7 @@ export default function ColorTestPage() {
         {step === 'q5' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
             <div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 05 · 综合颜色反应</p>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 06 · 综合颜色反应</p>
               <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>以下哪组颜色更容易让你显高级、稳定、不显黄？</h2>
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '8px' }}>这一题适合亚洲女性快速自测冷暖倾向</p>
             </div>
