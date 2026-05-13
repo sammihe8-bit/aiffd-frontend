@@ -609,19 +609,94 @@ export default function ColorTestPage() {
           </div>
         )}
 
-        {/* ── Q3 粉色反应（橄榄筛查）── */}
-        {step === 'q3' && (
-          <QuestionStep step={3} tag="Step 03 · 橄榄筛查"
-            title="你穿粉色时最常见的情况？"
-            subtitle="蜜桃粉、玫瑰粉、甜粉色等各种粉色系"
-            options={[
-              { id: 'A', label: '蜜桃粉最好看，暖调粉提亮气色', sub: '' },
-              { id: 'B', label: '玫瑰粉最好看，冷调粉让我更精致', sub: '' },
-              { id: 'C', label: '大多数粉色让我显脏显土', sub: '→ 这是橄榄肤色的重要信号' },
-              { id: 'D', label: '暖粉冷粉都可以，没有明显差别', sub: '' },
-            ]}
-            value={answers.q3} onChange={set('q3')} onNext={next} onBack={back} />
-        )}
+{/* ── Q3 粉色反应（橄榄筛查）── */}
+{step === 'q3' && (
+  <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+    <div>
+      <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>
+        Step 03 · 橄榄筛查
+      </p>
+      <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400 }}>
+        如果让你自己选择，你会选哪一种颜色？
+      </h2>
+    </div>
+
+    {/* 图片选项 A / B */}
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+      {[
+        { id: 'A', label: '蜜桃粉', img: '/mitaofen.png' },
+        { id: 'B', label: '玫瑰粉', img: '/rosefen.png' },
+      ].map(o => (
+        <button
+          key={o.id}
+          onClick={() => set('q3')(o.id)}
+          style={{
+            border: `2px solid ${answers.q3 === o.id ? C.gold : C.border}`,
+            borderRadius: '8px',
+            background: answers.q3 === o.id ? '#fdf8ee' : '#fff',
+            padding: '0',
+            cursor: 'pointer',
+            overflow: 'hidden',
+            transition: 'all 0.2s',
+          }}
+        >
+          <img
+            src={o.img}
+            alt={o.label}
+            style={{ width: '100%', aspectRatio: '1/1', objectFit: 'cover', display: 'block' }}
+          />
+          <p style={{
+            fontFamily: 'Inter, sans-serif',
+            fontSize: '13px',
+            color: answers.q3 === o.id ? C.gold : C.body,
+            padding: '10px 0',
+            margin: 0,
+            textAlign: 'center',
+          }}>
+            <span style={{ fontSize: '11px', color: C.muted, marginRight: '6px' }}>{o.id}</span>
+            {o.label}
+          </p>
+        </button>
+      ))}
+    </div>
+
+    {/* 文字选项 C / D */}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      {[
+        { id: 'C', label: '大多数粉色让我显脏显土', sub: '→ 这是橄榄肤色的重要信号' },
+        { id: 'D', label: '暖粉冷粉都可以，没有明显差别', sub: '' },
+      ].map(o => (
+        <button
+          key={o.id}
+          onClick={() => set('q3')(o.id)}
+          style={{
+            border: `1.5px solid ${answers.q3 === o.id ? C.gold : C.border}`,
+            borderRadius: '8px',
+            background: answers.q3 === o.id ? '#fdf8ee' : '#fff',
+            padding: '14px 18px',
+            cursor: 'pointer',
+            textAlign: 'left',
+            transition: 'all 0.2s',
+            display: 'flex',
+            gap: '12px',
+            alignItems: 'flex-start',
+          }}
+        >
+          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: answers.q3 === o.id ? C.gold : C.muted, letterSpacing: '1px', flexShrink: 0, marginTop: '2px' }}>{o.id}</span>
+          <div>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: answers.q3 === o.id ? C.h2 : C.body, margin: 0 }}>{o.label}</p>
+            {o.sub && <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted, marginTop: '3px', marginBottom: 0 }}>{o.sub}</p>}
+          </div>
+        </button>
+      ))}
+    </div>
+
+    <div style={{ display: 'flex', gap: '12px' }}>
+      <BackBtn onClick={back} />
+      <button onClick={next} disabled={!answers.q3} style={!answers.q3 ? btnDisabledStyle : btnPrimaryStyle}>继续</button>
+    </div>
+  </div>
+)}
 
         {/* ── Q4 粉底问题（橄榄/暗沉）── */}
         {step === 'q4' && (
