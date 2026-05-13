@@ -590,7 +590,7 @@ export default function ColorTestPage() {
                   padding: 0, cursor: 'pointer', overflow: 'hidden', transition: 'all 0.2s',
                   textAlign: 'left',
                 }}>
-                  <img src={o.img} alt={o.label} style={{ width: '100%', aspectRatio: '1/1', objectFit: 'cover', objectPosition: 'top', display: 'block' }} />
+                  <img src={o.img} alt={o.label} style={{ width: '100%', objectFit: 'contain', display: 'block', background: '#f5f3ef' }} />
                   <div style={{ padding: '10px 12px 12px' }}>
                     <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: answers.q1c === o.id ? C.h2 : C.body, margin: 0 }}>
                       <span style={{ fontSize: '11px', color: answers.q1c === o.id ? C.gold : C.muted, marginRight: '6px' }}>{o.id}</span>
