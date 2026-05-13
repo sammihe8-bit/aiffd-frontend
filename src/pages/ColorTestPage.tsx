@@ -571,16 +571,51 @@ export default function ColorTestPage() {
 
         {/* ── Q1c 发色瞳色 ── */}
         {step === 'q1c' && (
-          <QuestionStep tag="Step 03 · 发色瞳色"
-            title="你的自然发色和瞳色更接近哪一种？"
-            options={[
-              { id: 'A', label: '黑发黑瞳，颜色很深', sub: '→ 高对比、深色承受力强' },
-              { id: 'B', label: '深棕发 / 深棕瞳', sub: '→ 中对比，适合稳定色' },
-              { id: 'C', label: '浅棕发 / 茶色瞳', sub: '→ 明度偏轻，适合柔和浅色' },
-              { id: 'D', label: '发色偏灰黑，瞳色不太亮', sub: '→ 可能偏冷、偏灰、橄榄方向' },
-              { id: 'E', label: '染发较多，不确定', sub: '' },
-            ]}
-            value={answers.q1c} onChange={set('q1c')} onNext={next} onBack={back} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 03 · 发色瞳色</p>
+              <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>你的自然发色和瞳色更接近哪一种？</h2>
+            </div>
+            {/* A/B/C/D 图片选项 2列 */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              {[
+                { id: 'A', label: '黑发黑瞳，颜色很深', sub: '→ 高对比、深色承受力强', img: '/Black_Eyes.png' },
+                { id: 'B', label: '深棕发 / 深棕瞳', sub: '→ 中对比，适合稳定色', img: '/Dark_brown.png' },
+                { id: 'C', label: '浅棕发 / 茶色瞳', sub: '→ 明度偏轻，适合柔和浅色', img: '/Light_brown.png' },
+                { id: 'D', label: '发色偏灰黑，瞳色不太亮', sub: '→ 可能偏冷、偏灰、橄榄方向', img: '/gray-black.png' },
+              ].map(o => (
+                <button key={o.id} onClick={() => set('q1c')(o.id)} style={{
+                  border: `2px solid ${answers.q1c === o.id ? C.gold : C.border}`,
+                  borderRadius: '8px', background: answers.q1c === o.id ? '#fdf8ee' : '#fff',
+                  padding: 0, cursor: 'pointer', overflow: 'hidden', transition: 'all 0.2s',
+                  textAlign: 'left',
+                }}>
+                  <img src={o.img} alt={o.label} style={{ width: '100%', aspectRatio: '3/2', objectFit: 'cover', display: 'block' }} />
+                  <div style={{ padding: '10px 12px 12px' }}>
+                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: answers.q1c === o.id ? C.h2 : C.body, margin: 0 }}>
+                      <span style={{ fontSize: '11px', color: answers.q1c === o.id ? C.gold : C.muted, marginRight: '6px' }}>{o.id}</span>
+                      {o.label}
+                    </p>
+                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted, margin: '4px 0 0' }}>{o.sub}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+            {/* E 选项纯文字 */}
+            <button onClick={() => set('q1c')('E')} style={{
+              border: `1.5px solid ${answers.q1c === 'E' ? C.gold : C.border}`,
+              borderRadius: '8px', background: answers.q1c === 'E' ? '#fdf8ee' : '#fff',
+              padding: '16px 20px', cursor: 'pointer', textAlign: 'left',
+              transition: 'all 0.2s', display: 'flex', gap: '14px', alignItems: 'center',
+            }}>
+              <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: answers.q1c === 'E' ? C.gold : C.muted, letterSpacing: '1px' }}>E</span>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: answers.q1c === 'E' ? C.h2 : C.body, margin: 0 }}>染发较多，不确定</p>
+            </button>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <BackBtn onClick={back} />
+              <button onClick={next} disabled={!answers.q1c} style={!answers.q1c ? btnDisabledStyle : btnPrimaryStyle}>继续</button>
+            </div>
+          </div>
         )}
 
         {/* ── Q1d 黑色上衣 ── */}
