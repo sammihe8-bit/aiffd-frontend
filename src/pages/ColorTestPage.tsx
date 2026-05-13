@@ -11,7 +11,7 @@ type ColorResult = '暖黄皮' | '冷黄皮' | '中性黄皮' | '橄榄黄皮' |
 
 type StepKey = 'intro' | 'q1' | 'q1b' | 'q1c' | 'q1d' | 'q2' | 'q3' | 'q3b' | 'q4' | 'q5' | 'q6' | 'report'
 
-type ContrastLevel = 'high' | 'mid' | 'low' | 'olive_check' | ''
+type ContrastLevel = 'high' | 'mid' | 'low' | 'olive_check'
 
 interface Answers {
   q1: string; q1b: string; q1c: string; q1d: string
@@ -19,7 +19,7 @@ interface Answers {
   q4: string; q5: string; q6: string
 }
 
-function computeContrast(a: Answers): ContrastLevel {
+function computeContrast(a: Answers): ContrastLevel | undefined {
   if (a.q1c === 'D' && a.q1d === 'C') return 'olive_check'
   let score = 0
   if (a.q1b === 'A') score += 2
@@ -33,7 +33,8 @@ function computeContrast(a: Answers): ContrastLevel {
   else if (a.q1d === 'C') score -= 1
   if (score >= 4) return 'high'
   if (score >= 1) return 'mid'
-  return 'low'
+  if (score <= -1) return 'low'
+  return undefined
 }
 
 // ─── 色彩结果数据库 ──────────────────────────────────────────
@@ -315,7 +316,7 @@ function QuestionStep({ tag, title, subtitle, options, value, onChange, onNext, 
 }
 
 // ─── 报告组件 ─────────────────────────────────────────────────
-function ColorReport({ result, contrast, onReset }: { result: ColorResult; contrast: ContrastLevel; onReset: () => void }) {
+function ColorReport({ result, contrast, onReset }: { result: ColorResult; contrast: ContrastLevel | undefined; onReset: () => void }) {
   const [tab, setTab] = useState<'judge' | 'good' | 'risk' | 'palette' | 'shopping' | 'season'>('judge')
   const profile = COLOR_PROFILES[result]
   const tabs: { key: typeof tab; label: string }[] = [
@@ -332,7 +333,7 @@ function ColorReport({ result, contrast, onReset }: { result: ColorResult; contr
       <div style={{ textAlign: 'center', padding: '24px 0 16px', borderBottom: `1px solid ${C.border}` }}>
         <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '3px', textTransform: 'uppercase', marginBottom: '8px' }}>您的色彩类型</p>
         <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '36px', color: C.h1, fontWeight: 400, margin: '0 0 12px' }}>{result}</h1>
-        {contrast && contrast !== '' && (
+        {contrast && (
           <div style={{ display: 'inline-block', padding: '4px 14px', borderRadius: '20px', background: '#f5f0e8', border: `1px solid ${C.border}` }}>
             <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.gold }}>
               {contrast === 'high' ? '高对比型 · 适合深色、清晰色、高对比配色'
