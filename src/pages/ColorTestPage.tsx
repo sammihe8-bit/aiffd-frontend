@@ -9,11 +9,31 @@ const C = {
 // ─── 结果类型 ───────────────────────────────────────────────
 type ColorResult = '暖黄皮' | '冷黄皮' | '中性黄皮' | '橄榄黄皮' | '冷白皮' | '暖白皮' | '需人工复核'
 
-type StepKey = 'intro' | 'q1' | 'q2' | 'q3' | 'q3b' | 'q4' | 'q5' | 'q6' | 'report'
+type StepKey = 'intro' | 'q1' | 'q1b' | 'q1c' | 'q1d' | 'q2' | 'q3' | 'q3b' | 'q4' | 'q5' | 'q6' | 'report'
+
+type ContrastLevel = 'high' | 'mid' | 'low' | 'olive_check' | ''
 
 interface Answers {
-  q1: string; q2: string; q3: string; q3b: string
+  q1: string; q1b: string; q1c: string; q1d: string
+  q2: string; q3: string; q3b: string
   q4: string; q5: string; q6: string
+}
+
+function computeContrast(a: Answers): ContrastLevel {
+  if (a.q1c === 'D' && a.q1d === 'C') return 'olive_check'
+  let score = 0
+  if (a.q1b === 'A') score += 2
+  else if (a.q1b === 'B') score += 1
+  else if (a.q1b === 'C') score -= 1
+  if (a.q1c === 'A') score += 2
+  else if (a.q1c === 'B') score += 1
+  else if (a.q1c === 'C') score -= 1
+  if (a.q1d === 'A') score += 2
+  else if (a.q1d === 'B') score += 1
+  else if (a.q1d === 'C') score -= 1
+  if (score >= 4) return 'high'
+  if (score >= 1) return 'mid'
+  return 'low'
 }
 
 // ─── 色彩结果数据库 ──────────────────────────────────────────
@@ -216,6 +236,9 @@ function computeResult(a: Answers): ColorResult {
   if (a.q6 === 'A') bright += 1      // 高对比→偏深冬
   else if (a.q6 === 'C') bright -= 1 // 柔和→偏柔夏
 
+  // q1c=D + q1d=C → 橄榄/灰黄肤色复核信号
+  if (a.q1c === 'D' && a.q1d === 'C') olive += 3
+
   // ── 判断橄榄 ──
   if (olive >= 8) return '橄榄黄皮'
 
@@ -292,7 +315,7 @@ function QuestionStep({ tag, title, subtitle, options, value, onChange, onNext, 
 }
 
 // ─── 报告组件 ─────────────────────────────────────────────────
-function ColorReport({ result, onReset }: { result: ColorResult; onReset: () => void }) {
+function ColorReport({ result, contrast, onReset }: { result: ColorResult; contrast: ContrastLevel; onReset: () => void }) {
   const [tab, setTab] = useState<'judge' | 'good' | 'risk' | 'palette' | 'shopping' | 'season'>('judge')
   const profile = COLOR_PROFILES[result]
   const tabs: { key: typeof tab; label: string }[] = [
@@ -308,7 +331,17 @@ function ColorReport({ result, onReset }: { result: ColorResult; onReset: () => 
       {/* 结果标题 */}
       <div style={{ textAlign: 'center', padding: '24px 0 16px', borderBottom: `1px solid ${C.border}` }}>
         <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '3px', textTransform: 'uppercase', marginBottom: '8px' }}>您的色彩类型</p>
-        <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '36px', color: C.h1, fontWeight: 400, margin: 0 }}>{result}</h1>
+        <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '36px', color: C.h1, fontWeight: 400, margin: '0 0 12px' }}>{result}</h1>
+        {contrast && contrast !== '' && (
+          <div style={{ display: 'inline-block', padding: '4px 14px', borderRadius: '20px', background: '#f5f0e8', border: `1px solid ${C.border}` }}>
+            <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.gold }}>
+              {contrast === 'high' ? '高对比型 · 适合深色、清晰色、高对比配色'
+                : contrast === 'mid' ? '中对比型 · 适合中等深浅、中等饱和度，选择空间较大'
+                : contrast === 'low' ? '低对比型 · 适合柔和、浅中明度、低饱和色'
+                : '需后续验证 · 结合方巾、金银测试、肤色反应继续判断'}
+            </span>
+          </div>
+        )}
       </div>
       {/* Tab 导航 */}
       <div style={{ display: 'flex', gap: '4px', overflowX: 'auto', paddingBottom: '4px' }}>
@@ -405,19 +438,20 @@ function ColorReport({ result, onReset }: { result: ColorResult; onReset: () => 
 // ─── 主页面 ───────────────────────────────────────────────────
 export default function ColorTestPage() {
   const [step, setStep] = useState<StepKey>('intro')
-  const [answers, setAnswers] = useState<Answers>({ q1: '', q2: '', q3: '', q3b: '', q4: '', q5: '', q6: '' })
+  const [answers, setAnswers] = useState<Answers>({ q1: '', q1b: '', q1c: '', q1d: '', q2: '', q3: '', q3b: '', q4: '', q5: '', q6: '' })
 
   const set = (key: keyof Answers) => (val: string) => setAnswers(prev => ({ ...prev, [key]: val }))
 
   const next = () => {
-    const order: StepKey[] = ['intro', 'q1', 'q2', 'q3', 'q3b', 'q4', 'q5', 'q6', 'report']
+    const order: StepKey[] = ['intro', 'q1', 'q1b', 'q1c', 'q1d', 'q2', 'q3', 'q3b', 'q4', 'q5', 'q6', 'report']
     const i = order.indexOf(step)
     if (i < order.length - 1) setStep(order[i + 1])
   }
 
   const back = () => {
     const backMap: Partial<Record<StepKey, StepKey>> = {
-      q1: 'intro', q2: 'q1', q3: 'q2', q3b: 'q3',
+      q1: 'intro', q1b: 'q1', q1c: 'q1b', q1d: 'q1c',
+      q2: 'q1d', q3: 'q2', q3b: 'q3',
       q4: 'q3', q5: 'q4', q6: 'q5', report: 'q6',
     }
     const prev = backMap[step]
@@ -425,7 +459,7 @@ export default function ColorTestPage() {
   }
 
   const reset = () => {
-    setAnswers({ q1: '', q2: '', q3: '', q3b: '', q4: '', q5: '', q6: '' })
+    setAnswers({ q1: '', q1b: '', q1c: '', q1d: '', q2: '', q3: '', q3b: '', q4: '', q5: '', q6: '' })
     setStep('intro')
   }
 
@@ -433,7 +467,7 @@ export default function ColorTestPage() {
 
   // 进度条（q3b 算在 q3 内，不单独计步）
   const stepIndex: Record<StepKey, number> = {
-    intro: 0, q1: 1, q2: 2, q3: 3, q3b: 3, q4: 4, q5: 5, q6: 6, report: 7,
+    intro: 0, q1: 1, q1b: 1, q1c: 1, q1d: 1, q2: 2, q3: 3, q3b: 3, q4: 4, q5: 5, q6: 6, report: 7,
   }
   const totalSteps = 6
   const progress = step === 'intro' ? 0 : step === 'report' ? 100 : (stepIndex[step] / totalSteps) * 100
@@ -456,7 +490,7 @@ export default function ColorTestPage() {
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '3px', textTransform: 'uppercase', marginBottom: '12px' }}>色彩测试</p>
               <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '32px', color: C.h1, fontWeight: 400, lineHeight: 1.3, margin: 0 }}>找到属于你的色彩答案</h1>
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: C.muted, marginTop: '16px', lineHeight: 1.8 }}>
-                6个问题，约3分钟，判断你的肤色底调——暖黄、冷黄、橄榄、冷白或暖白，给出专属色彩方向。
+                9个问题，约5分钟，判断你的肤色底调与对比度——暖黄、冷黄、橄榄、冷白或暖白，给出专属色彩方向。
               </p>
             </div>
             <div style={{ background: '#fff', border: `1px solid ${C.border}`, borderRadius: '10px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -500,6 +534,46 @@ export default function ColorTestPage() {
               <button onClick={next} disabled={!answers.q1} style={!answers.q1 ? btnDisabledStyle : btnPrimaryStyle}>继续</button>
             </div>
           </div>
+        )}
+
+        {/* ── Q1b 眉眼对比度 ── */}
+        {step === 'q1b' && (
+          <QuestionStep tag="Step 01 · 面部对比度 1/3"
+            title="素颜时，你的眉眼和皮肤对比明显吗？"
+            options={[
+              { id: 'A', label: '很明显，黑发黑眉黑眼，五官存在感强', sub: '→ 高对比，可能适合深色、强色、清晰色' },
+              { id: 'B', label: '中等，有一定对比，但不强烈', sub: '→ 中对比，适合范围较宽' },
+              { id: 'C', label: '很柔和，眉眼颜色比较淡', sub: '→ 低对比，适合柔和、低饱和、浅中性色' },
+              { id: 'D', label: '不确定', sub: '' },
+            ]}
+            value={answers.q1b} onChange={set('q1b')} onNext={next} onBack={back} />
+        )}
+
+        {/* ── Q1c 发色瞳色 ── */}
+        {step === 'q1c' && (
+          <QuestionStep tag="Step 01 · 面部对比度 2/3"
+            title="你的自然发色和瞳色更接近哪一种？"
+            options={[
+              { id: 'A', label: '黑发黑瞳，颜色很深', sub: '→ 高对比、深色承受力强' },
+              { id: 'B', label: '深棕发 / 深棕瞳', sub: '→ 中对比，适合稳定色' },
+              { id: 'C', label: '浅棕发 / 茶色瞳', sub: '→ 明度偏轻，适合柔和浅色' },
+              { id: 'D', label: '发色偏灰黑，瞳色不太亮', sub: '→ 可能偏冷、偏灰、橄榄方向' },
+              { id: 'E', label: '染发较多，不确定', sub: '' },
+            ]}
+            value={answers.q1c} onChange={set('q1c')} onNext={next} onBack={back} />
+        )}
+
+        {/* ── Q1d 黑色上衣 ── */}
+        {step === 'q1d' && (
+          <QuestionStep tag="Step 01 · 面部对比度 3/3"
+            title="素颜时，你穿黑色上衣通常怎样？"
+            options={[
+              { id: 'A', label: '显得五官更清楚，很有气场', sub: '→ 高对比，可能偏冬季/戏剧感' },
+              { id: 'B', label: '可以穿，但有点沉重', sub: '→ 中对比，需要搭配妆容或配饰' },
+              { id: 'C', label: '显老、显累、显暗', sub: '→ 低对比，或橄榄/灰黄肤色信号' },
+              { id: 'D', label: '不确定', sub: '' },
+            ]}
+            value={answers.q1d} onChange={set('q1d')} onNext={next} onBack={back} />
         )}
 
         {/* ── Q2 冷暖色卡 ── */}
@@ -750,7 +824,7 @@ export default function ColorTestPage() {
 
         {/* ── 报告页 ── */}
         {step === 'report' && (
-          <ColorReport result={result} onReset={reset} />
+          <ColorReport result={result} contrast={computeContrast(answers)} onReset={reset} />
         )}
 
       </div>
