@@ -651,19 +651,40 @@ export default function ColorTestPage() {
 
         {/* ── Q4 粉底问题 ── */}
         {step === 'q4' && (
-          <QuestionStep tag="Step 04 · 粉底经验"
-            title="你买粉底最常遇到什么问题？"
-            subtitle="不用粉底也可根据印象或朋友反馈作答"
-            options={[
-              { id: 'A', label: '经常太粉，显得假白', sub: '' },
-              { id: 'B', label: '经常太黄，找对肤色号很难', sub: '' },
-              { id: 'C', label: '经常太灰，涂上去脸色更差', sub: '→ 橄榄/灰调肤色的典型问题' },
-              { id: 'D', label: '容易氧化发暗，过几小时变暗', sub: '→ 暗沉或橄榄肤色信号' },
-              { id: 'E', label: '很容易匹配，基本都适合', sub: '' },
-            ]}
-            value={answers.q4} onChange={set('q4')}
-            onNext={next}
-            onBack={() => answers.q3 === 'C' ? setStep('q3b') : setStep('q3')} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 04 · 粉底经验</p>
+              <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>你买粉底最常遇到什么问题？</h2>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '8px' }}>不用粉底也可根据印象或朋友反馈作答</p>
+            </div>
+            <img src="/foundation.png" alt="粉底色号参考" style={{ width: '100%', borderRadius: '10px', objectFit: 'cover', maxHeight: '200px' }} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {[
+                { id: 'A', label: '经常太粉，显得假白', sub: '' },
+                { id: 'B', label: '经常太黄，找对肤色号很难', sub: '' },
+                { id: 'C', label: '经常太灰，涂上去脸色更差', sub: '→ 橄榄/灰调肤色的典型问题' },
+                { id: 'D', label: '容易氧化发暗，过几小时变暗', sub: '→ 暗沉或橄榄肤色信号' },
+                { id: 'E', label: '很容易匹配，基本都适合', sub: '' },
+              ].map(o => (
+                <button key={o.id} onClick={() => set('q4')(o.id)} style={{
+                  border: `1.5px solid ${answers.q4 === o.id ? C.gold : C.border}`,
+                  borderRadius: '8px', background: answers.q4 === o.id ? '#fdf8ee' : '#fff',
+                  padding: '16px 20px', cursor: 'pointer', textAlign: 'left',
+                  transition: 'all 0.2s', display: 'flex', gap: '14px', alignItems: 'flex-start',
+                }}>
+                  <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: answers.q4 === o.id ? C.gold : C.muted, letterSpacing: '1px', flexShrink: 0, marginTop: '2px' }}>{o.id}</span>
+                  <div>
+                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: answers.q4 === o.id ? C.h2 : C.body, margin: 0 }}>{o.label}</p>
+                    {o.sub && <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted, marginTop: '3px', marginBottom: 0 }}>{o.sub}</p>}
+                  </div>
+                </button>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <BackBtn onClick={() => answers.q3 === 'C' ? setStep('q3b') : setStep('q3')} />
+              <button onClick={next} disabled={!answers.q4} style={!answers.q4 ? btnDisabledStyle : btnPrimaryStyle}>继续</button>
+            </div>
+          </div>
         )}
 
         {/* ── Q5 金银首饰 ── */}
