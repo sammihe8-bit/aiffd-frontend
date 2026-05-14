@@ -396,7 +396,11 @@ function SeasonReport({ result, onReset }: { result: SeasonResult; onReset: () =
 export default function ColorSeasonPage() {
   // 从路由 state 获取第一层结果（实际部署时从 location.state 取）
   const location = useLocation()
-  const warmCool: WarmCoolInput = (location.state?.warmCool as WarmCoolInput) || 'warm'
+  const warmCool: WarmCoolInput = (
+    (location.state?.warmCool as WarmCoolInput) ||
+    (localStorage.getItem('aiffd_warmcool') as WarmCoolInput) ||
+    'warm'
+  )
   const path = getPath(warmCool)
 
   // 路径A answers
