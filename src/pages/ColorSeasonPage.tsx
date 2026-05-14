@@ -538,9 +538,9 @@ export default function ColorSeasonPage() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {[
-                { id: 'A', label: '浅色更提气，深色感觉压我', sub: '→ 春季方向' },
-                { id: 'B', label: '深色更有气场，浅色感觉平淡', sub: '→ 秋季方向' },
-                { id: 'C', label: '都可以，没有明显差别', sub: '→ 夏季候选' },
+                { id: 'A', label: '浅色更提气，深色感觉压我', sub: '' },
+                { id: 'B', label: '深色更有气场，浅色感觉平淡', sub: '' },
+                { id: 'C', label: '都可以，没有明显差别', sub: '' },
               ].map(o => <OptionBtn key={o.id} {...o} active={aAnswers.a1 === o.id} onClick={() => setA('a1')(o.id)} />)}
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
@@ -560,9 +560,9 @@ export default function ColorSeasonPage() {
             <ColorSwatches colors={[['正红','#CC0000'],['亮橘','#FF6600'],['明黄','#FFCC00'],['鲜蓝','#0066CC']]} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {[
-                { id: 'A', label: '很好看，更有精神，气色更强', sub: '→ 夏季方向（高饱和承受力强）' },
-                { id: 'B', label: '颜色太抢，反而显脸暗', sub: '→ 春 / 秋方向（更适合中低饱和）' },
-                { id: 'C', label: '能穿但需要淡妆或配饰配合', sub: '→ 秋季偏向' },
+                { id: 'A', label: '很好看，更有精神，气色更强', sub: '' },
+                { id: 'B', label: '颜色太抢，反而显脸暗', sub: '' },
+                { id: 'C', label: '能穿但需要淡妆或配饰配合', sub: '' },
               ].map(o => <OptionBtn key={o.id} {...o} active={aAnswers.a2 === o.id} onClick={() => setA('a2')(o.id)} />)}
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
@@ -590,9 +590,9 @@ export default function ColorSeasonPage() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {[
-                { id: 'A', label: '清亮暖色更显年轻透亮', sub: '→ 春季方向' },
-                { id: 'B', label: '柔和浓郁暖色更显成熟高级', sub: '→ 秋季方向' },
-                { id: 'C', label: '高饱和鲜艳的反而更好看', sub: '→ 夏季方向' },
+                { id: 'A', label: '清亮暖色更显年轻透亮', sub: '' },
+                { id: 'B', label: '柔和浓郁暖色更显成熟高级', sub: '' },
+                { id: 'C', label: '高饱和鲜艳的反而更好看', sub: '' },
               ].map(o => <OptionBtn key={o.id} {...o} active={aAnswers.a3 === o.id} onClick={() => setA('a3')(o.id)} />)}
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
@@ -610,9 +610,9 @@ export default function ColorSeasonPage() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {[
-                { id: 'A', label: '显老显暗，换浅色或暖色好很多', sub: '→ 春季方向（黑色对比度过高）' },
-                { id: 'B', label: '还可以，但不是最好的选择', sub: '→ 秋季方向' },
-                { id: 'C', label: '很有气场，五官更清楚精神', sub: '→ 夏季方向（高对比承受力强）' },
+                { id: 'A', label: '显老显暗，换浅色或暖色好很多', sub: '' },
+                { id: 'B', label: '还可以，但不是最好的选择', sub: '' },
+                { id: 'C', label: '很有气场，五官更清楚精神', sub: '' },
               ].map(o => <OptionBtn key={o.id} {...o} active={aAnswers.a4 === o.id} onClick={() => setA('a4')(o.id)} />)}
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
@@ -632,9 +632,9 @@ export default function ColorSeasonPage() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {[
-                { id: 'A', label: '纯白更显气色、清透、干净', sub: '→ 夏季方向（高明度冷调）' },
-                { id: 'B', label: '纯黑更有气场、深邃、有力量', sub: '→ 冬季方向（高对比冷调）' },
-                { id: 'C', label: '都不太好，柔和灰色或冷色更好', sub: '→ 长夏边界（可能非典型冷调）' },
+                { id: 'A', label: '纯白更显气色、清透、干净', sub: '' },
+                { id: 'B', label: '纯黑更有气场、深邃、有力量', sub: '' },
+                { id: 'C', label: '都不太好，柔和灰色或冷色更好', sub: '' },
               ].map(o => <OptionBtn key={o.id} {...o} active={bAnswers.b1 === o.id} onClick={() => setB('b1')(o.id)} />)}
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
@@ -662,8 +662,8 @@ export default function ColorSeasonPage() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {[
-                { id: 'A', label: '高对比更有存在感，更精神', sub: '→ 冬季方向' },
-                { id: 'B', label: '低对比更柔和高级，更舒服', sub: '→ 夏季方向' },
+                { id: 'A', label: '高对比更有存在感，更精神', sub: '' },
+                { id: 'B', label: '低对比更柔和高级，更舒服', sub: '' },
               ].map(o => <OptionBtn key={o.id} {...o} active={bAnswers.b2 === o.id} onClick={() => setB('b2')(o.id)} />)}
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
@@ -682,9 +682,9 @@ export default function ColorSeasonPage() {
             <ColorSwatches colors={[['藏蓝','#1C2E5A'],['深紫','#4A2060'],['墨黑','#1A1A1A']]} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {[
-                { id: 'A', label: '很好，五官更清楚，更有气场', sub: '→ 冬季方向（深色承受力强）' },
-                { id: 'B', label: '有点沉重，偏浅的冷色更好看', sub: '→ 夏季方向（适合浅中明度冷色）' },
-                { id: 'C', label: '都还行，深浅均可', sub: '→ 冷夏 / 冷冬边界' },
+                { id: 'A', label: '很好，五官更清楚，更有气场', sub: '' },
+                { id: 'B', label: '有点沉重，偏浅的冷色更好看', sub: '' },
+                { id: 'C', label: '都还行，深浅均可', sub: '' },
               ].map(o => <OptionBtn key={o.id} {...o} active={bAnswers.b3 === o.id} onClick={() => setB('b3')(o.id)} />)}
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
@@ -705,9 +705,9 @@ export default function ColorSeasonPage() {
             <ColorSwatches colors={[['焦糖','#C68642'],['橘色','#E8734A'],['南瓜','#D2691E'],['驼色','#C4A882']]} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {[
-                { id: 'A', label: '有气色，温暖感，挺好看', sub: '→ 春 / 秋方向（暖色耐受良好）' },
-                { id: 'B', label: '显土显黄，不舒服，感觉更老', sub: '→ 长夏方向（橄榄 / 灰黄信号）' },
-                { id: 'C', label: '有时可以，有时不稳定', sub: '→ 长夏边界' },
+                { id: 'A', label: '有气色，温暖感，挺好看', sub: '' },
+                { id: 'B', label: '显土显黄，不舒服，感觉更老', sub: '' },
+                { id: 'C', label: '有时可以，有时不稳定', sub: '' },
               ].map(o => <OptionBtn key={o.id} {...o} active={cAnswers.c1 === o.id} onClick={() => setC('c1')(o.id)} />)}
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
@@ -731,9 +731,9 @@ export default function ColorSeasonPage() {
             ]} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {[
-                { id: 'A', label: '很高级，很稳，很舒服，感觉对了', sub: '→ 长夏方向' },
-                { id: 'B', label: '显脏显暗，不好看，感觉更差', sub: '→ 春季方向' },
-                { id: 'C', label: '还可以，但不是最好的颜色', sub: '→ 秋季方向' },
+                { id: 'A', label: '很高级，很稳，很舒服，感觉对了', sub: '' },
+                { id: 'B', label: '显脏显暗，不好看，感觉更差', sub: '' },
+                { id: 'C', label: '还可以，但不是最好的颜色', sub: '' },
               ].map(o => <OptionBtn key={o.id} {...o} active={cAnswers.c2 === o.id} onClick={() => setC('c2')(o.id)} />)}
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
@@ -751,9 +751,9 @@ export default function ColorSeasonPage() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {[
-                { id: 'A', label: '低饱和、雾感、大地色、哑光质感', sub: '→ 长夏方向' },
-                { id: 'B', label: '中等饱和、清爽自然、看起来干净的颜色', sub: '→ 春季方向' },
-                { id: 'C', label: '浓郁、有分量感、成熟、厚重的颜色', sub: '→ 秋季方向' },
+                { id: 'A', label: '低饱和、雾感、大地色、哑光质感', sub: '' },
+                { id: 'B', label: '中等饱和、清爽自然、看起来干净的颜色', sub: '' },
+                { id: 'C', label: '浓郁、有分量感、成熟、厚重的颜色', sub: '' },
               ].map(o => <OptionBtn key={o.id} {...o} active={cAnswers.c3 === o.id} onClick={() => setC('c3')(o.id)} />)}
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
@@ -771,9 +771,9 @@ export default function ColorSeasonPage() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {[
-                { id: 'A', label: '稳重、高级、低调有质感、耐看', sub: '→ 长夏方向' },
-                { id: 'B', label: '清新、年轻、自然干净、有活力', sub: '→ 春季方向' },
-                { id: 'C', label: '成熟、浓郁、有存在感、大气', sub: '→ 秋季方向' },
+                { id: 'A', label: '稳重、高级、低调有质感、耐看', sub: '' },
+                { id: 'B', label: '清新、年轻、自然干净、有活力', sub: '' },
+                { id: 'C', label: '成熟、浓郁、有存在感、大气', sub: '' },
               ].map(o => <OptionBtn key={o.id} {...o} active={cAnswers.c4 === o.id} onClick={() => setC('c4')(o.id)} />)}
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
@@ -803,9 +803,9 @@ export default function ColorSeasonPage() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {[
-                { id: 'A', label: '深色组更高级，更有气场', sub: '→ 长夏·深型' },
-                { id: 'B', label: '浅色组更干净，更清爽', sub: '→ 长夏·浅型' },
-                { id: 'C', label: '都还可以，均衡适合', sub: '→ 长夏·标准型' },
+                { id: 'A', label: '深色组更高级，更有气场', sub: '' },
+                { id: 'B', label: '浅色组更干净，更清爽', sub: '' },
+                { id: 'C', label: '都还可以，均衡适合', sub: '' },
               ].map(o => <OptionBtn key={o.id} {...o} active={dAnswers.d1 === o.id} onClick={() => setD('d1')(o.id)} />)}
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
@@ -824,8 +824,8 @@ export default function ColorSeasonPage() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {[
-                { id: 'A', label: '素颜穿深色也很好看，五官更清楚', sub: '→ 长夏·深型（对比度承受力强）' },
-                { id: 'B', label: '需要配口红或亮色配饰才出彩', sub: '→ 长夏·浅型（需要辅助提亮）' },
+                { id: 'A', label: '素颜穿深色也很好看，五官更清楚', sub: '' },
+                { id: 'B', label: '需要配口红或亮色配饰才出彩', sub: '' },
               ].map(o => <OptionBtn key={o.id} {...o} active={dAnswers.d2 === o.id} onClick={() => setD('d2')(o.id)} />)}
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
