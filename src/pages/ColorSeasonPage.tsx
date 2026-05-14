@@ -476,7 +476,7 @@ export default function ColorSeasonPage() {
 
   // 路径标签
   const pathLabel: Record<PathType, string> = {
-    A: '暖调 → 春 / 夏 / 秋',
+    A: '暖调 → 春 / 夏 / 长夏 / 秋',
     B: '冷调 → 夏 / 冬',
     C: '中性 → 长夏 / 春 / 秋',
     D: '橄榄 → 长夏',
@@ -515,7 +515,7 @@ export default function ColorSeasonPage() {
             </div>
             <div style={{ background: '#fdf8ee', borderRadius: '8px', padding: '16px 20px', borderLeft: `3px solid ${C.gold}` }}>
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.sub, margin: 0, lineHeight: 1.7 }}>
-                💡 长夏是 AIFFD 专属季型，对应亚洲橄榄肤色——这是西方四季体系里没有的维度。
+                💡 亚洲橄榄色肤色多为长夏家族成员。
               </p>
             </div>
             <button onClick={next} style={btnPrimaryStyle}>开始五季测试</button>
