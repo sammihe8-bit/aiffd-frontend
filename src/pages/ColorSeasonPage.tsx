@@ -100,8 +100,6 @@ function computeC(c: AnswersC, warmCool: WarmCoolInput): SeasonResult {
 }
 
 function computeD(d: AnswersD): SeasonResult {
-  // hair D灰黑→深型加权
-  const hairDeep = d.hair === 'A' || d.hair === 'D'
   if (d.d1 === 'A' && d.d2 === 'A') return 'changxia_deep'
   if (d.d1 === 'B' && d.d2 === 'B') return 'changxia_light'
   return 'changxia_standard'
