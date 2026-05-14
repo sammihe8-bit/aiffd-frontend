@@ -14,10 +14,10 @@ type SeasonResult = 'spring' | 'summer' | 'changxia' | 'autumn' | 'winter'
 // 路径类型
 type PathType = 'A' | 'B' | 'C' | 'D'
 
-interface AnswersA { hair: string; a1: string; a2: string; a3: string; a4: string }
-interface AnswersB { hair: string; b1: string; b2: string; b3: string }
-interface AnswersC { hair: string; c1: string; c2: string; c3: string; c4: string }
-interface AnswersD { hair: string; d1: string; d2: string }
+interface AnswersA { hairColor: string; irisColor: string; a1: string; a2: string; a3: string; a4: string }
+interface AnswersB { hairColor: string; irisColor: string; b1: string; b2: string; b3: string }
+interface AnswersC { hairColor: string; irisColor: string; c1: string; c2: string; c3: string; c4: string }
+interface AnswersD { hairColor: string; irisColor: string; d1: string; d2: string }
 
 // ─── 路径判断 ─────────────────────────────────────────────────
 function getPath(warmCool: WarmCoolInput): PathType {
@@ -30,11 +30,20 @@ function getPath(warmCool: WarmCoolInput): PathType {
 // ─── 评分逻辑 ─────────────────────────────────────────────────
 function computeA(a: AnswersA): SeasonResult {
   let spring = 0; let summer = 0; let autumn = 0
-  // hair: A黑发黑瞳→夏, B深棕→秋, C浅棕→春, D灰黑→长夏边界, E金棕→秋
-  if (a.hair === 'A') summer += 1
-  else if (a.hair === 'B') autumn += 1
-  else if (a.hair === 'C') spring += 1
-  else if (a.hair === 'E') autumn += 2
+  // 发色 hairColor: A纯黑→夏+1, B灰黑→中性, C深棕→秋+1, D中棕→秋+1, E金棕→秋+2, F灰棕→中性
+  if (a.hairColor === 'A') summer += 1
+  else if (a.hairColor === 'C') autumn += 1
+  else if (a.hairColor === 'D') autumn += 1
+  else if (a.hairColor === 'E') autumn += 2
+  // 虹膜 irisColor: A近黑→夏+1, B深棕→秋+1, C暖深棕→秋+1, D琥珀→春+1, E茶色→春+1, F灰棕→中性
+  if (a.irisColor === 'A') summer += 1
+  else if (a.irisColor === 'B') autumn += 1
+  else if (a.irisColor === 'C') autumn += 1
+  else if (a.irisColor === 'D') spring += 1
+  else if (a.irisColor === 'E') spring += 1
+  // 特殊组合规则
+  if (a.hairColor === 'E' && a.irisColor === 'E') spring += 1 // 金棕发+茶色瞳→春加权
+  if (a.hairColor === 'A' && a.irisColor === 'A') summer += 1 // 纯黑发+近黑瞳→夏/冬加权
   if (a.a1 === 'A') spring += 2
   else if (a.a1 === 'B') autumn += 2
   if (a.a2 === 'A') summer += 3
@@ -53,11 +62,17 @@ function computeA(a: AnswersA): SeasonResult {
 
 function computeB(b: AnswersB): SeasonResult {
   let winter = 0; let summer = 0
-  // hair: A黑发黑瞳→冬, B深棕→冬偏, C浅棕→夏, D灰黑→冬
-  if (b.hair === 'A') winter += 1
-  else if (b.hair === 'B') winter += 1
-  else if (b.hair === 'C') summer += 1
-  else if (b.hair === 'D') winter += 1
+  // 发色 hairColor: A纯黑→冬+1, B灰黑→冬+1, C深棕→冬+1, D中棕→中性, E金棕→中性, F灰棕→中性
+  if (b.hairColor === 'A') winter += 1
+  else if (b.hairColor === 'B') winter += 1
+  else if (b.hairColor === 'C') winter += 1
+  // 虹膜 irisColor: A近黑→冬+1, B深棕→冬+1, C暖深棕→中性, D琥珀→中性, E茶色→夏+1, F灰棕→冬+1
+  if (b.irisColor === 'A') winter += 1
+  else if (b.irisColor === 'B') winter += 1
+  else if (b.irisColor === 'E') summer += 1
+  else if (b.irisColor === 'F') winter += 1
+  // 特殊组合：纯黑发+近黑瞳→冬加权
+  if (b.hairColor === 'A' && b.irisColor === 'A') winter += 1
   if (b.b1 === 'A') summer += 2
   else if (b.b1 === 'B') winter += 2
   else if (b.b1 === 'C') return 'changxia'
@@ -71,11 +86,22 @@ function computeB(b: AnswersB): SeasonResult {
 
 function computeC(c: AnswersC, warmCool: WarmCoolInput): SeasonResult {
   let changxia = 0; let spring = 0; let autumn = 0
-  // hair: A黑发→秋/冬边界, C浅棕→春, D灰黑→长夏, E金棕→秋
-  if (c.hair === 'A') { autumn += 1 }
-  else if (c.hair === 'C') spring += 1
-  else if (c.hair === 'D') changxia += 2
-  else if (c.hair === 'E') autumn += 1
+  // 发色 hairColor: A纯黑→秋+1, B灰黑→长夏+1, C深棕→秋+1, D中棕→秋+1, E金棕→秋+1, F灰棕→长夏+2
+  if (c.hairColor === 'A') autumn += 1
+  else if (c.hairColor === 'B') changxia += 1
+  else if (c.hairColor === 'C') autumn += 1
+  else if (c.hairColor === 'D') autumn += 1
+  else if (c.hairColor === 'E') autumn += 1
+  else if (c.hairColor === 'F') changxia += 2
+  // 虹膜 irisColor: A近黑→秋+1, B深棕→秋+1, C暖深棕→秋+1, D琥珀→春+1, E茶色→春+1, F灰棕→长夏+1
+  if (c.irisColor === 'A') autumn += 1
+  else if (c.irisColor === 'B') autumn += 1
+  else if (c.irisColor === 'C') autumn += 1
+  else if (c.irisColor === 'D') spring += 1
+  else if (c.irisColor === 'E') spring += 1
+  else if (c.irisColor === 'F') changxia += 1
+  // 特殊组合：灰黑发+灰棕瞳→长夏直接触发
+  if ((c.hairColor === 'B' || c.hairColor === 'F') && c.irisColor === 'F') changxia += 2
   if (c.c1 === 'A') { spring += 1; autumn += 1 }
   else if (c.c1 === 'B') changxia += 2
   else if (c.c1 === 'C') changxia += 1
@@ -100,8 +126,20 @@ function computeC(c: AnswersC, warmCool: WarmCoolInput): SeasonResult {
 }
 
 function computeD(d: AnswersD): SeasonResult {
-  if (d.d1 === 'A' && d.d2 === 'A') return 'changxia_deep'
-  if (d.d1 === 'B' && d.d2 === 'B') return 'changxia_light'
+  let deep = 0; let light = 0
+  // 发色: A纯黑/B灰黑→深型, F灰棕→浅型, C深棕→深型, E金棕→浅型
+  if (d.hairColor === 'A' || d.hairColor === 'B' || d.hairColor === 'C') deep += 1
+  else if (d.hairColor === 'F' || d.hairColor === 'E') light += 1
+  // 虹膜: A近黑/B深棕→深型, E茶色/F灰棕→浅型
+  if (d.irisColor === 'A' || d.irisColor === 'B') deep += 1
+  else if (d.irisColor === 'E' || d.irisColor === 'F') light += 1
+  // 行为题
+  if (d.d1 === 'A') deep += 2
+  else if (d.d1 === 'B') light += 2
+  if (d.d2 === 'A') deep += 2
+  else if (d.d2 === 'B') light += 2
+  if (deep > light) return 'changxia_deep'
+  if (light > deep) return 'changxia_light'
   return 'changxia_standard'
 }
 
@@ -419,10 +457,10 @@ export default function ColorSeasonPage() {
   const path = getPath(warmCool)
 
   // 路径A answers
-  const [aAnswers, setAAnswers] = useState<AnswersA>({ hair: '', a1: '', a2: '', a3: '', a4: '' })
-  const [bAnswers, setBAnswers] = useState<AnswersB>({ hair: '', b1: '', b2: '', b3: '' })
-  const [cAnswers, setCAnswers] = useState<AnswersC>({ hair: '', c1: '', c2: '', c3: '', c4: '' })
-  const [dAnswers, setDAnswers] = useState<AnswersD>({ hair: '', d1: '', d2: '' })
+  const [aAnswers, setAAnswers] = useState<AnswersA>({ hairColor: '', irisColor: '', a1: '', a2: '', a3: '', a4: '' })
+  const [bAnswers, setBAnswers] = useState<AnswersB>({ hairColor: '', irisColor: '', b1: '', b2: '', b3: '' })
+  const [cAnswers, setCAnswers] = useState<AnswersC>({ hairColor: '', irisColor: '', c1: '', c2: '', c3: '', c4: '' })
+  const [dAnswers, setDAnswers] = useState<AnswersD>({ hairColor: '', irisColor: '', d1: '', d2: '' })
 
   const setA = (k: keyof AnswersA) => (v: string) => setAAnswers(p => ({ ...p, [k]: v }))
   const setB = (k: keyof AnswersB) => (v: string) => setBAnswers(p => ({ ...p, [k]: v }))
@@ -434,16 +472,16 @@ export default function ColorSeasonPage() {
   type BStep = 'intro' | 'b1' | 'b2' | 'b3' | 'report'
   type CStep = 'intro' | 'c1' | 'c2' | 'c3' | 'c4' | 'report'
   type DStep = 'intro' | 'd1' | 'd2' | 'report'
-  type AnyStep = AStep | BStep | CStep | DStep | 'hair'
+  type AnyStep = AStep | BStep | CStep | DStep | 'hairColor' | 'irisColor'
 
   const [step, setStep] = useState<AnyStep>('intro')
   const [result, setResult] = useState<SeasonResult | null>(null)
 
   const pathSteps: Record<PathType, AnyStep[]> = {
-    A: ['intro', 'hair', 'a1', 'a2', 'a3', 'a4', 'report'],
-    B: ['intro', 'hair', 'b1', 'b2', 'b3', 'report'],
-    C: ['intro', 'hair', 'c1', 'c2', 'c3', 'c4', 'report'],
-    D: ['intro', 'hair', 'd1', 'd2', 'report'],
+    A: ['intro', 'hairColor', 'irisColor', 'a1', 'a2', 'a3', 'a4', 'report'],
+    B: ['intro', 'hairColor', 'irisColor', 'b1', 'b2', 'b3', 'report'],
+    C: ['intro', 'hairColor', 'irisColor', 'c1', 'c2', 'c3', 'c4', 'report'],
+    D: ['intro', 'hairColor', 'irisColor', 'd1', 'd2', 'report'],
   }
 
   const steps = pathSteps[path]
@@ -469,10 +507,10 @@ export default function ColorSeasonPage() {
   const reset = () => {
     setStep('intro')
     setResult(null)
-    setAAnswers({ hair: '', a1: '', a2: '', a3: '', a4: '' })
-    setBAnswers({ hair: '', b1: '', b2: '', b3: '' })
-    setCAnswers({ hair: '', c1: '', c2: '', c3: '', c4: '' })
-    setDAnswers({ hair: '', d1: '', d2: '' })
+    setAAnswers({ hairColor: '', irisColor: '', a1: '', a2: '', a3: '', a4: '' })
+    setBAnswers({ hairColor: '', irisColor: '', b1: '', b2: '', b3: '' })
+    setCAnswers({ hairColor: '', irisColor: '', c1: '', c2: '', c3: '', c4: '' })
+    setDAnswers({ hairColor: '', irisColor: '', d1: '', d2: '' })
   }
 
   // 进度
@@ -482,7 +520,8 @@ export default function ColorSeasonPage() {
   // 当前答案是否已选
   const canNext: Record<AnyStep, boolean> = {
     intro: true,
-    hair: !!(aAnswers.hair || bAnswers.hair || cAnswers.hair || dAnswers.hair),
+    hairColor: !!(aAnswers.hairColor || bAnswers.hairColor || cAnswers.hairColor || dAnswers.hairColor),
+    irisColor: !!(aAnswers.irisColor || bAnswers.irisColor || cAnswers.irisColor || dAnswers.irisColor),
     a1: !!aAnswers.a1, a2: !!aAnswers.a2, a3: !!aAnswers.a3, a4: !!aAnswers.a4,
     b1: !!bAnswers.b1, b2: !!bAnswers.b2, b3: !!bAnswers.b3,
     c1: !!cAnswers.c1, c2: !!cAnswers.c2, c3: !!cAnswers.c3, c4: !!cAnswers.c4,
@@ -539,60 +578,147 @@ export default function ColorSeasonPage() {
         )}
 
 
-        {/* ── 发色瞳色（所有路径共用）── */}
-        {step === 'hair' && (
+        {/* ── Step 01 发色（所有路径共用）── */}
+        {step === 'hairColor' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
             <div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 01 · 发色与瞳色</p>
-              <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>你的自然发色和瞳色更接近哪一种？</h2>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 01 · 自然发色</p>
+              <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>你的自然发色最接近哪一组？</h2>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '8px' }}>如果经常染发，请回忆你的自然发色或发根颜色</p>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {[
-                { id: 'A', label: '黑发黑瞳，颜色很深', img: '/Black_Eyes.png' },
-                { id: 'B', label: '深棕发 / 深棕瞳', img: '/Dark_brown.png' },
-                { id: 'C', label: '浅棕发 / 茶色瞳', img: '/Light_brown.png' },
-                { id: 'D', label: '发色偏灰黑，瞳色不太亮', img: '/gray-black.png' },
-                { id: 'E', label: '发色偏黄棕 / 金棕', img: '/golden_brown.png' },
-              ].map(o => (
-                <button
-                  key={o.id}
-                  onClick={() => {
-                    if (path === 'A') setA('hair')(o.id)
-                    else if (path === 'B') setB('hair')(o.id)
-                    else if (path === 'C') setC('hair')(o.id)
-                    else setD('hair')(o.id)
-                  }}
-                  style={{
-                    border: `2px solid ${(aAnswers.hair === o.id || bAnswers.hair === o.id || cAnswers.hair === o.id || dAnswers.hair === o.id) ? C.gold : C.border}`,
-                    borderRadius: '8px',
-                    background: (aAnswers.hair === o.id || bAnswers.hair === o.id || cAnswers.hair === o.id || dAnswers.hair === o.id) ? '#fdf8ee' : '#fff',
-                    padding: 0, cursor: 'pointer', overflow: 'hidden', transition: 'all 0.2s', textAlign: 'left' as const,
-                  }}
-                >
-                  <img src={o.img} alt={o.label} style={{ width: '100%', objectFit: 'contain', display: 'block', background: '#f5f3ef' }} />
-                  <p style={{
-                    fontFamily: 'Inter, sans-serif', fontSize: '13px',
-                    color: (aAnswers.hair === o.id || bAnswers.hair === o.id || cAnswers.hair === o.id || dAnswers.hair === o.id) ? C.gold : C.body,
-                    padding: '10px 12px', margin: 0,
-                  }}>
-                    <span style={{ fontSize: '11px', color: C.muted, marginRight: '6px' }}>{o.id}</span>{o.label}
-                  </p>
-                </button>
-              ))}
+                {
+                  id: 'A', label: '纯黑 · 蓝黑 · 乌黑',
+                  imgs: ['/hair_raven_black.png', '/hair_blue_black.png', '/hair_soft_black.png'],
+                },
+                {
+                  id: 'B', label: '灰黑 · 烟熏黑 · 冷黑',
+                  imgs: ['/hair_ash_black.png', '/hair_smoky_black.png', '/hair_ash_brown_black.png'],
+                },
+                {
+                  id: 'C', label: '深棕 · 巧克力棕 · 冷深棕',
+                  imgs: ['/hair_deep_brown.png', '/hair_chocolate_brown.png', '/hair_cool_deep_brown.png'],
+                },
+                {
+                  id: 'D', label: '中棕 · 栗棕 · 红棕',
+                  imgs: ['/hair_chestnut_brown.png', '/hair_light_brown.png', '/hair_red_brown.png'],
+                },
+                {
+                  id: 'E', label: '金棕 · 黄棕 · 暖茶棕',
+                  imgs: ['/hair_golden_brown.png', '/hair_yellow_brown.png', '/hair_warm_tea_brown.png'],
+                },
+                {
+                  id: 'F', label: '灰棕 · 雾棕 · 橄榄灰棕',
+                  imgs: ['/hair_mushroom_brown.png', '/hair_mist_brown.png', '/hair_olive_ash_brown.png'],
+                },
+              ].map(o => {
+                const currentVal = path === 'A' ? aAnswers.hairColor : path === 'B' ? bAnswers.hairColor : path === 'C' ? cAnswers.hairColor : dAnswers.hairColor
+                const isActive = currentVal === o.id
+                return (
+                  <button
+                    key={o.id}
+                    onClick={() => {
+                      if (path === 'A') setA('hairColor')(o.id)
+                      else if (path === 'B') setB('hairColor')(o.id)
+                      else if (path === 'C') setC('hairColor')(o.id)
+                      else setD('hairColor')(o.id)
+                    }}
+                    style={{
+                      border: `1.5px solid ${isActive ? C.gold : C.border}`,
+                      borderRadius: '10px',
+                      background: isActive ? '#fdf8ee' : '#fff',
+                      padding: '14px 16px',
+                      cursor: 'pointer',
+                      textAlign: 'left' as const,
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
+                      <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: isActive ? C.gold : C.muted, letterSpacing: '1px', flexShrink: 0 }}>{o.id}</span>
+                      <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: isActive ? C.h2 : C.body, margin: 0 }}>{o.label}</p>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', paddingLeft: '24px' }}>
+                      {o.imgs.map((img, i) => (
+                        <img key={i} src={img} alt="" style={{ width: '72px', height: '72px', objectFit: 'cover', borderRadius: '6px', border: `1px solid ${C.border}` }} />
+                      ))}
+                    </div>
+                  </button>
+                )
+              })}
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
               <BackBtn onClick={back} />
-              <button onClick={next} disabled={!canNext.hair} style={!canNext.hair ? btnDisabledStyle : btnPrimaryStyle}>继续</button>
+              <button onClick={next} disabled={!canNext.hairColor} style={!canNext.hairColor ? btnDisabledStyle : btnPrimaryStyle}>继续</button>
             </div>
           </div>
         )}
+
+        {/* ── Step 02 虹膜（所有路径共用）── */}
+        {step === 'irisColor' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+            <div>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 02 · 虹膜颜色</p>
+              <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>你的虹膜（眼珠）颜色更接近哪一种？</h2>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '8px' }}>在自然光下，观察眼珠中虹膜部分的颜色</p>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              {[
+                { id: 'A', label: '近黑瞳，几乎看不到边界', img: '/iris_near_black.png' },
+                { id: 'B', label: '深棕瞳，棕色感明显', img: '/iris_dark_brown.png' },
+                { id: 'C', label: '暖深棕瞳，带红棕感', img: '/iris_warm_deep_brown.png' },
+                { id: 'D', label: '琥珀棕瞳，颜色偏亮偏暖', img: '/iris_amber_brown.png' },
+                { id: 'E', label: '茶色瞳，颜色较浅', img: '/iris_tea_brown.png' },
+                { id: 'F', label: '灰棕瞳，偏冷偏暗', img: '/iris_gray_brown.png' },
+              ].map(o => {
+                const currentVal = path === 'A' ? aAnswers.irisColor : path === 'B' ? bAnswers.irisColor : path === 'C' ? cAnswers.irisColor : dAnswers.irisColor
+                const isActive = currentVal === o.id
+                return (
+                  <button
+                    key={o.id}
+                    onClick={() => {
+                      if (path === 'A') setA('irisColor')(o.id)
+                      else if (path === 'B') setB('irisColor')(o.id)
+                      else if (path === 'C') setC('irisColor')(o.id)
+                      else setD('irisColor')(o.id)
+                    }}
+                    style={{
+                      border: `2px solid ${isActive ? C.gold : C.border}`,
+                      borderRadius: '8px',
+                      background: isActive ? '#fdf8ee' : '#fff',
+                      padding: 0,
+                      cursor: 'pointer',
+                      overflow: 'hidden',
+                      transition: 'all 0.2s',
+                      textAlign: 'left' as const,
+                    }}
+                  >
+                    <img src={o.img} alt={o.label} style={{ width: '100%', aspectRatio: '1/1', objectFit: 'cover', display: 'block' }} />
+                    <p style={{
+                      fontFamily: 'Inter, sans-serif', fontSize: '12px',
+                      color: isActive ? C.gold : C.body,
+                      padding: '10px 12px', margin: 0,
+                    }}>
+                      <span style={{ fontSize: '11px', color: C.muted, marginRight: '6px' }}>{o.id}</span>{o.label}
+                    </p>
+                  </button>
+                )
+              })}
+            </div>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <BackBtn onClick={back} />
+              <button onClick={next} disabled={!canNext.irisColor} style={!canNext.irisColor ? btnDisabledStyle : btnPrimaryStyle}>继续</button>
+            </div>
+          </div>
+        )}
+
 
         {/* ══════════ 路径 A：暖调 ══════════ */}
 
         {step === 'a1' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
             <div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 02 · 明度感知</p>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 03 · 明度感知</p>
               <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>你穿浅色和深色，哪种更有精神？</h2>
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '8px' }}>浅色如米白、裸粉、浅杏；深色如深咖、铁锈红、暗棕</p>
             </div>
@@ -618,7 +744,7 @@ export default function ColorSeasonPage() {
         {step === 'a2' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
             <div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 03 · 饱和度承受力</p>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 04 · 饱和度承受力</p>
               <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>你穿高饱和颜色时，脸的反应是？</h2>
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '8px' }}>正红、亮橘、明黄、鲜蓝等高饱和色</p>
             </div>
@@ -640,7 +766,7 @@ export default function ColorSeasonPage() {
         {step === 'a3' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
             <div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 04 · 清亮 vs 柔和</p>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 05 · 清亮 vs 柔和</p>
               <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>清亮的暖色和柔和浓郁的暖色，哪种更衬你？</h2>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
@@ -670,7 +796,7 @@ export default function ColorSeasonPage() {
         {step === 'a4' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
             <div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 05 · 黑色反应</p>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 06 · 黑色反应</p>
               <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>素颜穿黑色上衣，脸的感觉是？</h2>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -692,7 +818,7 @@ export default function ColorSeasonPage() {
         {step === 'b1' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
             <div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 02 · 白色 vs 黑色</p>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 03 · 白色 vs 黑色</p>
               <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>素颜穿纯白和纯黑，哪种更好看？</h2>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -712,7 +838,7 @@ export default function ColorSeasonPage() {
         {step === 'b2' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
             <div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 03 · 对比度承受力</p>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 04 · 对比度承受力</p>
               <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>高对比配色和低对比配色，哪种更出彩？</h2>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
@@ -741,7 +867,7 @@ export default function ColorSeasonPage() {
         {step === 'b3' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
             <div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 04 · 深色承受力</p>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 05 · 深色承受力</p>
               <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>藏蓝、深紫、墨黑靠近脸时，感觉是？</h2>
             </div>
             <ColorSwatches colors={[['藏蓝','#1C2E5A'],['深紫','#4A2060'],['墨黑','#1A1A1A']]} />
@@ -764,7 +890,7 @@ export default function ColorSeasonPage() {
         {step === 'c1' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
             <div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 02 · 暖色耐受</p>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 03 · 暖色耐受</p>
               <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>你穿焦糖、橘色、南瓜色时，脸通常会？</h2>
             </div>
             <ColorSwatches colors={[['焦糖','#C68642'],['橘色','#E8734A'],['南瓜','#D2691E'],['驼色','#C4A882']]} />
@@ -785,7 +911,7 @@ export default function ColorSeasonPage() {
         {step === 'c2' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
             <div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 03 · 灰调颜色反应</p>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 04 · 灰调颜色反应</p>
               <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>这些低饱和大地色靠近脸时，感觉是？</h2>
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '8px' }}>墨绿 · 苔藓绿 · 蘑菇色 · 炭灰 · 燕麦色 · 灰绿 · 灰蓝 · 深咖 · 冷棕 · 酒红</p>
             </div>
@@ -811,7 +937,7 @@ export default function ColorSeasonPage() {
         {step === 'c3' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
             <div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 04 · 饱和度偏好</p>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 05 · 饱和度偏好</p>
               <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>你买衣服时，自然会倾向选择哪类颜色？</h2>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -831,7 +957,7 @@ export default function ColorSeasonPage() {
         {step === 'c4' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
             <div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 05 · 整体气质</p>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 06 · 整体气质</p>
               <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>别人描述你的穿搭气质，通常是？</h2>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -853,7 +979,7 @@ export default function ColorSeasonPage() {
         {step === 'd1' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
             <div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 02 · 深浅感知</p>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 03 · 深浅感知</p>
               <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>长夏色域中，深色组还是浅色组更衬你？</h2>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
@@ -883,7 +1009,7 @@ export default function ColorSeasonPage() {
         {step === 'd2' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
             <div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 03 · 对比度确认</p>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 04 · 对比度确认</p>
               <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>你穿深色时，素颜状态下好不好看？</h2>
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '8px' }}>不需要靠口红或配饰来撑</p>
             </div>
