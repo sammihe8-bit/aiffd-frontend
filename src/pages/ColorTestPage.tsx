@@ -324,10 +324,10 @@ export default function ColorTestPage() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {[
-                { id: 'A', label: '金色更显气色、柔和、健康', sub: '→ 暖调信号' },
-                { id: 'B', label: '银色更显干净、清透、高级', sub: '→ 冷调信号' },
-                { id: 'C', label: '金银都可以，没有明显差别', sub: '→ 中性' },
-                { id: 'D', label: '金银都一般，都不太衬我', sub: '→ 橄榄 / 灰黄复核信号' },
+                { id: 'A', label: '金色更显气色、柔和、健康', sub: '' },
+                { id: 'B', label: '银色更显干净、清透、高级', sub: '' },
+                { id: 'C', label: '金银都可以，没有明显差别', sub: '' },
+                { id: 'D', label: '金银都一般，都不太衬我', sub: '' },
               ].map(o => <OptionBtn key={o.id} {...o} active={answers.q1 === o.id} onClick={() => set('q1')(o.id)} />)}
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
@@ -362,10 +362,10 @@ export default function ColorTestPage() {
             ))}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {[
-                { id: 'A', label: '暖调组更好看，更提气色', sub: '→ 暖调信号（本题权重最高）' },
-                { id: 'B', label: '冷调组更好看，更干净清透', sub: '→ 冷调信号（本题权重最高）' },
-                { id: 'C', label: '两组都可以，没有明显差别', sub: '→ 中性' },
-                { id: 'D', label: '两组都一般，放上去都不好看', sub: '→ 橄榄 / 灰黄复核信号' },
+                { id: 'A', label: '暖调组更好看，更提气色', sub: '' },
+                { id: 'B', label: '冷调组更好看，更干净清透', sub: '' },
+                { id: 'C', label: '两组都可以，没有明显差别', sub: '' },
+                { id: 'D', label: '两组都一般，放上去都不好看', sub: '' },
               ].map(o => <OptionBtn key={o.id} {...o} active={answers.q2 === o.id} onClick={() => set('q2')(o.id)} />)}
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
@@ -392,9 +392,9 @@ export default function ColorTestPage() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {[
-                { id: 'A', label: '更有气色、更温暖、更健康', sub: '→ 暖调信号' },
-                { id: 'B', label: '更黄、更土、更暗沉', sub: '→ 冷黄 / 橄榄复核信号' },
-                { id: 'C', label: '有时可以，有时不稳定', sub: '→ 中性或橄榄复核' },
+                { id: 'A', label: '更有气色、更温暖、更健康', sub: '' },
+                { id: 'B', label: '更黄、更土、更暗沉', sub: '' },
+                { id: 'C', label: '有时可以，有时不稳定', sub: '' },
                 { id: 'D', label: '很少穿，不确定', sub: '' },
               ].map(o => <OptionBtn key={o.id} {...o} active={answers.q3 === o.id} onClick={() => set('q3')(o.id)} />)}
             </div>
@@ -421,10 +421,10 @@ export default function ColorTestPage() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {[
-                { id: 'A', label: '蜜桃粉、珊瑚粉更显气色', sub: '→ 暖调信号' },
-                { id: 'B', label: '玫瑰粉、冷粉更显干净', sub: '→ 冷调信号' },
-                { id: 'C', label: '大多数粉色都显脏、显灰', sub: '→ 橄榄肤色复核信号' },
-                { id: 'D', label: '粉色都还可以，没有明显差别', sub: '→ 中性' },
+                { id: 'A', label: '蜜桃粉、珊瑚粉更显气色', sub: '' },
+                { id: 'B', label: '玫瑰粉、冷粉更显干净', sub: '' },
+                { id: 'C', label: '大多数粉色都显脏、显灰', sub: '' },
+                { id: 'D', label: '粉色都还可以，没有明显差别', sub: '' },
                 { id: 'E', label: '不确定', sub: '' },
               ].map(o => <OptionBtn key={o.id} {...o} active={answers.q4 === o.id} onClick={() => set('q4')(o.id)} />)}
             </div>
@@ -444,10 +444,10 @@ export default function ColorTestPage() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {[
-                { id: 'A', label: '焦糖、橘红、暖驼、奶油白', sub: '→ 暖调倾向', colors: ['#C68642','#E8734A','#C4A882','#F5F0E8'] },
-                { id: 'B', label: '玫瑰粉、冰白、浅蓝、银灰', sub: '→ 冷调倾向', colors: ['#F4A0B8','#F0F4F8','#AED6F1','#B0B8C4'] },
-                { id: 'C', label: '墨绿、灰蓝、炭灰、酒红、深咖', sub: '→ 橄榄 / 灰黄倾向', colors: ['#2D5A3D','#5A7A9A','#4A4A4A','#7B1A2A','#5A3A20'] },
-                { id: 'D', label: '都不明显，没有特别突出的那组', sub: '→ 需要后续测试辅助判断' },
+                { id: 'A', label: '焦糖、橘红、暖驼、奶油白', sub: '', colors: ['#C68642','#E8734A','#C4A882','#F5F0E8'] },
+                { id: 'B', label: '玫瑰粉、冰白、浅蓝、银灰', sub: '', colors: ['#F4A0B8','#F0F4F8','#AED6F1','#B0B8C4'] },
+                { id: 'C', label: '墨绿、灰蓝、炭灰、酒红、深咖', sub: '', colors: ['#2D5A3D','#5A7A9A','#4A4A4A','#7B1A2A','#5A3A20'] },
+                { id: 'D', label: '都不明显，没有特别突出的那组', sub: '' },
               ].map(o => (
                 <button key={o.id} onClick={() => set('q5')(o.id)} style={{
                   border: `1.5px solid ${answers.q5 === o.id ? C.gold : C.border}`,
