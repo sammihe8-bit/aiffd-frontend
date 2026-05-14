@@ -10,7 +10,6 @@ import BodyTestPage from './pages/BodyTestPage'
 import ColumnPage from './pages/ColumnPage'
 import ColorTestPage from './pages/ColorTestPage'
 import { useAuth } from './hooks/useAuth'
-import ColorTestPage from './pages/ColorTestPage'
 import ColorSeasonPage from './pages/ColorSeasonPage' 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { token } = useAuth()
