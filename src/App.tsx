@@ -10,7 +10,8 @@ import BodyTestPage from './pages/BodyTestPage'
 import ColumnPage from './pages/ColumnPage'
 import ColorTestPage from './pages/ColorTestPage'
 import { useAuth } from './hooks/useAuth'
-
+import ColorTestPage from './pages/ColorTestPage'
+import ColorSeasonPage from './pages/ColorSeasonPage' 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { token } = useAuth()
   return token ? <>{children}</> : <Navigate to="/auth" replace />
@@ -30,6 +31,7 @@ export default function App() {
             <Route path="/column" element={<ColumnPage />} />
             <Route path="/test/body" element={<BodyTestPage />} />
             <Route path="/test/color" element={<ColorTestPage />} />
+            <Route path="/test/color/season" element={<ColorSeasonPage />} />
             <Route path="/test/style" element={
               <PlaceholderPage title="风格测试" description="风格测试即将上线" />
             } />
