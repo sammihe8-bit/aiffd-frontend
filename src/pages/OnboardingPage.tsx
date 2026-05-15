@@ -32,6 +32,7 @@ const TESTS = [
     duration: '约 8 分钟', to: '/test/fashion', available: false,
   },
 ]
+
 function ConsentScreen({ onAgree }: { onAgree: () => void }) {
   const [consent, setConsent] = useState({ basic: false, photo: false, stylist: false, ai: false })
   const canProceed = consent.basic && consent.photo && consent.stylist
@@ -112,7 +113,6 @@ function TestCenter() {
           </p>
         </div>
 
-        {/* 推荐顺序 */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '48px', flexWrap: 'wrap' }}>
           {[
             { label: '体型测试', active: true },
@@ -132,7 +132,6 @@ function TestCenter() {
           ))}
         </div>
 
-        {/* 测试卡片 */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0', border: `1px solid ${C.border}` }}>
           {TESTS.map((test, i) => (
             <div key={test.num} style={{
@@ -190,7 +189,6 @@ function TestCenter() {
           ))}
         </div>
 
-        {/* 底部说明 */}
         <div style={{ marginTop: '48px', padding: '28px 32px', background: '#f7f4ef', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '24px' }}>
           {[
             { label: '先天底色', desc: '体型 + 色彩测试构成你不会轻易改变的客观条件' },
