@@ -441,6 +441,18 @@ function SeasonReport({ result, onReset }: { result: SeasonResult; onReset: () =
         <button onClick={onReset} style={{ flex: 1, padding: '14px', background: 'transparent', border: `1px solid ${C.border}`, borderRadius: '6px', fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, cursor: 'pointer' }}>重新测试</button>
         <Link to="/onboarding" style={{ flex: 1, padding: '14px', background: '#f5f0e8', border: 'none', borderRadius: '6px', fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.h2, textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>返回测试中心</Link>
       </div>
+      {typeof window !== 'undefined' && localStorage.getItem('aiffd_return_to') === 'style_color' && (
+        <button
+          onClick={() => {
+            localStorage.setItem('aiffd_season_result', result || '')
+            localStorage.removeItem('aiffd_return_to')
+            window.location.href = '/test/style'
+          }}
+          style={{ width: '100%', padding: '14px', background: '#B8973A', color: '#fff', border: 'none', borderRadius: '6px', fontFamily: 'Inter, sans-serif', fontSize: '14px', letterSpacing: '1px', cursor: 'pointer', marginTop: '4px' }}
+        >
+          ← 返回风格测试（色彩结果已保存）
+        </button>
+      )}
     </div>
   )
 }
