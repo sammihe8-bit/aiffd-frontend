@@ -215,7 +215,12 @@ function ColorReport({ result, onReset }: { result: WarmCoolResult; onReset: () 
           冷暖方向已确认。第二层将进一步判断你适合浅色还是深色、清亮色还是柔和色，锁定你的四季类型。
         </p>
         <button
-          onClick={() => { localStorage.setItem('aiffd_warmcool', result); navigate('/test/color/season') }}
+          onClick={() => {
+            localStorage.setItem('aiffd_warmcool', result)
+            localStorage.setItem('aiffd_color_result', JSON.stringify({ experience: ['done'], colorGroup: result }))
+            // 如果是从风格测试跳过来，色彩测试完成后继续进入五季，五季完成后跳回
+            navigate('/test/color/season')
+          }}
           style={{ background: C.gold, color: '#fff', border: 'none', borderRadius: '6px', padding: '13px 28px', fontFamily: 'Inter, sans-serif', fontSize: '13px', letterSpacing: '1px', cursor: 'pointer' }}
         >
           {profile.next} →
