@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
 // ─── 设计系统 ────────────────────────────────────────────────
@@ -531,10 +531,6 @@ export default function StyleTestPage() {
   const navigate = useNavigate()
   const [phase, setPhase] = useState<Phase>('intro')
 
-  // 检查是否从专业测试跳回（用 useEffect 在挂载时执行）
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useState(() => { checkReturnFromTest() })
-
   // 各模块 answers
   const [basic, setBasic] = useState<BasicProfile>({ age: '', height: '', weight: '', occupation: '', painPoints: [], aspirations: [] })
   const [body, setBody] = useState<BodyQuick>({ bodyShape: '', bodyLine: '', boneScale: '' })
@@ -586,6 +582,9 @@ export default function StyleTestPage() {
     }
     return false
   }
+
+  // 挂载时检查是否从专业测试跳回
+  useEffect(() => { checkReturnFromTest() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const computeAndFinish = () => {
     const result = computeStyle(body, style)
