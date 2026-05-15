@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 
 const C = {
   h1: '#111111', h2: '#222222', sub: '#444444',
@@ -89,9 +89,10 @@ function ProgressBar({ current, total, label }: { current: number; total: number
 }
 
 // ── 报告组件
-function ReportView({ result, onReset }: {
+function ReportView({ result, onReset, onReturnToStyle }: {
   result: { boneCode: string; fatCode: string; compositeCode: string; compositeName: string; sheldonMap: string; yinYang: string }
   onReset: () => void
+  onReturnToStyle?: () => void
 }) {
   const imgSrc = BODY_IMAGES[result.compositeCode] || BODY_IMAGES[result.boneCode]
   return (
@@ -176,13 +177,22 @@ function ReportView({ result, onReset }: {
         <Link to="/onboarding" style={{ ...btnOutline, textDecoration: 'none', textAlign: 'center' as const, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>返回测试中心</Link>
         <Link to="/profile" style={{ ...btnGold, textDecoration: 'none', textAlign: 'center' as const, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>进入我的档案</Link>
       </div>
+      {onReturnToStyle && (
+        <button onClick={onReturnToStyle} style={{ ...btnGold, marginTop: '8px' }}>
+          ← 返回风格测试（体型结果已保存）
+        </button>
+      )}
     </div>
   )
 }
 
 // ── 主页面
 export default function BodyTestPage() {
+  const navigate = useNavigate()
   const [phase, setPhase] = useState<Phase>('method')
+
+  // 检查是否需要完成后跳回风格测试
+  const fromStyle = typeof window !== 'undefined' && localStorage.getItem('aiffd_return_to') === 'style_body'
   const [method, setMethod] = useState<'manual' | 'ai' | ''>('')
 
   // 测量数据
@@ -240,11 +250,18 @@ export default function BodyTestPage() {
       '外胚层': 'Ectomorph · 线条感强', '中胚层': 'Mesomorph · 骨骼立体', '内胚层': 'Endomorph · 圆润饱满',
     }
     const yinYang = calcYinYang(q1, q2, q3, q4)
-    setResult({
+    const resultData = {
       boneCode, fatCode: fatCode === '无' ? '—' : fatCode,
       compositeCode, compositeName: NAMES[compositeCode] || compositeCode,
       sheldonMap: SHELDON_MAP[sheldon] || sheldon, yinYang,
-    })
+    }
+    setResult(resultData)
+    // 保存体型结果到 localStorage
+    localStorage.setItem('aiffd_body_result', JSON.stringify({
+      bodyShape: boneCode,
+      bodyLine: fatCode === '—' ? 'straight' : 'curve',
+      boneScale: sheldon === '外胚层' ? 'small' : sheldon === '内胚层' ? 'large' : 'medium',
+    }))
     setPhase('report')
   }
 
@@ -573,7 +590,11 @@ export default function BodyTestPage() {
 
         {/* ── 报告页 ── */}
         {phase === 'report' && result && (
-          <ReportView result={result} onReset={reset} />
+          <ReportView
+            result={result}
+            onReset={reset}
+            onReturnToStyle={fromStyle ? () => navigate('/test/style') : undefined}
+          />
         )}
 
       </div>
