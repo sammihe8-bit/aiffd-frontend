@@ -531,6 +531,10 @@ export default function StyleTestPage() {
   const navigate = useNavigate()
   const [phase, setPhase] = useState<Phase>('intro')
 
+  // 检查是否从专业测试跳回（用 useEffect 在挂载时执行）
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useState(() => { checkReturnFromTest() })
+
   // 各模块 answers
   const [basic, setBasic] = useState<BasicProfile>({ age: '', height: '', weight: '', occupation: '', painPoints: [], aspirations: [] })
   const [body, setBody] = useState<BodyQuick>({ bodyShape: '', bodyLine: '', boneScale: '' })
@@ -540,8 +544,48 @@ export default function StyleTestPage() {
   const [styleResult, setStyleResult] = useState<StyleType | null>(null)
 
   // 子步骤管理
-  const [basicStep, setBasicStep] = useState(0)  // 0-3 基础建档子步
-  const [styleStep, setStyleStep] = useState(0)  // 0-6 风格题子步
+  const [basicStep, setBasicStep] = useState(0)
+  const [styleStep, setStyleStep] = useState(0)
+
+  // 从 localStorage 读取已完成的专业测试结果（体型/色彩）
+  const loadSavedResults = () => {
+    const savedBody = localStorage.getItem('aiffd_body_result')
+    const savedColor = localStorage.getItem('aiffd_color_result')
+    const savedSeason = localStorage.getItem('aiffd_season_result')
+    if (savedBody) {
+      try {
+        const b = JSON.parse(savedBody)
+        setBody(prev => ({ ...prev, ...b }))
+      } catch {}
+    }
+    if (savedColor) {
+      try {
+        const c = JSON.parse(savedColor)
+        setColor(prev => ({ ...prev, ...c }))
+      } catch {}
+    }
+    if (savedSeason) {
+      localStorage.setItem('aiffd_warmcool', savedSeason)
+    }
+  }
+
+  // 页面加载时检查是否从专业测试跳回
+  const checkReturnFromTest = () => {
+    const returnTo = localStorage.getItem('aiffd_return_to')
+    if (returnTo === 'style_body') {
+      localStorage.removeItem('aiffd_return_to')
+      loadSavedResults()
+      setPhase('body')
+      return true
+    }
+    if (returnTo === 'style_color') {
+      localStorage.removeItem('aiffd_return_to')
+      loadSavedResults()
+      setPhase('color')
+      return true
+    }
+    return false
+  }
 
   const computeAndFinish = () => {
     const result = computeStyle(body, style)
@@ -745,8 +789,11 @@ export default function StyleTestPage() {
               onChange={v => setBody(p => ({ ...p, bodyShape: v }))}
             />
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <button onClick={() => navigate('/test/body')} style={{ ...btnOutline, textAlign: 'center', padding: '14px' }}>
-                不确定 → 进入完整体型测试
+              <button onClick={() => {
+                localStorage.setItem('aiffd_return_to', 'style_body')
+                navigate('/test/body')
+              }} style={{ ...btnOutline, textAlign: 'center', padding: '14px' }}>
+                不确定 → 进入完整体型测试（完成后自动返回）
               </button>
             </div>
             {body.bodyShape && (
@@ -807,7 +854,7 @@ export default function StyleTestPage() {
                     { id: 'C', label: '墨绿、炭灰、酒红、灰蓝、深咖' },
                     { id: 'D', label: '铜棕、铁锈红、暖驼、芥末黄' },
                     { id: 'E', label: '纯黑、冷白、藏蓝、玫红' },
-                    { id: 'F', label: '需要完整测试才能判断' },
+                    { id: 'F', label: '需要完整测试才能判断（可进入专业测试后返回）' },
                   ]}
                   value={color.colorGroup}
                   onChange={v => setColor(p => ({ ...p, colorGroup: v }))}
@@ -817,7 +864,10 @@ export default function StyleTestPage() {
             <div style={{ display: 'flex', gap: '12px' }}>
               <BackBtn onClick={() => setPhase('body')} />
               {color.experience.includes('F') ? (
-                <button onClick={() => navigate('/test/color')} style={btnGold}>进入完整色彩测试</button>
+                <button onClick={() => {
+                  localStorage.setItem('aiffd_return_to', 'style_color')
+                  navigate('/test/color')
+                }} style={btnGold}>进入完整色彩测试（完成后自动返回）</button>
               ) : (
                 <button onClick={() => setPhase('style')} disabled={color.experience.length === 0} style={color.experience.length === 0 ? btnDisabled : btnGold}>继续</button>
               )}
