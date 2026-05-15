@@ -354,9 +354,8 @@ function StepHeader({ tag, title, subtitle }: { tag: string; title: string; subt
 }
 
 // ─── 报告组件 ─────────────────────────────────────────────────
-function StyleReport({ styleType, basic, body, color, scenario, onReset }: {
+function StyleReport({ styleType, body, color, scenario, onReset }: {
   styleType: StyleType
-  basic: BasicProfile
   body: BodyQuick
   color: ColorQuick
   scenario: ScenarioProfile
@@ -364,8 +363,6 @@ function StyleReport({ styleType, basic, body, color, scenario, onReset }: {
 }) {
   const [tab, setTab] = useState<'style'|'body'|'color'|'scenario'|'next'>('style')
   const profile = STYLE_PROFILES[styleType]
-  const navigate = useNavigate()
-
   const tabs = [
     { key: 'style' as const, label: '风格主型' },
     { key: 'body' as const, label: '体型建议' },
@@ -1046,7 +1043,6 @@ export default function StyleTestPage() {
         {phase === 'report' && styleResult && (
           <StyleReport
             styleType={styleResult}
-            basic={basic}
             body={body}
             color={color}
             scenario={scenario}
