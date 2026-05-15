@@ -23,7 +23,7 @@ const TESTS = [
     num: '03', tag: 'STYLE TEST', title: '风格测试',
     desc: '结合体型与色彩底色，判断你的风格适合度。如已完成前两项测试，结论将更精准。',
     steps: ['风格倾向问卷', '场景适配分析', '风格关键词生成', '穿搭方向建议'],
-    duration: '约 10 分钟', to: '/test/style', available: false,
+    duration: '约 10 分钟', to: '/test/style',true,
   },
   {
     num: '04', tag: 'FASHION TEST', title: '时尚个性测试',
@@ -32,7 +32,6 @@ const TESTS = [
     duration: '约 8 分钟', to: '/test/fashion', available: false,
   },
 ]
-
 function ConsentScreen({ onAgree }: { onAgree: () => void }) {
   const [consent, setConsent] = useState({ basic: false, photo: false, stylist: false, ai: false })
   const canProceed = consent.basic && consent.photo && consent.stylist
