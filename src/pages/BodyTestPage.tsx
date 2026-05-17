@@ -397,7 +397,6 @@ export default function BodyTestPage() {
           let liveShape = ''
           if (hasBasic) {
             const bustHipDiff = bustN - hipN
-            const waistBustRatio = waistN / bustN
             const waistHipRatio = waistN / hipN
             if (waistHipRatio > 0.88) liveShape = 'H'
             else if (bustHipDiff > 3) liveShape = 'V'
