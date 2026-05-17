@@ -776,27 +776,71 @@ export default function StyleTestPage() {
         {/* ── 模块B：体型快判 ── */}
         {phase === 'body' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-            <StepHeader tag="模块 B · 体型快判" title="你认为自己的体型更接近哪种？" subtitle="不确定可进入完整体型测试，约10分钟" />
-            <SingleSelect
-              options={[
-                { id: 'H', label: 'H 型', sub: '肩宽≈臀宽，腰部不明显，整体较方正' },
-                { id: 'A', label: 'A 型', sub: '臀宽>肩宽，重心偏下，梨形轮廓' },
-                { id: 'V', label: 'V 型', sub: '肩宽>臀宽，倒三角轮廓，上半身较宽' },
-                { id: 'X', label: 'X 型', sub: '肩臀相近，腰部明显收细，沙漏型轮廓' },
-              ]}
-              value={body.bodyShape}
-              onChange={v => setBody(p => ({ ...p, bodyShape: v }))}
-            />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <button onClick={() => {
-                localStorage.setItem('aiffd_return_to', 'style_body')
-                navigate('/test/body')
-              }} style={{ ...btnOutline, textAlign: 'center', padding: '14px' }}>
-                不确定 → 进入完整体型测试（完成后自动返回）
-              </button>
+            <StepHeader tag="模块 B · 体型快判" title="你的体型更接近哪种？" subtitle="点击图片选择，不确定可进入完整体型测试" />
+
+            {/* 体型图片选项 2×2 */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+              {[
+                { id: 'H', label: 'H 型', sub: '肩宽≈臀宽，腰线不明显', img: '/BodyH.png' },
+                { id: 'A', label: 'A 型', sub: '臀宽>肩宽，重心偏下', img: '/BodyA.png' },
+                { id: 'V', label: 'V 型', sub: '肩宽>臀宽，倒三角', img: '/BodyV.png' },
+                { id: 'X', label: 'X 型', sub: '肩臀相近，腰部明显', img: '/BodX.png' },
+              ].map(o => {
+                const active = body.bodyShape === o.id
+                return (
+                  <button
+                    key={o.id}
+                    onClick={() => setBody(p => ({ ...p, bodyShape: o.id }))}
+                    style={{
+                      border: `2px solid ${active ? C.gold : C.border}`,
+                      borderRadius: '10px',
+                      background: active ? '#fdf8ee' : '#fff',
+                      padding: 0,
+                      cursor: 'pointer',
+                      overflow: 'hidden',
+                      transition: 'all 0.2s',
+                      textAlign: 'left' as const,
+                    }}
+                  >
+                    <div style={{
+                      background: active ? '#fdf3e0' : '#f5f3ef',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      padding: '16px 8px',
+                      transition: 'background 0.2s',
+                    }}>
+                      <img
+                        src={o.img}
+                        alt={o.label}
+                        style={{ height: '140px', objectFit: 'contain', display: 'block' }}
+                      />
+                    </div>
+                    <div style={{ padding: '12px 14px' }}>
+                      <p style={{
+                        fontFamily: 'Georgia, serif', fontSize: '16px',
+                        color: active ? C.gold : C.h2,
+                        margin: '0 0 4px', fontWeight: 400,
+                      }}>{o.label}</p>
+                      <p style={{
+                        fontFamily: 'Inter, sans-serif', fontSize: '11px',
+                        color: C.muted, margin: 0,
+                      }}>{o.sub}</p>
+                    </div>
+                  </button>
+                )
+              })}
             </div>
+
+            {/* 不确定入口 */}
+            <button onClick={() => {
+              localStorage.setItem('aiffd_return_to', 'style_body')
+              navigate('/test/body')
+            }} style={{ ...btnOutline, textAlign: 'center' as const, padding: '14px', width: '100%' }}>
+              不确定 → 进入完整体型测试（完成后自动返回）
+            </button>
+
+            {/* 选完体型后展示补充题 */}
             {body.bodyShape && (
-              <>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', paddingTop: '8px', borderTop: `1px solid ${C.border}` }}>
                 <StepHeader tag="" title="你的身体线条感觉更接近？" />
                 <SingleSelect
                   options={[
@@ -818,11 +862,16 @@ export default function StyleTestPage() {
                   value={body.boneScale}
                   onChange={v => setBody(p => ({ ...p, boneScale: v }))}
                 />
-              </>
+              </div>
             )}
+
             <div style={{ display: 'flex', gap: '12px' }}>
               <BackBtn onClick={() => { setBasicStep(3); setPhase('basic') }} />
-              <button onClick={() => setPhase('color')} disabled={!body.bodyShape || !body.bodyLine || !body.boneScale} style={!body.bodyShape || !body.bodyLine || !body.boneScale ? btnDisabled : btnGold}>继续</button>
+              <button
+                onClick={() => setPhase('color')}
+                disabled={!body.bodyShape || !body.bodyLine || !body.boneScale}
+                style={!body.bodyShape || !body.bodyLine || !body.boneScale ? btnDisabled : btnGold}
+              >继续</button>
             </div>
           </div>
         )}
