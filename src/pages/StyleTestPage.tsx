@@ -778,8 +778,8 @@ export default function StyleTestPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
             <StepHeader tag="模块 B · 体型快判" title="你的体型更接近哪种？" subtitle="点击图片选择，不确定可进入完整体型测试" />
 
-            {/* 体型图片选项 2×2 */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+            {/* 体型图片选项 4列并排 */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
               {[
                 { id: 'H', label: 'H 型', sub: '肩宽≈臀宽，腰线不明显', img: '/BodyH.png' },
                 { id: 'A', label: 'A 型', sub: '臀宽>肩宽，重心偏下', img: '/BodyA.png' },
@@ -805,13 +805,13 @@ export default function StyleTestPage() {
                     <div style={{
                       background: active ? '#fdf3e0' : '#f5f3ef',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      padding: '16px 8px',
+                      padding: '20px 6px',
                       transition: 'background 0.2s',
                     }}>
                       <img
                         src={o.img}
                         alt={o.label}
-                        style={{ height: '140px', objectFit: 'contain', display: 'block' }}
+                        style={{ height: '220px', objectFit: 'contain', display: 'block' }}
                       />
                     </div>
                     <div style={{ padding: '12px 14px' }}>
