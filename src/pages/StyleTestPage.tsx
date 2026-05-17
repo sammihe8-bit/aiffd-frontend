@@ -811,7 +811,7 @@ export default function StyleTestPage() {
                       <img
                         src={o.img}
                         alt={o.label}
-                        style={{ height: '220px', objectFit: 'contain', display: 'block' }}
+                        style={{ height: '220px', objectFit: 'contain', objectPosition: 'top', display: 'block', width: '100%' }}
                       />
                     </div>
                     <div style={{ padding: '12px 14px' }}>
