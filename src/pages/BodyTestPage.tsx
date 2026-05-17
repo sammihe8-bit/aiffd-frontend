@@ -389,8 +389,6 @@ export default function BodyTestPage() {
           const bustN = parseFloat(bust) || 0
           const waistN = parseFloat(waist) || 0
           const hipN = parseFloat(hip) || 0
-          const shoulderN = parseFloat(shoulder) || 0
-          const hipBoneN = parseFloat(hipBone) || 0
           const hasBasic = bustN > 0 && waistN > 0 && hipN > 0
 
           // 实时推算体型代码
