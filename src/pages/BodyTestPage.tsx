@@ -384,57 +384,165 @@ export default function BodyTestPage() {
           </div>
         )}
 
-        {phase === 'data' && method === 'manual' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-            <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '26px', color: C.h2, fontWeight: 400, margin: 0 }}>填写体型数据</h2>
-            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, lineHeight: 1.8, margin: 0 }}>
-              用软尺测量，数值单位为厘米（cm）。站立姿态，自然呼吸状态下测量。
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {[
-                { label: '胸围', hint: '胸部最丰满处水平一圈', value: bust, set: setBust },
-                { label: '腰围', hint: '腰部最细处水平一圈', value: waist, set: setWaist },
-                { label: '臀围', hint: '臀部最丰满处水平一圈', value: hip, set: setHip },
-                { label: '肩宽', hint: '两肩峰之间的距离', value: shoulder, set: setShoulder },
-                { label: '髋骨宽', hint: '两侧髋骨最宽处', value: hipBone, set: setHipBone },
-              ].map(f => (
-                <div key={f.label}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                    <label style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.h2 }}>{f.label}</label>
-                    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted }}>{f.hint}</span>
-                  </div>
-                  <input
-                    type="number" value={f.value} placeholder="cm"
-                    onChange={e => {
-                      f.set(e.target.value)
-                      if (f.label === '胸围') checkConflict(e.target.value, waist, hip)
-                      if (f.label === '腰围') checkConflict(bust, e.target.value, hip)
-                      if (f.label === '臀围') checkConflict(bust, waist, e.target.value)
-                    }}
-                    style={{
-                      width: '100%', padding: '12px 14px', border: `1px solid ${C.border}`,
-                      borderRadius: '6px', fontFamily: 'Inter, sans-serif', fontSize: '14px',
-                      background: '#fff', boxSizing: 'border-box' as const,
-                    }}
-                  />
-                </div>
-              ))}
-              {conflict && (
-                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: '#c0392b', background: '#fef8f8', padding: '12px', borderRadius: '6px' }}>
-                  ⚠ {conflict}
+        {phase === 'data' && method === 'manual' && (() => {
+          // 实时计算体型
+          const bustN = parseFloat(bust) || 0
+          const waistN = parseFloat(waist) || 0
+          const hipN = parseFloat(hip) || 0
+          const shoulderN = parseFloat(shoulder) || 0
+          const hipBoneN = parseFloat(hipBone) || 0
+          const hasBasic = bustN > 0 && waistN > 0 && hipN > 0
+
+          // 实时推算体型代码
+          let liveShape = ''
+          if (hasBasic) {
+            const bustHipDiff = bustN - hipN
+            const waistBustRatio = waistN / bustN
+            const waistHipRatio = waistN / hipN
+            if (waistHipRatio > 0.88) liveShape = 'H'
+            else if (bustHipDiff > 3) liveShape = 'V'
+            else if (hipN - bustN > 5) liveShape = 'A'
+            else liveShape = 'X'
+          }
+
+          const shapeDesc: Record<string, string> = {
+            H: 'H型 · 肩臀等宽，腰线不明显，整体方正感',
+            X: 'X型 · 肩臀相近，腰部明显收细，沙漏轮廓',
+            A: 'A型 · 臀宽大于肩宽，重心偏下，梨形',
+            V: 'V型 · 肩宽大于臀宽，倒三角轮廓',
+          }
+
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              <div>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', marginBottom: '8px' }}>体型计算器</p>
+                <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '26px', color: C.h2, fontWeight: 400, margin: 0 }}>输入你的围度数据</h2>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '8px' }}>
+                  用软尺紧贴皮肤测量，站立自然呼吸状态，单位：cm
                 </p>
+              </div>
+
+              {/* 实时结果显示 */}
+              <div style={{
+                background: hasBasic ? '#fdf8ee' : '#f5f5f3',
+                border: `1px solid ${hasBasic ? C.gold : C.border}`,
+                borderRadius: '10px', padding: '20px',
+                transition: 'all 0.3s',
+              }}>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', marginBottom: '10px' }}>
+                  实时计算结果
+                </p>
+                {hasBasic ? (
+                  <div>
+                    <p style={{ fontFamily: 'Georgia, serif', fontSize: '42px', color: C.gold, margin: '0 0 8px', letterSpacing: '4px' }}>
+                      {liveShape}
+                    </p>
+                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.body, margin: 0 }}>
+                      {shapeDesc[liveShape]}
+                    </p>
+                    <div style={{ display: 'flex', gap: '20px', marginTop: '12px', flexWrap: 'wrap' }}>
+                      {[
+                        { label: '腰臀比', value: hipN > 0 ? (waistN / hipN).toFixed(2) : '—' },
+                        { label: '胸腰差', value: bustN > 0 ? `${(bustN - waistN).toFixed(1)} cm` : '—' },
+                        { label: '胸臀差', value: hipN > 0 ? `${(bustN - hipN).toFixed(1)} cm` : '—' },
+                      ].map(s => (
+                        <div key={s.label}>
+                          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', color: C.muted, marginBottom: '2px' }}>{s.label}</p>
+                          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '15px', color: C.h2, margin: 0, fontWeight: 500 }}>{s.value}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, margin: 0 }}>
+                    输入胸围、腰围、臀围后自动计算
+                  </p>
+                )}
+              </div>
+
+              {/* 输入字段 */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                {[
+                  { label: '胸围 *', hint: '胸部最丰满处', value: bust, set: setBust, key: '胸围' },
+                  { label: '腰围 *', hint: '腰部最细处', value: waist, set: setWaist, key: '腰围' },
+                  { label: '臀围 *', hint: '臀部最丰满处', value: hip, set: setHip, key: '臀围' },
+                  { label: '肩宽', hint: '两肩峰距离（选填）', value: shoulder, set: setShoulder, key: '肩宽' },
+                  { label: '髋骨宽', hint: '两髋骨最宽处（选填）', value: hipBone, set: setHipBone, key: '髋骨宽' },
+                ].map(f => (
+                  <div key={f.label} style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                      <label style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: f.value ? C.gold : C.h2, fontWeight: f.value ? 500 : 400 }}>
+                        {f.label}
+                      </label>
+                      <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', color: C.muted }}>{f.hint}</span>
+                    </div>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type="number" value={f.value} placeholder="0"
+                        onChange={e => {
+                          f.set(e.target.value)
+                          if (f.key === '胸围') checkConflict(e.target.value, waist, hip)
+                          if (f.key === '腰围') checkConflict(bust, e.target.value, hip)
+                          if (f.key === '臀围') checkConflict(bust, waist, e.target.value)
+                        }}
+                        style={{
+                          width: '100%', padding: '12px 36px 12px 14px',
+                          border: `1px solid ${f.value ? C.gold : C.border}`,
+                          borderRadius: '6px', fontFamily: 'Inter, sans-serif', fontSize: '16px',
+                          fontWeight: 500, color: C.h2,
+                          background: f.value ? '#fdfbf5' : '#fff',
+                          boxSizing: 'border-box' as const,
+                          transition: 'all 0.2s',
+                          outline: 'none',
+                        }}
+                      />
+                      <span style={{
+                        position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
+                        fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted,
+                      }}>cm</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {conflict && (
+                <div style={{ background: '#fef8f8', border: '1px solid #f5c6c6', borderRadius: '6px', padding: '12px 16px' }}>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: '#c0392b', margin: 0 }}>⚠ {conflict}</p>
+                </div>
               )}
+
+              {/* 测量提示 */}
+              <details style={{ background: '#f7f4ef', borderRadius: '8px', padding: '14px 16px', cursor: 'pointer' }}>
+                <summary style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.gold, listStyle: 'none' }}>
+                  不知道怎么测量？点击查看说明
+                </summary>
+                <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {[
+                    ['胸围', '穿无衬垫内衣，软尺经过胸部最高点水平绕一圈'],
+                    ['腰围', '自然站立，软尺在肋骨最下端和髋骨最上端中间绕一圈'],
+                    ['臀围', '软尺经过臀部最丰满处水平绕一圈'],
+                    ['肩宽', '从左肩峰到右肩峰的直线距离'],
+                  ].map(([k, v]) => (
+                    <p key={k} style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.body, margin: 0, lineHeight: 1.7 }}>
+                      <strong style={{ color: C.gold }}>{k}：</strong>{v}
+                    </p>
+                  ))}
+                </div>
+              </details>
+
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button onClick={() => setPhase('method')} style={btnOutline}>← 返回</button>
+                <button
+                  onClick={() => setPhase('sheldon')}
+                  disabled={!bust || !waist || !hip}
+                  style={bust && waist && hip ? { ...btnGold, flex: 1 } : { ...btnGold, flex: 1, background: '#e0e0e0', cursor: 'not-allowed' }}
+                >
+                  {hasBasic ? `确认 ${liveShape} 型，继续` : '继续'}
+                </button>
+              </div>
             </div>
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button onClick={() => setPhase('method')} style={btnOutline}>← 返回</button>
-              <button
-                onClick={() => setPhase('sheldon')}
-                disabled={!bust || !waist || !hip}
-                style={bust && waist && hip ? { ...btnGold, flex: 1 } : { ...btnGold, flex: 1, background: '#e0e0e0', cursor: 'not-allowed' }}
-              >继续</button>
-            </div>
-          </div>
-        )}
+          )
+        })()}
 
         {/* ── Step 2: 谢尔顿三型 ── */}
         {phase === 'sheldon' && (
