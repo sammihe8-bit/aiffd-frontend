@@ -16,7 +16,8 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { token } = useAuth()
   return token ? <>{children}</> : <Navigate to="/auth" replace />
 }
-
+import VirtualFitPage from './pages/VirtualFitPage'
+<Route path="/virtual-fit" element={<VirtualFitPage />} />
 export default function App() {
   return (
     <BrowserRouter>
