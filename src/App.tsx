@@ -9,15 +9,16 @@ import PrivacyPage from './pages/PrivacyPage'
 import BodyTestPage from './pages/BodyTestPage'
 import ColumnPage from './pages/ColumnPage'
 import ColorTestPage from './pages/ColorTestPage'
-import { useAuth } from './hooks/useAuth'
-import ColorSeasonPage from './pages/ColorSeasonPage' 
+import ColorSeasonPage from './pages/ColorSeasonPage'
 import StyleTestPage from './pages/StyleTestPage'
+import VirtualFitPage from './pages/VirtualFitPage'
+import { useAuth } from './hooks/useAuth'
+
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { token } = useAuth()
   return token ? <>{children}</> : <Navigate to="/auth" replace />
 }
-import VirtualFitPage from './pages/VirtualFitPage'
-<Route path="/virtual-fit" element={<VirtualFitPage />} />
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -30,10 +31,11 @@ export default function App() {
             <Route path="/onboarding" element={<OnboardingPage />} />
             <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="/column" element={<ColumnPage />} />
+            <Route path="/virtual-fit" element={<VirtualFitPage />} />
             <Route path="/test/body" element={<BodyTestPage />} />
             <Route path="/test/color" element={<ColorTestPage />} />
             <Route path="/test/color/season" element={<ColorSeasonPage />} />
-           <Route path="/test/style" element={<StyleTestPage />} />
+            <Route path="/test/style" element={<StyleTestPage />} />
             <Route path="/test/fashion" element={
               <PlaceholderPage title="时尚个性测试" description="时尚个性测试即将上线" />
             } />
