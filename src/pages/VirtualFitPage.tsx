@@ -108,9 +108,7 @@ export default function VirtualFitPage() {
                   background: activeFeature === i ? '#fff' : '#fafaf8',
                   borderBottom: i < features.length - 1 ? `1px solid ${C.border}` : 'none',
                   borderLeft: `3px solid ${activeFeature === i ? C.gold : 'transparent'}`,
-                  border: 'none',
-                  borderBottom: i < features.length - 1 ? `1px solid ${C.border}` : 'none',
-                  borderLeft: `3px solid ${activeFeature === i ? C.gold : 'transparent'}`,
+                  borderTop: 'none', borderRight: 'none',
                   transition: 'all 0.2s',
                 }}
               >
