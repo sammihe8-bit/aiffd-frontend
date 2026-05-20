@@ -6,11 +6,12 @@ export default function Navbar() {
   const location = useLocation()
 
   const navLinks = [
-    { to: '/', label: '首页', external: false },
-    { to: '/onboarding', label: '我的风格系统', external: false },
-    { to: '/about', label: '关于', external: false },
-    { to: '/column', label: '专栏', external: false },
-    { to: '/subscribe', label: '订阅', external: false },
+    { to: '/', label: '首页' },
+    { to: '/onboarding', label: '我的风格系统' },
+    { to: '/virtual-fit', label: '虚拟试衣', highlight: true },
+    { to: '/about', label: '关于' },
+    { to: '/column', label: '专栏' },
+    { to: '/subscribe', label: '订阅' },
   ]
 
   return (
@@ -24,6 +25,7 @@ export default function Navbar() {
         maxWidth: '1200px', margin: '0 auto', padding: '0 32px',
         width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
+
         {/* Logo */}
         <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'baseline', gap: '8px' }}>
           <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', fontWeight: 600, letterSpacing: '4px', color: '#1a1a1a' }}>AIFFD</span>
@@ -32,26 +34,34 @@ export default function Navbar() {
 
         {/* Nav links */}
         <nav style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
-          {navLinks.map(link => (
-            link.external ? (
-              <a key={link.to} href={link.to} target="_blank" rel="noopener noreferrer" style={{
-                fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '1.5px',
-                color: '#888', textDecoration: 'none', transition: 'color 0.2s',
-              }}>
-                {link.label}
-              </a>
-            ) : (
+          {navLinks.map(link => {
+            const isActive = location.pathname === link.to
+            if (link.highlight) {
+              return (
+                <Link key={link.to} to={link.to} style={{
+                  fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '1.5px',
+                  color: isActive ? '#fff' : '#B8973A',
+                  background: isActive ? '#B8973A' : 'transparent',
+                  border: '0.5px solid #B8973A',
+                  padding: '5px 12px',
+                  textDecoration: 'none', transition: 'all 0.2s',
+                }}>
+                  {link.label}
+                </Link>
+              )
+            }
+            return (
               <Link key={link.to} to={link.to} style={{
                 fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '1.5px',
-                color: location.pathname === link.to ? '#1a1a1a' : '#888',
+                color: isActive ? '#1a1a1a' : '#888',
                 textDecoration: 'none', transition: 'color 0.2s',
-                borderBottom: location.pathname === link.to ? '1px solid #1a1a1a' : 'none',
+                borderBottom: isActive ? '1px solid #1a1a1a' : 'none',
                 paddingBottom: '2px',
               }}>
                 {link.label}
               </Link>
             )
-          ))}
+          })}
         </nav>
 
         {/* Auth */}
@@ -73,6 +83,7 @@ export default function Navbar() {
             </>
           )}
         </div>
+
       </div>
     </header>
   )
