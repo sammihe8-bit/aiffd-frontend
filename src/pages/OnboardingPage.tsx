@@ -34,8 +34,7 @@ const TESTS = [
 ]
 
 function ConsentScreen({ onAgree }: { onAgree: () => void }) {
-  const [consent, setConsent] = useState({ basic: false, photo: false, stylist: false, ai: false })
-  const canProceed = consent.basic && consent.photo && consent.stylist
+  const [agreed, setAgreed] = useState(false)
 
   return (
     <div style={{ minHeight: '100vh', background: '#fafaf8' }}>
@@ -53,41 +52,38 @@ function ConsentScreen({ onAgree }: { onAgree: () => void }) {
           </Link>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '32px' }}>
-          {[
-            { id: 'basic', label: '必选', text: '我已阅读并同意《AIFFD 用户隐私政策与数据使用协议》，同意 AIFFD 按协议约定收集和使用我的个人信息（含风格档案数据）。', key: 'basic' as const },
-            { id: 'photo', label: '必选', text: '我同意 AIFFD 收集我上传的照片（包括个人照片及服装图片），用于生成风格档案和 AI 商品分析。', key: 'photo' as const },
-            { id: 'stylist', label: '必选', text: '我同意在我选择造型师服务时，将我的风格档案及相关照片共享给为我提供服务的第三方造型师。', key: 'stylist' as const },
-            { id: 'ai', label: '可选', text: '我同意将我的风格数据（去标识化处理后）用于改进 AIFFD AI 模型。可随时在账户设置中撤回。', key: 'ai' as const },
-          ].map(item => (
-            <label key={item.id} htmlFor={item.id} style={{
-              display: 'flex', gap: '12px', alignItems: 'flex-start', cursor: 'pointer',
-              padding: '14px 16px',
-              border: `0.5px solid ${consent[item.key] ? C.gold : C.border}`,
-              background: consent[item.key] ? '#fdf8ee' : '#fff',
-              transition: 'all 0.2s',
-            }}>
-              <input id={item.id} type="checkbox" checked={consent[item.key]}
-                onChange={() => setConsent(c => ({ ...c, [item.key]: !c[item.key] }))}
-                style={{ marginTop: '3px', accentColor: C.gold, flexShrink: 0, width: '14px', height: '14px' }} />
-              <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.body, lineHeight: '1.7' }}>
-                <strong>【{item.label}】</strong>{item.text}
-              </span>
-            </label>
-          ))}
-        </div>
+        <label htmlFor="agree-all" style={{
+          display: 'flex', gap: '16px', alignItems: 'flex-start', cursor: 'pointer',
+          padding: '20px 24px',
+          border: `1.5px solid ${agreed ? C.gold : C.border}`,
+          background: agreed ? '#fdf8ee' : '#fff',
+          borderRadius: '4px',
+          transition: 'all 0.2s',
+          marginBottom: '32px',
+        }}>
+          <input
+            id="agree-all"
+            type="checkbox"
+            checked={agreed}
+            onChange={() => setAgreed(a => !a)}
+            style={{ marginTop: '4px', accentColor: C.gold, flexShrink: 0, width: '16px', height: '16px', cursor: 'pointer' }}
+          />
+          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: C.body, lineHeight: '1.9' }}>
+            我已阅读并同意{' '}
+            <strong style={{ color: C.gold }}>《AIFFD 用户隐私政策与数据使用协议》</strong>
+            ，同意 AIFFD 收集和使用我的
+            <strong style={{ color: C.h1 }}>个人信息、上传照片及风格档案数据</strong>
+            ，用于生成专属 Style Profile 和 AI 商品分析；在我选择造型师服务时，可将相关数据共享给
+            <strong style={{ color: C.h1 }}>第三方造型师</strong>
+            。去标识化数据可用于改进 AIFFD AI 模型，可随时在账户设置中撤回。
+          </span>
+        </label>
 
-        {!canProceed && (
-          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, textAlign: 'center', marginBottom: '16px' }}>
-            请勾选所有必选项后继续
-          </p>
-        )}
-
-        <button onClick={() => canProceed && onAgree()} style={{
+        <button onClick={() => agreed && onAgree()} style={{
           width: '100%', padding: '16px',
-          background: canProceed ? C.h1 : '#ccc',
+          background: agreed ? C.h1 : '#ccc',
           color: '#fff', border: 'none',
-          cursor: canProceed ? 'pointer' : 'not-allowed',
+          cursor: agreed ? 'pointer' : 'not-allowed',
           fontFamily: 'Inter, sans-serif', fontSize: '13px', letterSpacing: '2px',
           transition: 'background 0.2s',
         }}>
