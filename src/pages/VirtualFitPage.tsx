@@ -133,13 +133,14 @@ function VirtualFitAnimation() {
             style={{ opacity: step === i ? 1 : 0, zIndex: step === i ? 3 : 0 }}/>
         ))}
 
-        {/* 扫描线 — 仅 Step 1 时渲染 */}
+        {/* 扫描线 — 仅 Step 1 大图扫描 */}
         {s.scan && (
           <div style={{
             position: 'absolute', left: 0, right: 0, top: 0, height: '2px',
             background: 'linear-gradient(to right, transparent, #B8973A 35%, #fff 50%, #B8973A 65%, transparent)',
-            pointerEvents: 'none', zIndex: 2,
-          }} className="vf-scan-active" />
+            pointerEvents: 'none', zIndex: 4,
+            animation: 'vfScan 1.8s cubic-bezier(.4,0,.6,1) infinite',
+          }} />
         )}
 
         {/* 四角框 — 仅 Step 1 扫描时显示 */}
@@ -183,6 +184,7 @@ function VirtualFitAnimation() {
           overflow: 'hidden',
         }}>
           <img src="/dress.png" alt="选中款式" style={{ width: '100%', borderRadius: '4px', display: 'block' }}/>
+          {/* 卡片内小扫描线 — 扫裙子图 */}
           {s.card && (
             <div style={{
               position: 'absolute', left: 0, right: 0, top: 0, height: '1.5px',
@@ -191,6 +193,7 @@ function VirtualFitAnimation() {
               animation: 'vfScan 1.4s cubic-bezier(.4,0,.6,1) infinite',
             }} />
           )}
+
           <div style={{
             position: 'absolute', top: '-9px', right: '-9px',
             width: '20px', height: '20px', background: C.gold, borderRadius: '50%',
