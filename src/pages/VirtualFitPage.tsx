@@ -180,12 +180,22 @@ function VirtualFitAnimation() {
           borderRadius: '8px', padding: '6px', zIndex: 9,
           border: `1px solid rgba(184,151,58,.5)`,
           boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+          overflow: 'hidden',
         }}>
           <img src="/dress.png" alt="选中款式" style={{ width: '100%', borderRadius: '4px', display: 'block' }}/>
+          {s.card && (
+            <div style={{
+              position: 'absolute', left: 0, right: 0, top: 0, height: '1.5px',
+              background: 'linear-gradient(to right, transparent, #B8973A 35%, #fff 50%, #B8973A 65%, transparent)',
+              pointerEvents: 'none', zIndex: 10,
+              animation: 'vfScan 1.4s cubic-bezier(.4,0,.6,1) infinite',
+            }} />
+          )}
           <div style={{
             position: 'absolute', top: '-9px', right: '-9px',
             width: '20px', height: '20px', background: C.gold, borderRadius: '50%',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 11,
           }}>
             <svg width="11" height="11" viewBox="0 0 16 16" fill="none">
               <path d="M3 8L6.5 11.5L13 5" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
