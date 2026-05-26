@@ -171,20 +171,21 @@ function VirtualFitAnimation() {
           }}>{label}</span>
         ))}
 
-        {/* 选款浮动卡片 */}
+        {/* 选款浮动卡片 — 右下角，不遮脸 */}
         <div className={`vf-card${s.card ? ' show' : ''}`} style={{
-          position: 'absolute', left: '50%', top: '44%', transform: 'translate(-50%,-50%)',
-          width: '120px', background: 'rgba(255,255,255,.94)',
-          borderRadius: '10px', padding: '8px', zIndex: 9,
-          border: '1px solid rgba(184,151,58,.35)',
+          position: 'absolute', right: '12px', bottom: '56px',
+          width: '80px', background: 'rgba(255,255,255,.96)',
+          borderRadius: '8px', padding: '6px', zIndex: 9,
+          border: `1px solid rgba(184,151,58,.5)`,
+          boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
         }}>
-          <img src="/shiyitu3.png" alt="选中款式" style={{ width: '100%', borderRadius: '6px', display: 'block' }}/>
+          <img src="/dress.png" alt="选中款式" style={{ width: '100%', borderRadius: '4px', display: 'block' }}/>
           <div style={{
-            position: 'absolute', top: '-10px', right: '-10px',
-            width: '22px', height: '22px', background: C.gold, borderRadius: '50%',
+            position: 'absolute', top: '-9px', right: '-9px',
+            width: '20px', height: '20px', background: C.gold, borderRadius: '50%',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="none">
               <path d="M3 8L6.5 11.5L13 5" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
