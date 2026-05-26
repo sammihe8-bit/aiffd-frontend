@@ -7,7 +7,6 @@ const C = {
   bg: '#faf9f7', dark: '#0f0f0d',
 }
 
-/* ── 单图三步切换动画 ── */
 // public/shiyitu1.png  → 用户紧身衣照片
 // public/shiyitu2.png  → 用户选款中间态
 // public/shiyitu3.png  → 上身效果最终态
@@ -73,7 +72,7 @@ function VirtualFitAnimation() {
   const s = STEPS[step]
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', width: '240px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', width: '280px' }}>
       <style>{`
         @keyframes vfScan {
           0%   { top: 0;    opacity: .85 }
@@ -83,7 +82,7 @@ function VirtualFitAnimation() {
         @keyframes vfShimmer { 0%,100%{opacity:0} 40%,60%{opacity:.2} }
         @keyframes vfBorderPulse {
           0%,100%{ box-shadow: 0 0 0 0 rgba(184,151,58,0) }
-          50%    { box-shadow: 0 0 0 4px rgba(184,151,58,.38) }
+          50%    { box-shadow: 0 0 0 4px rgba(184,151,58,.4) }
         }
         .vf-scan-active {
           animation: vfScan 1.8s cubic-bezier(.4,0,.6,1) infinite !important;
@@ -108,7 +107,7 @@ function VirtualFitAnimation() {
         .vf-badge.show { opacity: 1; }
         .vf-img {
           position: absolute; inset: 0; width: 100%; height: 100%;
-          object-fit: cover; object-position: top center;
+          object-fit: contain; object-position: top center;
           transition: opacity .55s ease;
         }
         .vf-dot {
@@ -121,16 +120,14 @@ function VirtualFitAnimation() {
         }
       `}</style>
 
-      {/* ── 照片框 ── */}
+      {/* ── 照片框：无背景色，透明 ── */}
       <div
         style={{
-          position: 'relative', width: '220px', height: '340px',
-          overflow: 'hidden', borderRadius: '6px',
-          border: `1px solid ${C.border}`, background: '#f5f2ee',
+          position: 'relative', width: '280px', height: '430px',
+          overflow: 'hidden', borderRadius: '8px',
         }}
         className={s.pulse ? 'vf-pulse-active' : ''}
       >
-        {/* 三张图叠加，只显示当前帧 */}
         {STEPS.map((st, i) => (
           <img key={i} src={st.img} alt={st.label} className="vf-img"
             style={{ opacity: step === i ? 1 : 0 }}/>
@@ -145,15 +142,15 @@ function VirtualFitAnimation() {
 
         {/* 四角框 */}
         {[
-          { top: '6px', left: '6px', d: 'M0 14V0H14' },
-          { top: '6px', right: '6px', d: 'M14 14V0H0' },
-          { bottom: '6px', left: '6px', d: 'M0 0V14H14' },
-          { bottom: '6px', right: '6px', d: 'M14 0V14H0' },
+          { top: '6px', left: '6px', d: 'M0 16V0H16' },
+          { top: '6px', right: '6px', d: 'M16 16V0H0' },
+          { bottom: '6px', left: '6px', d: 'M0 0V16H16' },
+          { bottom: '6px', right: '6px', d: 'M16 0V16H0' },
         ].map((p, i) => {
           const { d, ...pos } = p
           return (
-            <div key={i} style={{ position: 'absolute', width: '14px', height: '14px', ...pos, zIndex: 7 }}>
-              <svg width="14" height="14" viewBox="0 0 14 14">
+            <div key={i} style={{ position: 'absolute', width: '16px', height: '16px', ...pos, zIndex: 7 }}>
+              <svg width="16" height="16" viewBox="0 0 16 16">
                 <path d={d} fill="none" stroke="#B8973A" strokeWidth="1.3" opacity="0.45"/>
               </svg>
             </div>
@@ -167,9 +164,9 @@ function VirtualFitAnimation() {
           { top: '55%', label: 'H 90' },
         ].map(({ top, label }) => (
           <span key={label} className={`vf-meas${s.meas ? ' show' : ''}`} style={{
-            position: 'absolute', right: '6px', top,
-            fontSize: '10px', fontFamily: 'Georgia,serif', color: C.gold,
-            background: 'rgba(253,248,238,.92)', padding: '2px 6px',
+            position: 'absolute', right: '8px', top,
+            fontSize: '11px', fontFamily: 'Georgia,serif', color: C.gold,
+            background: 'rgba(253,248,238,.92)', padding: '2px 7px',
             border: `0.5px solid ${C.gold}`, borderRadius: '2px', zIndex: 7,
           }}>{label}</span>
         ))}
@@ -177,8 +174,8 @@ function VirtualFitAnimation() {
         {/* 选款浮动卡片 */}
         <div className={`vf-card${s.card ? ' show' : ''}`} style={{
           position: 'absolute', left: '50%', top: '44%', transform: 'translate(-50%,-50%)',
-          width: '110px', background: 'rgba(255,255,255,.94)',
-          borderRadius: '10px', padding: '7px', zIndex: 9,
+          width: '120px', background: 'rgba(255,255,255,.94)',
+          borderRadius: '10px', padding: '8px', zIndex: 9,
           border: '1px solid rgba(184,151,58,.35)',
         }}>
           <img src="/shiyitu3.png" alt="选中款式" style={{ width: '100%', borderRadius: '6px', display: 'block' }}/>
@@ -202,16 +199,16 @@ function VirtualFitAnimation() {
 
         {/* 360° 标签 */}
         <div className={`vf-badge${s.badge ? ' show' : ''}`} style={{
-          position: 'absolute', bottom: '10px', left: '50%', transform: 'translateX(-50%)',
-          fontFamily: 'Georgia,serif', fontSize: '10px', letterSpacing: '2px', color: C.gold,
-          background: 'rgba(255,255,255,.93)', padding: '3px 10px',
+          position: 'absolute', bottom: '12px', left: '50%', transform: 'translateX(-50%)',
+          fontFamily: 'Georgia,serif', fontSize: '11px', letterSpacing: '2px', color: C.gold,
+          background: 'rgba(255,255,255,.93)', padding: '4px 12px',
           border: `1px solid ${C.gold}`, borderRadius: '2px',
           whiteSpace: 'nowrap' as const, zIndex: 9,
         }}>360° 预览</div>
       </div>
 
       {/* ── 进度条 ── */}
-      <div style={{ width: '220px', height: '2px', background: 'rgba(184,151,58,.15)', borderRadius: '1px', overflow: 'hidden' }}>
+      <div style={{ width: '280px', height: '2px', background: 'rgba(184,151,58,.15)', borderRadius: '1px', overflow: 'hidden' }}>
         <div style={{ height: '100%', width: `${progress}%`, background: C.gold, borderRadius: '1px', transition: 'width .04s linear' }}/>
       </div>
 
@@ -282,7 +279,6 @@ export default function VirtualFitPage() {
           display: 'flex', gap: '64px', alignItems: 'center',
           flexWrap: 'wrap' as const,
         }}>
-
           {/* 左文字 */}
           <div style={{ flex: '1 1 360px', minWidth: '280px' }}>
             <p style={{ fontFamily: 'Inter,sans-serif', fontSize: '11px', letterSpacing: '4px', color: C.gold, marginBottom: '24px' }}>
@@ -313,7 +309,6 @@ export default function VirtualFitPage() {
           <div style={{ flex: '0 0 auto', display: 'flex', justifyContent: 'center' }}>
             <VirtualFitAnimation />
           </div>
-
         </div>
       </div>
 
@@ -323,7 +318,6 @@ export default function VirtualFitPage() {
         <h2 style={{ fontFamily: 'Georgia,serif', fontSize: 'clamp(26px,3vw,40px)', fontWeight: 400, color: C.h1, marginBottom: '48px' }}>
           四个维度，真正还原穿着体验
         </h2>
-
         <div style={{ display: 'flex', gap: '0', border: `1px solid ${C.border}` }}>
           <div style={{ width: '220px', flexShrink: 0, borderRight: `1px solid ${C.border}` }}>
             {features.map((f, i) => (
@@ -388,7 +382,6 @@ export default function VirtualFitPage() {
           <p style={{ fontFamily: 'Inter,sans-serif', fontSize: '14px', color: C.muted, lineHeight: 1.9, marginBottom: '36px' }}>
             虚拟试衣功能正在对高级会员开放内测。留下你的邮箱，我们会在你的名额到来时第一时间通知你。
           </p>
-
           {submitted ? (
             <div style={{ background: '#f7f4ef', border: `1px solid ${C.gold}`, padding: '28px 32px' }}>
               <p style={{ fontFamily: 'Georgia,serif', fontSize: '20px', color: C.gold, marginBottom: '8px' }}>已收到，谢谢</p>
@@ -420,7 +413,6 @@ export default function VirtualFitPage() {
               </button>
             </div>
           )}
-
           <p style={{ fontFamily: 'Inter,sans-serif', fontSize: '11px', color: C.muted, marginTop: '16px' }}>
             已有 AIFFD 账户？
             <Link to="/auth" style={{ color: C.gold, marginLeft: '6px', textDecoration: 'none' }}>登录后直接预约 →</Link>
