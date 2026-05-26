@@ -140,8 +140,8 @@ function VirtualFitAnimation() {
           pointerEvents: 'none', zIndex: 8,
         }} className={s.scan ? 'vf-scan-active' : ''} />
 
-        {/* 四角框 */}
-        {[
+        {/* 四角框 — 仅 Step 1 扫描时显示 */}
+        {s.scan && [
           { top: '6px', left: '6px', d: 'M0 16V0H16' },
           { top: '6px', right: '6px', d: 'M16 16V0H0' },
           { bottom: '6px', left: '6px', d: 'M0 0V16H16' },
@@ -149,7 +149,7 @@ function VirtualFitAnimation() {
         ].map((p, i) => {
           const { d, ...pos } = p
           return (
-            <div key={i} style={{ position: 'absolute', width: '16px', height: '16px', ...pos, zIndex: 7 }}>
+            <div key={i} style={{ position: 'absolute', width: '16px', height: '16px', ...pos, zIndex: 7, transition: 'opacity .3s ease' }}>
               <svg width="16" height="16" viewBox="0 0 16 16">
                 <path d={d} fill="none" stroke="#B8973A" strokeWidth="1.3" opacity="0.45"/>
               </svg>
