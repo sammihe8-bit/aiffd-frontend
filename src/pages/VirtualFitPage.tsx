@@ -130,15 +130,17 @@ function VirtualFitAnimation() {
       >
         {STEPS.map((st, i) => (
           <img key={i} src={st.img} alt={st.label} className="vf-img"
-            style={{ opacity: step === i ? 1 : 0 }}/>
+            style={{ opacity: step === i ? 1 : 0, zIndex: step === i ? 3 : 0 }}/>
         ))}
 
-        {/* 扫描线 */}
-        <div style={{
-          position: 'absolute', left: 0, right: 0, top: 0, height: '2px',
-          background: 'linear-gradient(to right, transparent, #B8973A 35%, #fff 50%, #B8973A 65%, transparent)',
-          pointerEvents: 'none', zIndex: 8,
-        }} className={s.scan ? 'vf-scan-active' : ''} />
+        {/* 扫描线 — 仅 Step 1 时渲染 */}
+        {s.scan && (
+          <div style={{
+            position: 'absolute', left: 0, right: 0, top: 0, height: '2px',
+            background: 'linear-gradient(to right, transparent, #B8973A 35%, #fff 50%, #B8973A 65%, transparent)',
+            pointerEvents: 'none', zIndex: 2,
+          }} className="vf-scan-active" />
+        )}
 
         {/* 四角框 — 仅 Step 1 扫描时显示 */}
         {s.scan && [
