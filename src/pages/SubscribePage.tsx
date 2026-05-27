@@ -288,16 +288,30 @@ export default function SubscribePage() {
                   background: plan.ctaStyle === 'gold' || plan.ctaStyle === 'gold-fill'
                     ? C.gold
                     : plan.ctaStyle === 'dark'
-                    ? C.h1
+                    ? '#fff'
                     : 'transparent',
                   color: plan.ctaStyle === 'outline'
                     ? (isPro ? '#fff' : C.h1)
+                    : plan.ctaStyle === 'dark'
+                    ? C.h1
                     : '#fff',
                   outline: plan.ctaStyle === 'outline' ? `1px solid ${isPro ? 'rgba(255,255,255,.3)' : C.border}` : 'none',
                   transition: 'opacity .2s',
+                  fontWeight: plan.ctaStyle === 'dark' ? 500 : 400,
                 }}>
                   {plan.cta}
                 </button>
+                {plan.ctaStyle === 'dark' && (
+                  <button style={{
+                    width: '100%', padding: '12px', marginTop: '8px',
+                    fontFamily: 'Inter,sans-serif', fontSize: '11px', letterSpacing: '1.5px',
+                    cursor: 'pointer', border: '1px solid rgba(255,255,255,0.15)',
+                    background: 'transparent', color: 'rgba(255,255,255,0.45)',
+                    transition: 'all .2s',
+                  }}>
+                    先了解功能详情
+                  </button>
+                )}
               </div>
             )
           })}
