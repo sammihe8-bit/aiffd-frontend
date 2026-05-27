@@ -13,7 +13,8 @@ import ColorSeasonPage from './pages/ColorSeasonPage'
 import StyleTestPage from './pages/StyleTestPage'
 import VirtualFitPage from './pages/VirtualFitPage'
 import { useAuth } from './hooks/useAuth'
-
+import SubscribePage from './pages/SubscribePage'
+<Route path="/subscribe" element={<SubscribePage />} />
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { token } = useAuth()
   return token ? <>{children}</> : <Navigate to="/auth" replace />
