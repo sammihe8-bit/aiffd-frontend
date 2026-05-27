@@ -119,10 +119,22 @@ export default function SubscribePage() {
       </div>
 
       {/* ── Newsletter 免费订阅 ── */}
-      <div style={{ background: C.goldLight, borderBottom: `1px solid ${C.border}`, padding: '48px 24px' }}>
-        <div style={{ maxWidth: '560px', margin: '0 auto', textAlign: 'center' }}>
+      <div style={{ background: C.goldLight, borderBottom: `1px solid ${C.border}`, padding: '64px 24px' }}>
+        <div style={{ maxWidth: '900px', margin: '0 auto', display: 'flex', gap: '64px', alignItems: 'center', flexWrap: 'wrap' as const }}>
+
+          {/* 左侧插画 */}
+          <div style={{ flex: '0 0 auto' }}>
+            <img
+              src="/stylereport.png"
+              alt="AIFFD 风格报告"
+              style={{ width: '280px', display: 'block', filter: 'drop-shadow(0 8px 32px rgba(0,0,0,0.12))' }}
+            />
+          </div>
+
+          {/* 右侧文字+表单 */}
+          <div style={{ flex: '1 1 300px', minWidth: '260px' }}>
           <p style={{ fontFamily: 'Georgia,serif', fontSize: '11px', letterSpacing: '3px', color: C.gold, marginBottom: '12px' }}>FREE · 永久免费</p>
-          <h2 style={{ fontFamily: 'Georgia,serif', fontSize: '28px', fontWeight: 400, color: C.h1, marginBottom: '12px' }}>
+          <h2 style={{ fontFamily: 'Georgia,serif', fontSize: '32px', fontWeight: 400, color: C.h1, marginBottom: '12px' }}>
             先从 Newsletter 开始
           </h2>
           <p style={{ fontFamily: 'Inter,sans-serif', fontSize: '14px', color: C.muted, lineHeight: 1.8, marginBottom: '28px' }}>
@@ -177,6 +189,7 @@ export default function SubscribePage() {
               </button>
             </div>
           )}
+          </div>
         </div>
       </div>
 
