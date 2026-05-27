@@ -212,17 +212,6 @@ function VirtualFitAnimation() {
           background: 'linear-gradient(130deg, transparent 20%, rgba(184,151,58,.5) 50%, transparent 80%)',
           opacity: 0,
         }}/>
-
-        {/* 360° 标签 */}
-        <div className={`vf-badge${s.badge ? ' show' : ''}`} style={{
-          position: 'absolute', bottom: '12px', left: '50%', transform: 'translateX(-50%)',
-          fontFamily: 'Georgia,serif', fontSize: '11px', letterSpacing: '2px', color: C.gold,
-          background: 'rgba(255,255,255,.93)', padding: '4px 12px',
-          border: `1px solid ${C.gold}`, borderRadius: '2px',
-          whiteSpace: 'nowrap' as const, zIndex: 9,
-        }}>360° 预览</div>
-      </div>
-
       {/* ── 进度条 ── */}
       <div style={{ width: '280px', height: '2px', background: 'rgba(184,151,58,.15)', borderRadius: '1px', overflow: 'hidden' }}>
         <div style={{ height: '100%', width: `${progress}%`, background: C.gold, borderRadius: '1px', transition: 'width .04s linear' }}/>
