@@ -12,9 +12,9 @@ import ColorTestPage from './pages/ColorTestPage'
 import ColorSeasonPage from './pages/ColorSeasonPage'
 import StyleTestPage from './pages/StyleTestPage'
 import VirtualFitPage from './pages/VirtualFitPage'
-import { useAuth } from './hooks/useAuth'
 import SubscribePage from './pages/SubscribePage'
-<Route path="/subscribe" element={<SubscribePage />} />
+import { useAuth } from './hooks/useAuth'
+
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { token } = useAuth()
   return token ? <>{children}</> : <Navigate to="/auth" replace />
@@ -33,6 +33,7 @@ export default function App() {
             <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="/column" element={<ColumnPage />} />
             <Route path="/virtual-fit" element={<VirtualFitPage />} />
+            <Route path="/subscribe" element={<SubscribePage />} />  {/* ← 加在这里 */}
             <Route path="/test/body" element={<BodyTestPage />} />
             <Route path="/test/color" element={<ColorTestPage />} />
             <Route path="/test/color/season" element={<ColorSeasonPage />} />
