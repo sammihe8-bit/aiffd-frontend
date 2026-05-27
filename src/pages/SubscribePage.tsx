@@ -301,17 +301,6 @@ export default function SubscribePage() {
                 }}>
                   {plan.cta}
                 </button>
-                {plan.ctaStyle === 'dark' && (
-                  <button style={{
-                    width: '100%', padding: '12px', marginTop: '8px',
-                    fontFamily: 'Inter,sans-serif', fontSize: '11px', letterSpacing: '1.5px',
-                    cursor: 'pointer', border: '1px solid rgba(255,255,255,0.15)',
-                    background: 'transparent', color: 'rgba(255,255,255,0.45)',
-                    transition: 'all .2s',
-                  }}>
-                    先了解功能详情
-                  </button>
-                )}
               </div>
             )
           })}
