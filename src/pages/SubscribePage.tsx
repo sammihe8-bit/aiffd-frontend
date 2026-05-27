@@ -86,9 +86,9 @@ const PLANS = [
 ]
 
 const TESTIMONIALS = [
-  { name: 'Vivian L.', role: '品牌总监 · 上海', text: '体型测试之后我才意识到自己一直在买错版型。现在买衣服像开了天眼。' },
-  { name: 'Rachel M.', role: '自由撰稿人 · 洛杉矶', text: '虚拟试衣帮我退掉了三件本来要买的裙子，也让我果断入了两件犹豫很久的。值。' },
-  { name: '陈小姐', role: '企业主 · 北京', text: '年度顾问服务是我送给自己 45 岁生日的礼物。比买包更值得。' },
+  { name: 'Vivian L.', role: '品牌总监 · 上海', text: '体型测试之后我才意识到自己一直在买错版型。现在买衣服像开了天眼。', initials: 'V', color: '#C9A87A' },
+  { name: 'Rachel M.', role: '自由撰稿人 · 洛杉矶', text: '虚拟试衣帮我退掉了三件本来要买的裙子，也让我果断入了两件犹豫很久的。值。', initials: 'R', color: '#B8973A' },
+  { name: '陈小姐', role: '企业主 · 北京', text: '年度顾问服务是我送给自己 45 岁生日的礼物。比买包更值得。', initials: '陈', color: '#8B7355' },
 ]
 
 export default function SubscribePage() {
@@ -343,13 +343,24 @@ export default function SubscribePage() {
         </h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1px', background: C.border }}>
           {TESTIMONIALS.map(t => (
-            <div key={t.name} style={{ background: '#fff', padding: '36px 28px' }}>
-              <p style={{ fontFamily: 'Georgia,serif', fontSize: '16px', color: C.h1, lineHeight: 1.8, marginBottom: '24px', fontStyle: 'italic' }}>
+            <div key={t.name} style={{ background: '#fff', padding: '36px 28px', display: 'flex', flexDirection: 'column', gap: '0' }}>
+              <p style={{ fontFamily: 'Georgia,serif', fontSize: '16px', color: C.h1, lineHeight: 1.8, marginBottom: '28px', fontStyle: 'italic', flex: 1 }}>
                 「{t.text}」
               </p>
-              <div style={{ fontFamily: 'Inter,sans-serif', fontSize: '12px', color: C.muted }}>
-                <div style={{ color: C.h1, marginBottom: '2px' }}>{t.name}</div>
-                {t.role}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                {/* 占位头像 */}
+                <div style={{
+                  width: '44px', height: '44px', borderRadius: '50%',
+                  background: t.color, flexShrink: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontFamily: 'Georgia,serif', fontSize: '16px', color: '#fff', fontWeight: 400,
+                }}>
+                  {t.initials}
+                </div>
+                <div style={{ fontFamily: 'Inter,sans-serif', fontSize: '12px', color: C.muted }}>
+                  <div style={{ color: C.h1, marginBottom: '3px', fontSize: '13px' }}>{t.name}</div>
+                  {t.role}
+                </div>
               </div>
             </div>
           ))}
