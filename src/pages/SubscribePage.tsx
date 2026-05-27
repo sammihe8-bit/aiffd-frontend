@@ -31,7 +31,7 @@ const PLANS = [
     name: 'Pro 会员',
     price: '¥99',
     priceNote: '/ 月',
-    tag: '最受欢迎',
+    tag: '',
     color: C.gold,
     desc: '解锁 AI 风格分析，开始了解自己',
     features: [
@@ -50,7 +50,7 @@ const PLANS = [
     name: 'Premium 会员',
     price: '¥199',
     priceNote: '/ 月',
-    tag: '',
+    tag: '最受欢迎',
     color: C.h1,
     desc: '完整 AI 试衣体验，一对一风格顾问',
     features: [
@@ -211,7 +211,7 @@ export default function SubscribePage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1px', background: C.border }}>
           {PLANS.map(plan => {
             const isHovered = hoveredPlan === plan.id
-            const isPro = plan.id === 'pro'
+            const isPro = plan.id === 'premium'
             return (
               <div
                 key={plan.id}
@@ -358,7 +358,7 @@ export default function SubscribePage() {
             display: 'inline-block', padding: '14px 36px',
             background: C.gold, color: '#fff',
             fontFamily: 'Inter,sans-serif', fontSize: '13px', letterSpacing: '2px', textDecoration: 'none',
-          }}>立即开始 Pro →</Link>
+          }}>立即开始 Premium →</Link>
         </div>
       </div>
 
