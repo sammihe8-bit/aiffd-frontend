@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
+import Footer from '../components/Footer'
 
 const C = {
   h1: '#111111', h2: '#222222', sub: '#444444',
@@ -430,6 +431,7 @@ export default function VirtualFitPage() {
         </div>
       </div>
 
+      <Footer />
     </div>
   )
 }
