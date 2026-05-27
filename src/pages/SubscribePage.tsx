@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import Footer from '../components/Footer'
 
 const C = {
@@ -92,8 +92,12 @@ const TESTIMONIALS = [
 ]
 
 export default function SubscribePage() {
-  const [email, setEmail] = useState('')
-  const [subscribed, setSubscribed] = useState(false)
+  const [searchParams] = useSearchParams()
+  const fromFooter = searchParams.get('subscribed') === 'true'
+  const footerEmail = searchParams.get('email') || ''
+
+  const [email, setEmail] = useState(footerEmail)
+  const [subscribed, setSubscribed] = useState(fromFooter)
   const [billingAnnual, setBillingAnnual] = useState(false)
   const [hoveredPlan, setHoveredPlan] = useState<string | null>(null)
 
@@ -125,8 +129,29 @@ export default function SubscribePage() {
             每月一封。一组当季搭配、一篇专栏、一段穿衣的私想。无推销，随时退订。
           </p>
           {subscribed ? (
-            <div style={{ padding: '20px 32px', border: `1px solid ${C.gold}`, display: 'inline-block' }}>
-              <p style={{ fontFamily: 'Georgia,serif', fontSize: '16px', color: C.gold, margin: 0 }}>已订阅 ✦ 感谢你</p>
+            <div style={{ maxWidth: '480px', margin: '0 auto' }}>
+              <div style={{ padding: '24px 32px', border: `1px solid ${C.gold}`, background: '#fff', marginBottom: '24px' }}>
+                <p style={{ fontFamily: 'Georgia,serif', fontSize: '18px', color: C.gold, marginBottom: '8px' }}>✦ 免费订阅成功</p>
+                <p style={{ fontFamily: 'Inter,sans-serif', fontSize: '13px', color: C.muted, margin: 0 }}>
+                  {footerEmail && <><strong style={{ color: C.h1 }}>{footerEmail}</strong> 已加入 Newsletter，</>}
+                  我们每月初会发送到你的邮箱。
+                </p>
+              </div>
+              <p style={{ fontFamily: 'Georgia,serif', fontSize: '14px', color: C.h1, marginBottom: '16px' }}>
+                想解锁更多？升级会员，体验 AI 风格系统的完整功能。
+              </p>
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' as const }}>
+                <a href="#membership" style={{
+                  display: 'inline-block', padding: '12px 28px',
+                  background: C.gold, color: '#fff', textDecoration: 'none',
+                  fontFamily: 'Inter,sans-serif', fontSize: '12px', letterSpacing: '2px',
+                }}>查看会员方案 ↓</a>
+                <Link to="/" style={{
+                  display: 'inline-block', padding: '12px 28px',
+                  border: `1px solid ${C.border}`, color: C.muted, textDecoration: 'none',
+                  fontFamily: 'Inter,sans-serif', fontSize: '12px', letterSpacing: '1px',
+                }}>先逛逛</Link>
+              </div>
             </div>
           ) : (
             <div style={{ display: 'flex', maxWidth: '420px', margin: '0 auto', border: `1px solid ${C.border}`, background: '#fff' }}>
@@ -156,7 +181,7 @@ export default function SubscribePage() {
       </div>
 
       {/* ── 付费方案 ── */}
-      <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '80px 24px' }}>
+      <div id="membership" style={{ maxWidth: '1100px', margin: '0 auto', padding: '80px 24px' }}>
 
         <div style={{ textAlign: 'center', marginBottom: '56px' }}>
           <p style={{ fontFamily: 'Inter,sans-serif', fontSize: '11px', letterSpacing: '4px', color: C.gold, marginBottom: '16px' }}>MEMBERSHIP</p>
