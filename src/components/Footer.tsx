@@ -1,6 +1,15 @@
-import { Link } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 
 export default function Footer() {
+  const [email, setEmail] = useState('')
+  const navigate = useNavigate()
+
+  const handleSubscribe = () => {
+    if (!email) return
+    navigate(`/subscribe?email=${encodeURIComponent(email)}&subscribed=true`)
+  }
+
   return (
     <footer style={{ background: '#1C1612', padding: '80px 64px 48px' }}>
       <style>{`
@@ -24,15 +33,31 @@ export default function Footer() {
             <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: 'rgba(255,255,255,0.45)', lineHeight: '1.8', marginBottom: '28px' }}>
               每月一封 — 一组当季搭配、一篇专栏、一段穿衣的私想。
             </p>
-            <Link to="/subscribe" style={{
-              display: 'inline-block', marginTop: '4px',
-              fontFamily: 'Inter, sans-serif', fontSize: '12px',
-              letterSpacing: '2px', color: '#B8973A',
-              textDecoration: 'none', borderBottom: '1px solid rgba(184,151,58,0.4)',
-              paddingBottom: '2px',
-            }}>
-              查看订阅方案 →
-            </Link>
+            <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.2)' }}>
+              <input
+                className="footer-input"
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleSubscribe()}
+                placeholder="your@email.com"
+                style={{
+                  flex: 1, background: 'transparent', border: 'none', outline: 'none',
+                  fontFamily: 'Inter, sans-serif', fontSize: '13px',
+                  color: '#fafaf8', padding: '10px 0',
+                }}
+              />
+              <button
+                onClick={handleSubscribe}
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  fontFamily: 'Inter, sans-serif', fontSize: '12px',
+                  letterSpacing: '2px', color: '#B8973A', padding: '10px 0', flexShrink: 0,
+                }}
+              >
+                订阅
+              </button>
+            </div>
           </div>
 
           {/* 链接列 */}
@@ -40,20 +65,20 @@ export default function Footer() {
             { title: '产品', items: [
               { label: '系列', to: '/' },
               { label: '虚拟试衣', to: '/virtual-fit' },
-              { label: '衣橱', to: '/' },
-              { label: '搭配方案', to: '/' },
+              { label: '风格测试', to: '/onboarding' },
+              { label: '我的档案', to: '/profile' },
             ]},
             { title: '关于', items: [
               { label: '品牌故事', to: '/' },
               { label: '专栏', to: '/column' },
-              { label: '合作', to: '/' },
+              { label: '订阅方案', to: '/subscribe' },
               { label: '招聘', to: '/' },
             ]},
             { title: '支持', items: [
               { label: '帮助中心', to: '/' },
               { label: '联系我们', to: '/' },
               { label: '尺码指引', to: '/' },
-              { label: '隐私', to: '/privacy' },
+              { label: '隐私政策', to: '/privacy' },
             ]},
           ].map(col => (
             <div key={col.title}>
