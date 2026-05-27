@@ -1,10 +1,6 @@
-import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
 export default function Footer() {
-  const [email, setEmail] = useState('')
-  const [done, setDone] = useState(false)
-
   return (
     <footer style={{ background: '#1C1612', padding: '80px 64px 48px' }}>
       <style>{`
@@ -28,36 +24,15 @@ export default function Footer() {
             <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: 'rgba(255,255,255,0.45)', lineHeight: '1.8', marginBottom: '28px' }}>
               每月一封 — 一组当季搭配、一篇专栏、一段穿衣的私想。
             </p>
-            {done ? (
-              <p style={{ fontFamily: 'Georgia, serif', fontSize: '13px', color: '#B8973A', letterSpacing: '1px' }}>
-                已订阅，感谢 ✦
-              </p>
-            ) : (
-              <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.2)' }}>
-                <input
-                  className="footer-input"
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder="your@email.com"
-                  style={{
-                    flex: 1, background: 'transparent', border: 'none', outline: 'none',
-                    fontFamily: 'Inter, sans-serif', fontSize: '13px',
-                    color: '#fafaf8', padding: '10px 0',
-                  }}
-                />
-                <button
-                  onClick={() => { if (email) setDone(true) }}
-                  style={{
-                    background: 'none', border: 'none', cursor: 'pointer',
-                    fontFamily: 'Inter, sans-serif', fontSize: '12px',
-                    letterSpacing: '2px', color: '#B8973A', padding: '10px 0', flexShrink: 0,
-                  }}
-                >
-                  订阅
-                </button>
-              </div>
-            )}
+            <Link to="/subscribe" style={{
+              display: 'inline-block', marginTop: '4px',
+              fontFamily: 'Inter, sans-serif', fontSize: '12px',
+              letterSpacing: '2px', color: '#B8973A',
+              textDecoration: 'none', borderBottom: '1px solid rgba(184,151,58,0.4)',
+              paddingBottom: '2px',
+            }}>
+              查看订阅方案 →
+            </Link>
           </div>
 
           {/* 链接列 */}
