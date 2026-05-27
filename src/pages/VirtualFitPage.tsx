@@ -22,13 +22,13 @@ const STEPS = [
     label: '选择款式',
     sub: '浏览推荐款式或上传截图，一键选择试穿',
     img: '/shiyitu2.png',
-    scan: false, meas: false, card: true, shimmer: false, badge: false, pulse: false,
+    scan: true, meas: false, card: false, shimmer: false, badge: false, pulse: false,
   },
   {
     label: '上身效果',
     sub: '实时渲染，360° 全方位查看穿着效果',
     img: '/shiyitu3.png',
-    scan: false, meas: false, card: false, shimmer: true, badge: true, pulse: true,
+    scan: false, meas: false, card: false, shimmer: true, badge: false, pulse: true,
   },
 ]
 const DURATION = 3200
@@ -174,37 +174,7 @@ function VirtualFitAnimation() {
           }}>{label}</span>
         ))}
 
-        {/* 选款浮动卡片 — 右下角，不遮脸 */}
-        <div className={`vf-card${s.card ? ' show' : ''}`} style={{
-          position: 'absolute', right: '12px', bottom: '56px',
-          width: '80px', background: 'rgba(255,255,255,.96)',
-          borderRadius: '8px', padding: '6px', zIndex: 9,
-          border: `1px solid rgba(184,151,58,.5)`,
-          boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
-          overflow: 'hidden',
-        }}>
-          <img src="/dress.png" alt="选中款式" style={{ width: '100%', borderRadius: '4px', display: 'block' }}/>
-          {/* 卡片内小扫描线 — 扫裙子图 */}
-          {s.card && (
-            <div style={{
-              position: 'absolute', left: 0, right: 0, top: 0, height: '1.5px',
-              background: 'linear-gradient(to right, transparent, #B8973A 35%, #fff 50%, #B8973A 65%, transparent)',
-              pointerEvents: 'none', zIndex: 10,
-              animation: 'vfScan 1.4s cubic-bezier(.4,0,.6,1) infinite',
-            }} />
-          )}
 
-          <div style={{
-            position: 'absolute', top: '-9px', right: '-9px',
-            width: '20px', height: '20px', background: C.gold, borderRadius: '50%',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            zIndex: 11,
-          }}>
-            <svg width="11" height="11" viewBox="0 0 16 16" fill="none">
-              <path d="M3 8L6.5 11.5L13 5" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </div>
-        </div>
 
         {/* 金光扫射 */}
         <div className={s.shimmer ? 'vf-shimmer-active' : ''} style={{
@@ -212,6 +182,10 @@ function VirtualFitAnimation() {
           background: 'linear-gradient(130deg, transparent 20%, rgba(184,151,58,.5) 50%, transparent 80%)',
           opacity: 0,
         }}/>
+
+
+      </div>
+
       {/* ── 进度条 ── */}
       <div style={{ width: '280px', height: '2px', background: 'rgba(184,151,58,.15)', borderRadius: '1px', overflow: 'hidden' }}>
         <div style={{ height: '100%', width: `${progress}%`, background: C.gold, borderRadius: '1px', transition: 'width .04s linear' }}/>
