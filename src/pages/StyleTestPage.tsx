@@ -11,12 +11,12 @@ const C = {
 // ─── 类型定义 ────────────────────────────────────────────────
 type Phase =
   | 'intro'
-  | 'basic'       // A 基础建档
-  | 'body'        // B 体型快判
-  | 'color'       // C 色彩快判
-  | 'style'       // D 风格主测试
-  | 'scenario'    // E 场景需求
-  | 'report'      // 初始报告
+  | 'basic'
+  | 'body'
+  | 'color'
+  | 'style'
+  | 'scenario'
+  | 'report'
 
 interface BasicProfile {
   age: string
@@ -161,12 +161,10 @@ const STYLE_PROFILES: Record<StyleType, {
   },
 }
 
-// ─── 13风格判断函数 ──────────────────────────────────────────
 function computeStyle(body: BodyQuick, style: StyleProfile): StyleType {
-  let scores: Partial<Record<StyleType, number>> = {}
+  const scores: Partial<Record<StyleType, number>> = {}
   const add = (type: StyleType, n: number) => { scores[type] = (scores[type] || 0) + n }
 
-  // 骨架信号
   if (body.boneScale === 'small') {
     add('Romantic', 3); add('TheatricalRomantic', 2)
     add('SoftGamine', 3); add('Gamine', 2); add('FlamboyantGamine', 1)
@@ -179,7 +177,6 @@ function computeStyle(body: BodyQuick, style: StyleProfile): StyleType {
     add('DramaticClassic', 1); add('FlamboyantGamine', 1)
   }
 
-  // 身体线条信号
   if (body.bodyLine === 'curve') {
     add('Romantic', 3); add('TheatricalRomantic', 2); add('SoftDramatic', 2)
     add('SoftClassic', 1); add('SoftNatural', 1)
@@ -193,7 +190,6 @@ function computeStyle(body: BodyQuick, style: StyleProfile): StyleType {
     add('DramaticClassic', 2); add('FlamboyantGamine', 2); add('FlamboyantNatural', 2)
   }
 
-  // 风格感知信号
   const impressionMap: Partial<Record<string, [StyleType, number][]>> = {
     A: [['Romantic', 3], ['SoftGamine', 2], ['SoftClassic', 1]],
     B: [['Natural', 3], ['SoftNatural', 2], ['FlamboyantNatural', 1]],
@@ -203,10 +199,8 @@ function computeStyle(body: BodyQuick, style: StyleProfile): StyleType {
     F: [['SoftDramatic', 3], ['Dramatic', 2], ['FlamboyantNatural', 1]],
     G: [['Natural', 3], ['FlamboyantNatural', 2], ['SoftNatural', 2]],
   }
-  const impressionSignals = impressionMap[style.impression] || []
-  impressionSignals.forEach(([t, n]) => add(t, n))
+  ;(impressionMap[style.impression] || []).forEach(([t, n]) => add(t, n))
 
-  // 廓形偏好信号
   const silhouetteMap: Partial<Record<string, [StyleType, number][]>> = {
     A: [['Romantic', 3], ['SoftDramatic', 2], ['TheatricalRomantic', 1]],
     B: [['Natural', 3], ['FlamboyantNatural', 2], ['Dramatic', 1]],
@@ -214,10 +208,8 @@ function computeStyle(body: BodyQuick, style: StyleProfile): StyleType {
     D: [['TheatricalRomantic', 2], ['SoftDramatic', 2], ['Romantic', 1]],
     E: [['Gamine', 3], ['FlamboyantGamine', 2]],
   }
-  const silhouetteSignals = silhouetteMap[style.silhouette] || []
-  silhouetteSignals.forEach(([t, n]) => add(t, n))
+  ;(silhouetteMap[style.silhouette] || []).forEach(([t, n]) => add(t, n))
 
-  // 面料偏好信号
   style.fabric.forEach(f => {
     const fabricMap: Partial<Record<string, [StyleType, number][]>> = {
       A: [['Romantic', 2], ['TheatricalRomantic', 1], ['SoftDramatic', 1]],
@@ -229,7 +221,6 @@ function computeStyle(body: BodyQuick, style: StyleProfile): StyleType {
     ;(fabricMap[f] || []).forEach(([t, n]) => add(t, n))
   })
 
-  // 理想造型信号
   const idealMap: Partial<Record<string, [StyleType, number][]>> = {
     A: [['TheatricalRomantic', 3], ['Romantic', 2], ['SoftClassic', 1]],
     B: [['Classic', 3], ['DramaticClassic', 2], ['SoftClassic', 1]],
@@ -238,10 +229,8 @@ function computeStyle(body: BodyQuick, style: StyleProfile): StyleType {
     E: [['Romantic', 3], ['SoftDramatic', 2], ['TheatricalRomantic', 1]],
     F: [['SoftDramatic', 3], ['Dramatic', 2], ['DramaticClassic', 1]],
   }
-  const idealSignals = idealMap[style.ideal] || []
-  idealSignals.forEach(([t, n]) => add(t, n))
+  ;(idealMap[style.ideal] || []).forEach(([t, n]) => add(t, n))
 
-  // 找最高分
   let topType: StyleType = 'Classic'
   let topScore = 0
   ;(Object.entries(scores) as [StyleType, number][]).forEach(([t, s]) => {
@@ -250,7 +239,6 @@ function computeStyle(body: BodyQuick, style: StyleProfile): StyleType {
   return topType
 }
 
-// ─── 公共样式 ─────────────────────────────────────────────────
 const btnGold: React.CSSProperties = {
   background: C.gold, color: '#fff', border: 'none', borderRadius: '6px',
   padding: '14px 0', fontFamily: 'Inter, sans-serif', fontSize: '14px',
@@ -269,7 +257,6 @@ const BackBtn = ({ onClick }: { onClick: () => void }) => (
   <button onClick={onClick} style={btnOutline}>← 返回</button>
 )
 
-// 多选按钮组件
 function MultiSelect({ options, selected, onChange, max }: {
   options: { id: string; label: string; sub?: string }[]
   selected: string[]; onChange: (v: string[]) => void; max?: number
@@ -310,7 +297,6 @@ function MultiSelect({ options, selected, onChange, max }: {
   )
 }
 
-// 单选按钮组件
 function SingleSelect({ options, value, onChange }: {
   options: { id: string; label: string; sub?: string }[]
   value: string; onChange: (v: string) => void
@@ -342,7 +328,6 @@ function SingleSelect({ options, value, onChange }: {
   )
 }
 
-// 步骤标题组件
 function StepHeader({ tag, title, subtitle }: { tag: string; title: string; subtitle?: string }) {
   return (
     <div>
@@ -353,7 +338,6 @@ function StepHeader({ tag, title, subtitle }: { tag: string; title: string; subt
   )
 }
 
-// ─── 报告组件 ─────────────────────────────────────────────────
 function StyleReport({ styleType, body, color, scenario, onReset }: {
   styleType: StyleType
   body: BodyQuick
@@ -370,7 +354,6 @@ function StyleReport({ styleType, body, color, scenario, onReset }: {
     { key: 'scenario' as const, label: '场景策略' },
     { key: 'next' as const, label: '下一步' },
   ]
-
   const sceneLabels: Record<string, string> = {
     '1': '日常通勤', '2': '商务会议', '3': '周末休闲',
     '4': '约会/晚餐', '5': '旅行/拍照', '6': '重要活动',
@@ -379,12 +362,9 @@ function StyleReport({ styleType, body, color, scenario, onReset }: {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-      {/* 标题 */}
       <div style={{ textAlign: 'center', padding: '28px 0 24px', borderBottom: `1px solid ${C.border}` }}>
         <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '3px', textTransform: 'uppercase', marginBottom: '10px' }}>你的风格主型</p>
-        <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '36px', color: C.h1, fontWeight: 400, margin: '0 0 8px' }}>
-          {profile.name}
-        </h1>
+        <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '36px', color: C.h1, fontWeight: 400, margin: '0 0 8px' }}>{profile.name}</h1>
         <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.gold, letterSpacing: '1px', margin: '0 0 16px' }}>
           {profile.nameEn} · {profile.element}
         </p>
@@ -395,7 +375,6 @@ function StyleReport({ styleType, body, color, scenario, onReset }: {
         </div>
       </div>
 
-      {/* Tab 导航 */}
       <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '4px' }}>
         {tabs.map(t => (
           <button key={t.key} onClick={() => setTab(t.key)} style={{
@@ -408,7 +387,6 @@ function StyleReport({ styleType, body, color, scenario, onReset }: {
         ))}
       </div>
 
-      {/* Tab 内容 */}
       {tab === 'style' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: '10px', padding: '20px' }}>
@@ -435,8 +413,8 @@ function StyleReport({ styleType, body, color, scenario, onReset }: {
               </p>
             </div>
           )}
-          <div style={{ marginTop: '12px', display: 'flex', gap: '10px' }}>
-            <Link to="/test/body" style={{ flex: 1, padding: '12px', background: C.bg, border: `1px solid ${C.border}`, borderRadius: '6px', fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.h2, textDecoration: 'none', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ marginTop: '12px' }}>
+            <Link to="/test/body" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px', background: C.bg, border: `1px solid ${C.border}`, borderRadius: '6px', fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.h2, textDecoration: 'none' }}>
               进入完整体型测试 →
             </Link>
           </div>
@@ -448,10 +426,10 @@ function StyleReport({ styleType, body, color, scenario, onReset }: {
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', marginBottom: '12px' }}>色彩穿搭策略</p>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: C.body, lineHeight: 1.9, margin: '0 0 16px' }}>{profile.colorHint}</p>
           <div style={{ display: 'flex', gap: '10px' }}>
-            <Link to="/test/color" style={{ flex: 1, padding: '12px', background: C.bg, border: `1px solid ${C.border}`, borderRadius: '6px', fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.h2, textDecoration: 'none', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Link to="/test/color" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px', background: C.bg, border: `1px solid ${C.border}`, borderRadius: '6px', fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.h2, textDecoration: 'none' }}>
               进入冷暖色彩测试 →
             </Link>
-            <Link to="/test/color/season" style={{ flex: 1, padding: '12px', background: C.bg, border: `1px solid ${C.border}`, borderRadius: '6px', fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.h2, textDecoration: 'none', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Link to="/test/color/season" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px', background: C.bg, border: `1px solid ${C.border}`, borderRadius: '6px', fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.h2, textDecoration: 'none' }}>
               进入五季测试 →
             </Link>
           </div>
@@ -460,9 +438,7 @@ function StyleReport({ styleType, body, color, scenario, onReset }: {
 
       {tab === 'scenario' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, margin: 0 }}>
-            你优先的穿搭场景
-          </p>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, margin: 0 }}>你优先的穿搭场景</p>
           {scenario.scenes.map((s, i) => (
             <div key={s} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: '10px', padding: '16px 20px', display: 'flex', gap: '16px', alignItems: 'center' }}>
               <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: C.gold, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -515,7 +491,6 @@ function StyleReport({ styleType, body, color, scenario, onReset }: {
         </div>
       )}
 
-      {/* 操作按钮 */}
       <div style={{ display: 'flex', gap: '12px', paddingTop: '8px' }}>
         <button onClick={onReset} style={{ flex: 1, padding: '14px', background: 'transparent', border: `1px solid ${C.border}`, borderRadius: '6px', fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, cursor: 'pointer' }}>重新测试</button>
         <Link to="/profile" style={{ flex: 1, padding: '14px', background: C.gold, border: 'none', borderRadius: '6px', fontFamily: 'Inter, sans-serif', fontSize: '13px', color: '#fff', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -526,64 +501,38 @@ function StyleReport({ styleType, body, color, scenario, onReset }: {
   )
 }
 
-// ─── 主页面 ───────────────────────────────────────────────────
 export default function StyleTestPage() {
   const navigate = useNavigate()
   const [phase, setPhase] = useState<Phase>('intro')
-
-  // 各模块 answers
   const [basic, setBasic] = useState<BasicProfile>({ age: '', height: '', weight: '', occupation: '', painPoints: [], aspirations: [] })
   const [body, setBody] = useState<BodyQuick>({ bodyShape: '', bodyLine: '', boneScale: '' })
   const [color, setColor] = useState<ColorQuick>({ experience: [], colorGroup: '' })
   const [style, setStyle] = useState<StyleProfile>({ impression: '', taboo: '', attracted: [], ideal: '', silhouette: '', fabric: [], pattern: '' })
   const [scenario, setScenario] = useState<ScenarioProfile>({ scenes: [], functions: [], budget: '', forbidden: [] })
   const [styleResult, setStyleResult] = useState<StyleType | null>(null)
-
-  // 子步骤管理
   const [basicStep, setBasicStep] = useState(0)
   const [styleStep, setStyleStep] = useState(0)
 
-  // 从 localStorage 读取已完成的专业测试结果（体型/色彩）
   const loadSavedResults = () => {
     const savedBody = localStorage.getItem('aiffd_body_result')
     const savedColor = localStorage.getItem('aiffd_color_result')
     const savedSeason = localStorage.getItem('aiffd_season_result')
-    if (savedBody) {
-      try {
-        const b = JSON.parse(savedBody)
-        setBody(prev => ({ ...prev, ...b }))
-      } catch {}
-    }
-    if (savedColor) {
-      try {
-        const c = JSON.parse(savedColor)
-        setColor(prev => ({ ...prev, ...c }))
-      } catch {}
-    }
-    if (savedSeason) {
-      localStorage.setItem('aiffd_warmcool', savedSeason)
-    }
+    if (savedBody) { try { const b = JSON.parse(savedBody); setBody(prev => ({ ...prev, ...b })) } catch {} }
+    if (savedColor) { try { const c = JSON.parse(savedColor); setColor(prev => ({ ...prev, ...c })) } catch {} }
+    if (savedSeason) { localStorage.setItem('aiffd_warmcool', savedSeason) }
   }
 
-  // 页面加载时检查是否从专业测试跳回
   const checkReturnFromTest = () => {
     const returnTo = localStorage.getItem('aiffd_return_to')
     if (returnTo === 'style_body') {
-      localStorage.removeItem('aiffd_return_to')
-      loadSavedResults()
-      setPhase('body')
-      return true
+      localStorage.removeItem('aiffd_return_to'); loadSavedResults(); setPhase('body'); return true
     }
     if (returnTo === 'style_color') {
-      localStorage.removeItem('aiffd_return_to')
-      loadSavedResults()
-      setPhase('color')
-      return true
+      localStorage.removeItem('aiffd_return_to'); loadSavedResults(); setPhase('color'); return true
     }
     return false
   }
 
-  // 挂载时检查是否从专业测试跳回
   useEffect(() => { checkReturnFromTest() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const computeAndFinish = () => {
@@ -601,7 +550,6 @@ export default function StyleTestPage() {
     setScenario({ scenes: [], functions: [], budget: '', forbidden: [] })
   }
 
-  // 进度计算
   const phaseOrder: Phase[] = ['intro', 'basic', 'body', 'color', 'style', 'scenario', 'report']
   const totalProgress = phaseOrder.indexOf(phase)
   const totalPhases = phaseOrder.length - 2
@@ -609,7 +557,6 @@ export default function StyleTestPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg, paddingBottom: '60px' }}>
-      {/* 进度条 */}
       {phase !== 'intro' && phase !== 'report' && (
         <div style={{ height: '3px', background: C.border }}>
           <div style={{ height: '100%', width: `${progress}%`, background: C.gold, transition: 'width 0.3s ease' }} />
@@ -618,7 +565,6 @@ export default function StyleTestPage() {
 
       <div style={{ maxWidth: '680px', margin: '0 auto', padding: '40px 32px' }}>
 
-        {/* ── 介绍页 ── */}
         {phase === 'intro' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
             <div>
@@ -630,8 +576,6 @@ export default function StyleTestPage() {
                 AIFFD 以个人风格测试为入口，整合体型、色彩、气韵与场景，给你一个可理解、可执行的风格答案。
               </p>
             </div>
-
-            {/* 测试流程说明 */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
               {[
                 { step: 'A', label: '基础建档', sub: '年龄 / 身高 / 职业 / 风格向往' },
@@ -651,7 +595,6 @@ export default function StyleTestPage() {
                 </div>
               ))}
             </div>
-
             <div style={{ background: C.accent, borderRadius: '8px', padding: '16px 20px', borderLeft: `3px solid ${C.gold}` }}>
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.sub, margin: 0, lineHeight: 1.7 }}>
                 💡 体型测试和色彩测试已有独立入口，可随时在档案页继续深入。本测试约15分钟。
@@ -661,32 +604,28 @@ export default function StyleTestPage() {
           </div>
         )}
 
-        {/* ── 模块A：基础建档 ── */}
         {phase === 'basic' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-            {/* A0：年龄 + 身高 */}
             {basicStep === 0 && (
               <>
                 <StepHeader tag="模块 A · 基础建档 1/4" title="先告诉我一些基本信息" subtitle="这些信息会直接影响风格判断和穿搭建议" />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <div>
-                    <label style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.h2, display: 'block', marginBottom: '8px' }}>
-                      真实年龄（岁）
-                      <span style={{ color: C.gold, marginLeft: '6px', fontSize: '11px' }}>* 请填写真实年龄，年龄会影响风格判断</span>
-                    </label>
-                    <input type="number" value={basic.age} onChange={e => setBasic(p => ({ ...p, age: e.target.value }))} placeholder="例如：38" style={{ width: '100%', padding: '12px 14px', border: `1px solid ${C.border}`, borderRadius: '6px', fontFamily: 'Inter, sans-serif', fontSize: '14px', background: C.card, boxSizing: 'border-box' as const }} />
-                  </div>
-                  <div>
-                    <label style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.h2, display: 'block', marginBottom: '8px' }}>身高（cm）</label>
-                    <input type="number" value={basic.height} onChange={e => setBasic(p => ({ ...p, height: e.target.value }))} placeholder="例如：163" style={{ width: '100%', padding: '12px 14px', border: `1px solid ${C.border}`, borderRadius: '6px', fontFamily: 'Inter, sans-serif', fontSize: '14px', background: C.card, boxSizing: 'border-box' as const }} />
-                  </div>
-                  <div>
-                    <label style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.h2, display: 'block', marginBottom: '8px' }}>
-                      体重（kg）
-                      <span style={{ color: C.muted, marginLeft: '6px', fontSize: '11px' }}>选填，仅用于体型分析</span>
-                    </label>
-                    <input type="number" value={basic.weight} onChange={e => setBasic(p => ({ ...p, weight: e.target.value }))} placeholder="选填" style={{ width: '100%', padding: '12px 14px', border: `1px solid ${C.border}`, borderRadius: '6px', fontFamily: 'Inter, sans-serif', fontSize: '14px', background: C.card, boxSizing: 'border-box' as const }} />
-                  </div>
+                  {[
+                    { key: 'age', label: '真实年龄（岁）', note: '* 请填写真实年龄，年龄会影响风格判断', placeholder: '例如：38' },
+                    { key: 'height', label: '身高（cm）', note: '', placeholder: '例如：163' },
+                    { key: 'weight', label: '体重（kg）', note: '选填，仅用于体型分析', placeholder: '选填' },
+                  ].map(field => (
+                    <div key={field.key}>
+                      <label style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.h2, display: 'block', marginBottom: '8px' }}>
+                        {field.label}
+                        {field.note && <span style={{ color: field.key === 'age' ? C.gold : C.muted, marginLeft: '6px', fontSize: '11px' }}>{field.note}</span>}
+                      </label>
+                      <input type="number" value={basic[field.key as keyof BasicProfile] as string}
+                        onChange={e => setBasic(p => ({ ...p, [field.key]: e.target.value }))}
+                        placeholder={field.placeholder}
+                        style={{ width: '100%', padding: '12px 14px', border: `1px solid ${C.border}`, borderRadius: '6px', fontFamily: 'Inter, sans-serif', fontSize: '14px', background: C.card, boxSizing: 'border-box' as const }} />
+                    </div>
+                  ))}
                 </div>
                 <div style={{ display: 'flex', gap: '12px' }}>
                   <BackBtn onClick={() => setPhase('intro')} />
@@ -694,76 +633,56 @@ export default function StyleTestPage() {
                 </div>
               </>
             )}
-
-            {/* A1：职业场景 */}
             {basicStep === 1 && (
               <>
                 <StepHeader tag="模块 A · 基础建档 2/4" title="你的主要职业状态是？" />
-                <SingleSelect
-                  options={[
-                    { id: 'A', label: '职场白领 / 管理层' },
-                    { id: 'B', label: '自由职业 / 创业者' },
-                    { id: 'C', label: '专业人士（医疗 / 法律 / 教育）' },
-                    { id: 'D', label: '创意从业者（设计 / 媒体 / 艺术）' },
-                    { id: 'E', label: '全职妈妈 / 居家' },
-                    { id: 'F', label: '学生' },
-                    { id: 'G', label: '其他' },
-                  ]}
-                  value={basic.occupation}
-                  onChange={v => setBasic(p => ({ ...p, occupation: v }))}
-                />
+                <SingleSelect options={[
+                  { id: 'A', label: '职场白领 / 管理层' },
+                  { id: 'B', label: '自由职业 / 创业者' },
+                  { id: 'C', label: '专业人士（医疗 / 法律 / 教育）' },
+                  { id: 'D', label: '创意从业者（设计 / 媒体 / 艺术）' },
+                  { id: 'E', label: '全职妈妈 / 居家' },
+                  { id: 'F', label: '学生' },
+                  { id: 'G', label: '其他' },
+                ]} value={basic.occupation} onChange={v => setBasic(p => ({ ...p, occupation: v }))} />
                 <div style={{ display: 'flex', gap: '12px' }}>
                   <BackBtn onClick={() => setBasicStep(0)} />
                   <button onClick={() => setBasicStep(2)} disabled={!basic.occupation} style={!basic.occupation ? btnDisabled : btnGold}>继续</button>
                 </div>
               </>
             )}
-
-            {/* A2：穿搭困扰 */}
             {basicStep === 2 && (
               <>
                 <StepHeader tag="模块 A · 基础建档 3/4" title="你最大的穿搭困扰是什么？" subtitle="最多选3个" />
-                <MultiSelect
-                  max={3}
-                  options={[
-                    { id: 'A', label: '不知道什么颜色适合我' },
-                    { id: 'B', label: '不知道什么版型适合我的身材' },
-                    { id: 'C', label: '买了很多衣服但没有什么可穿' },
-                    { id: 'D', label: '经常买错，穿几次就不想穿了' },
-                    { id: 'E', label: '职场和私下风格很难平衡' },
-                    { id: 'F', label: '不知道怎么搭配让整体有高级感' },
-                    { id: 'G', label: '年龄增长后不知道该怎么穿' },
-                    { id: 'H', label: '不知道如何在有限预算内买到对的东西' },
-                  ]}
-                  selected={basic.painPoints}
-                  onChange={v => setBasic(p => ({ ...p, painPoints: v }))}
-                />
+                <MultiSelect max={3} options={[
+                  { id: 'A', label: '不知道什么颜色适合我' },
+                  { id: 'B', label: '不知道什么版型适合我的身材' },
+                  { id: 'C', label: '买了很多衣服但没有什么可穿' },
+                  { id: 'D', label: '经常买错，穿几次就不想穿了' },
+                  { id: 'E', label: '职场和私下风格很难平衡' },
+                  { id: 'F', label: '不知道怎么搭配让整体有高级感' },
+                  { id: 'G', label: '年龄增长后不知道该怎么穿' },
+                  { id: 'H', label: '不知道如何在有限预算内买到对的东西' },
+                ]} selected={basic.painPoints} onChange={v => setBasic(p => ({ ...p, painPoints: v }))} />
                 <div style={{ display: 'flex', gap: '12px' }}>
                   <BackBtn onClick={() => setBasicStep(1)} />
                   <button onClick={() => setBasicStep(3)} disabled={basic.painPoints.length === 0} style={basic.painPoints.length === 0 ? btnDisabled : btnGold}>继续</button>
                 </div>
               </>
             )}
-
-            {/* A3：风格向往 */}
             {basicStep === 3 && (
               <>
                 <StepHeader tag="模块 A · 基础建档 4/4" title="以下哪些词最接近你想要的穿搭感觉？" subtitle="最多选5个" />
-                <MultiSelect
-                  max={5}
-                  options={[
-                    { id: 'elegant', label: '高级感 · 优雅 · 知性' },
-                    { id: 'professional', label: '职业 · 干练 · 专业' },
-                    { id: 'feminine', label: '柔美 · 女人味 · 浪漫' },
-                    { id: 'natural', label: '自然 · 随性 · 松弛 · 质感' },
-                    { id: 'edgy', label: '时髦 · 个性 · 前卫 · 酷' },
-                    { id: 'powerful', label: '大气 · 成熟 · 稳重 · 气场' },
-                    { id: 'minimal', label: '清爽 · 简洁 · 极简 · 现代' },
-                    { id: 'sweet', label: '甜美 · 少女感 · 可爱' },
-                  ]}
-                  selected={basic.aspirations}
-                  onChange={v => setBasic(p => ({ ...p, aspirations: v }))}
-                />
+                <MultiSelect max={5} options={[
+                  { id: 'elegant', label: '高级感 · 优雅 · 知性' },
+                  { id: 'professional', label: '职业 · 干练 · 专业' },
+                  { id: 'feminine', label: '柔美 · 女人味 · 浪漫' },
+                  { id: 'natural', label: '自然 · 随性 · 松弛 · 质感' },
+                  { id: 'edgy', label: '时髦 · 个性 · 前卫 · 酷' },
+                  { id: 'powerful', label: '大气 · 成熟 · 稳重 · 气场' },
+                  { id: 'minimal', label: '清爽 · 简洁 · 极简 · 现代' },
+                  { id: 'sweet', label: '甜美 · 少女感 · 可爱' },
+                ]} selected={basic.aspirations} onChange={v => setBasic(p => ({ ...p, aspirations: v }))} />
                 <div style={{ display: 'flex', gap: '12px' }}>
                   <BackBtn onClick={() => setBasicStep(2)} />
                   <button onClick={() => { setBasicStep(0); setPhase('body') }} disabled={basic.aspirations.length === 0} style={basic.aspirations.length === 0 ? btnDisabled : btnGold}>继续</button>
@@ -773,12 +692,11 @@ export default function StyleTestPage() {
           </div>
         )}
 
-        {/* ── 模块B：体型快判 ── */}
         {phase === 'body' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
             <StepHeader tag="模块 B · 体型快判" title="你的体型更接近哪种？" subtitle="点击图片选择，不确定可进入完整体型测试" />
 
-            {/* 体型图片选项 4列并排 */}
+            {/* 体型图片选项 — 无背景色，图片铺满 */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
               {[
                 { id: 'H', label: 'H 型', sub: '肩宽≈臀宽，腰线不明显', img: '/BodyH.png' },
@@ -794,7 +712,7 @@ export default function StyleTestPage() {
                     style={{
                       border: `2px solid ${active ? C.gold : C.border}`,
                       borderRadius: '10px',
-                      background: active ? '#fdf8ee' : '#fff',
+                      background: active ? C.accent : '#fff',
                       padding: 0,
                       cursor: 'pointer',
                       overflow: 'hidden',
@@ -802,16 +720,23 @@ export default function StyleTestPage() {
                       textAlign: 'left' as const,
                     }}
                   >
+                    {/* 图片区域：无背景色，无 padding，底部对齐 */}
                     <div style={{
-                      background: active ? '#fdf3e0' : '#f5f3ef',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      padding: '20px 6px',
-                      transition: 'background 0.2s',
+                      display: 'flex',
+                      alignItems: 'flex-end',
+                      justifyContent: 'center',
+                      overflow: 'hidden',
                     }}>
                       <img
                         src={o.img}
                         alt={o.label}
-                        style={{ height: '220px', objectFit: 'contain', objectPosition: 'top', display: 'block', width: '100%' }}
+                        style={{
+                          height: '240px',
+                          objectFit: 'contain',
+                          objectPosition: 'bottom',
+                          display: 'block',
+                          width: '100%',
+                        }}
                       />
                     </div>
                     <div style={{ padding: '12px 14px' }}>
@@ -830,7 +755,6 @@ export default function StyleTestPage() {
               })}
             </div>
 
-            {/* 不确定入口 */}
             <button onClick={() => {
               localStorage.setItem('aiffd_return_to', 'style_body')
               navigate('/test/body')
@@ -838,84 +762,59 @@ export default function StyleTestPage() {
               不确定 → 进入完整体型测试（完成后自动返回）
             </button>
 
-            {/* 选完体型后展示补充题 */}
             {body.bodyShape && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', paddingTop: '8px', borderTop: `1px solid ${C.border}` }}>
                 <StepHeader tag="" title="你的身体线条感觉更接近？" />
-                <SingleSelect
-                  options={[
-                    { id: 'curve', label: '明显的曲线感，腰臀弧度大' },
-                    { id: 'straight', label: '较直的线条，整体偏方正' },
-                    { id: 'soft', label: '柔和的线条，不突出也不平直' },
-                    { id: 'mixed', label: '上下不同，有一定混合感' },
-                  ]}
-                  value={body.bodyLine}
-                  onChange={v => setBody(p => ({ ...p, bodyLine: v }))}
-                />
+                <SingleSelect options={[
+                  { id: 'curve', label: '明显的曲线感，腰臀弧度大' },
+                  { id: 'straight', label: '较直的线条，整体偏方正' },
+                  { id: 'soft', label: '柔和的线条，不突出也不平直' },
+                  { id: 'mixed', label: '上下不同，有一定混合感' },
+                ]} value={body.bodyLine} onChange={v => setBody(p => ({ ...p, bodyLine: v }))} />
                 <StepHeader tag="" title="你的骨骼给人的感觉是？" />
-                <SingleSelect
-                  options={[
-                    { id: 'small', label: '小巧纤细，骨骼感弱' },
-                    { id: 'medium', label: '中等，不大不小' },
-                    { id: 'large', label: '宽大，有存在感，骨骼感强' },
-                  ]}
-                  value={body.boneScale}
-                  onChange={v => setBody(p => ({ ...p, boneScale: v }))}
-                />
+                <SingleSelect options={[
+                  { id: 'small', label: '小巧纤细，骨骼感弱' },
+                  { id: 'medium', label: '中等，不大不小' },
+                  { id: 'large', label: '宽大，有存在感，骨骼感强' },
+                ]} value={body.boneScale} onChange={v => setBody(p => ({ ...p, boneScale: v }))} />
               </div>
             )}
 
             <div style={{ display: 'flex', gap: '12px' }}>
               <BackBtn onClick={() => { setBasicStep(3); setPhase('basic') }} />
-              <button
-                onClick={() => setPhase('color')}
-                disabled={!body.bodyShape || !body.bodyLine || !body.boneScale}
-                style={!body.bodyShape || !body.bodyLine || !body.boneScale ? btnDisabled : btnGold}
-              >继续</button>
+              <button onClick={() => setPhase('color')} disabled={!body.bodyShape || !body.bodyLine || !body.boneScale} style={!body.bodyShape || !body.bodyLine || !body.boneScale ? btnDisabled : btnGold}>继续</button>
             </div>
           </div>
         )}
 
-        {/* ── 模块C：色彩快判 ── */}
         {phase === 'color' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
             <StepHeader tag="模块 C · 色彩快判" title="你是否有过以下穿搭体验？" subtitle="帮助系统快速判断你的色彩方向，不确定可进入完整色彩测试" />
-            <MultiSelect
-              options={[
-                { id: 'A', label: '穿橘色 / 焦糖色时总觉得显黄显土' },
-                { id: 'B', label: '穿金色首饰比银色首饰更有气色' },
-                { id: 'C', label: '大多数粉色穿上去都显脏' },
-                { id: 'D', label: '冷色调（藏蓝 / 玫红 / 冰白）靠近脸更干净' },
-                { id: 'E', label: '以上都没有明显感觉' },
-                { id: 'F', label: '不确定，需要完整色彩测试' },
-              ]}
-              selected={color.experience}
-              onChange={v => setColor(p => ({ ...p, experience: v }))}
-            />
+            <MultiSelect options={[
+              { id: 'A', label: '穿橘色 / 焦糖色时总觉得显黄显土' },
+              { id: 'B', label: '穿金色首饰比银色首饰更有气色' },
+              { id: 'C', label: '大多数粉色穿上去都显脏' },
+              { id: 'D', label: '冷色调（藏蓝 / 玫红 / 冰白）靠近脸更干净' },
+              { id: 'E', label: '以上都没有明显感觉' },
+              { id: 'F', label: '不确定，需要完整色彩测试' },
+            ]} selected={color.experience} onChange={v => setColor(p => ({ ...p, experience: v }))} />
             {!color.experience.includes('F') && color.experience.length > 0 && (
               <>
                 <StepHeader tag="" title="以下哪组颜色靠近脸时感觉最高级、最干净？" />
-                <SingleSelect
-                  options={[
-                    { id: 'A', label: '奶油白、蜜桃、杏色、焦糖' },
-                    { id: 'B', label: '正红、亮橘、明黄、宝蓝（高饱和）' },
-                    { id: 'C', label: '墨绿、炭灰、酒红、灰蓝、深咖' },
-                    { id: 'D', label: '铜棕、铁锈红、暖驼、芥末黄' },
-                    { id: 'E', label: '纯黑、冷白、藏蓝、玫红' },
-                    { id: 'F', label: '需要完整测试才能判断（可进入专业测试后返回）' },
-                  ]}
-                  value={color.colorGroup}
-                  onChange={v => setColor(p => ({ ...p, colorGroup: v }))}
-                />
+                <SingleSelect options={[
+                  { id: 'A', label: '奶油白、蜜桃、杏色、焦糖' },
+                  { id: 'B', label: '正红、亮橘、明黄、宝蓝（高饱和）' },
+                  { id: 'C', label: '墨绿、炭灰、酒红、灰蓝、深咖' },
+                  { id: 'D', label: '铜棕、铁锈红、暖驼、芥末黄' },
+                  { id: 'E', label: '纯黑、冷白、藏蓝、玫红' },
+                  { id: 'F', label: '需要完整测试才能判断（可进入专业测试后返回）' },
+                ]} value={color.colorGroup} onChange={v => setColor(p => ({ ...p, colorGroup: v }))} />
               </>
             )}
             <div style={{ display: 'flex', gap: '12px' }}>
               <BackBtn onClick={() => setPhase('body')} />
               {color.experience.includes('F') ? (
-                <button onClick={() => {
-                  localStorage.setItem('aiffd_return_to', 'style_color')
-                  navigate('/test/color')
-                }} style={btnGold}>进入完整色彩测试（完成后自动返回）</button>
+                <button onClick={() => { localStorage.setItem('aiffd_return_to', 'style_color'); navigate('/test/color') }} style={btnGold}>进入完整色彩测试（完成后自动返回）</button>
               ) : (
                 <button onClick={() => setPhase('style')} disabled={color.experience.length === 0} style={color.experience.length === 0 ? btnDisabled : btnGold}>继续</button>
               )}
@@ -923,137 +822,104 @@ export default function StyleTestPage() {
           </div>
         )}
 
-        {/* ── 模块D：风格主测试 ── */}
         {phase === 'style' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-
             {styleStep === 0 && (
               <>
                 <StepHeader tag="模块 D · 风格主测试 1/6" title="别人对你的第一印象通常是？" subtitle="选最符合的那个" />
-                <SingleSelect
-                  options={[
-                    { id: 'A', label: '温柔、柔软、有女人味' },
-                    { id: 'B', label: '清爽、干净、自然' },
-                    { id: 'C', label: '优雅、精致、有品位' },
-                    { id: 'D', label: '酷、有个性、不太好接近' },
-                    { id: 'E', label: '活泼、有趣、有反差感' },
-                    { id: 'F', label: '大气、有气场、成熟' },
-                    { id: 'G', label: '随性、松弛、自在' },
-                  ]}
-                  value={style.impression}
-                  onChange={v => setStyle(p => ({ ...p, impression: v }))}
-                />
+                <SingleSelect options={[
+                  { id: 'A', label: '温柔、柔软、有女人味' },
+                  { id: 'B', label: '清爽、干净、自然' },
+                  { id: 'C', label: '优雅、精致、有品位' },
+                  { id: 'D', label: '酷、有个性、不太好接近' },
+                  { id: 'E', label: '活泼、有趣、有反差感' },
+                  { id: 'F', label: '大气、有气场、成熟' },
+                  { id: 'G', label: '随性、松弛、自在' },
+                ]} value={style.impression} onChange={v => setStyle(p => ({ ...p, impression: v }))} />
                 <div style={{ display: 'flex', gap: '12px' }}>
                   <BackBtn onClick={() => setPhase('color')} />
                   <button onClick={() => setStyleStep(1)} disabled={!style.impression} style={!style.impression ? btnDisabled : btnGold}>继续</button>
                 </div>
               </>
             )}
-
             {styleStep === 1 && (
               <>
                 <StepHeader tag="模块 D · 风格主测试 2/6" title="你最抗拒哪种穿搭感觉？" />
-                <SingleSelect
-                  options={[
-                    { id: 'A', label: '太甜太可爱，像小女孩' },
-                    { id: 'B', label: '太严肃太商务，没有个性' },
-                    { id: 'C', label: '太随意太松垮，不够精致' },
-                    { id: 'D', label: '太夸张太显眼，不低调' },
-                    { id: 'E', label: '太性感太暴露，不自在' },
-                    { id: 'F', label: '太刻意太用力，不自然' },
-                  ]}
-                  value={style.taboo}
-                  onChange={v => setStyle(p => ({ ...p, taboo: v }))}
-                />
+                <SingleSelect options={[
+                  { id: 'A', label: '太甜太可爱，像小女孩' },
+                  { id: 'B', label: '太严肃太商务，没有个性' },
+                  { id: 'C', label: '太随意太松垮，不够精致' },
+                  { id: 'D', label: '太夸张太显眼，不低调' },
+                  { id: 'E', label: '太性感太暴露，不自在' },
+                  { id: 'F', label: '太刻意太用力，不自然' },
+                ]} value={style.taboo} onChange={v => setStyle(p => ({ ...p, taboo: v }))} />
                 <div style={{ display: 'flex', gap: '12px' }}>
                   <BackBtn onClick={() => setStyleStep(0)} />
                   <button onClick={() => setStyleStep(2)} disabled={!style.taboo} style={!style.taboo ? btnDisabled : btnGold}>继续</button>
                 </div>
               </>
             )}
-
             {styleStep === 2 && (
               <>
                 <StepHeader tag="模块 D · 风格主测试 3/6" title="逛街时你的眼神最容易被哪类单品吸引？" subtitle="最多选3个" />
-                <MultiSelect
-                  max={3}
-                  options={[
-                    { id: 'A', label: '有质感的基础款（白衬衫 / 精致西装 / 简洁裤子）' },
-                    { id: 'B', label: '有设计感的单品（特殊剪裁 / 不对称 / 解构）' },
-                    { id: 'C', label: '柔软飘逸的款式（丝绸 / 雪纺 / 蕾丝 / 流苏）' },
-                    { id: 'D', label: '帅气硬朗的款式（皮衣 / 工装 / 宽肩）' },
-                    { id: 'E', label: '印花 / 图案 / 颜色活泼的款式' },
-                    { id: 'F', label: '大廓形 / 结构感强的款式' },
-                    { id: 'G', label: '贴身修身的款式' },
-                  ]}
-                  selected={style.attracted}
-                  onChange={v => setStyle(p => ({ ...p, attracted: v }))}
-                />
+                <MultiSelect max={3} options={[
+                  { id: 'A', label: '有质感的基础款（白衬衫 / 精致西装 / 简洁裤子）' },
+                  { id: 'B', label: '有设计感的单品（特殊剪裁 / 不对称 / 解构）' },
+                  { id: 'C', label: '柔软飘逸的款式（丝绸 / 雪纺 / 蕾丝 / 流苏）' },
+                  { id: 'D', label: '帅气硬朗的款式（皮衣 / 工装 / 宽肩）' },
+                  { id: 'E', label: '印花 / 图案 / 颜色活泼的款式' },
+                  { id: 'F', label: '大廓形 / 结构感强的款式' },
+                  { id: 'G', label: '贴身修身的款式' },
+                ]} selected={style.attracted} onChange={v => setStyle(p => ({ ...p, attracted: v }))} />
                 <div style={{ display: 'flex', gap: '12px' }}>
                   <BackBtn onClick={() => setStyleStep(1)} />
                   <button onClick={() => setStyleStep(3)} disabled={style.attracted.length === 0} style={style.attracted.length === 0 ? btnDisabled : btnGold}>继续</button>
                 </div>
               </>
             )}
-
             {styleStep === 3 && (
               <>
                 <StepHeader tag="模块 D · 风格主测试 4/6" title="你最希望穿出什么样的感觉？" />
-                <SingleSelect
-                  options={[
-                    { id: 'A', label: '轻盈优雅，有气质，像在电影里' },
-                    { id: 'B', label: '干净利落，有品位，不用解释' },
-                    { id: 'C', label: '自然松弛，有态度，不刻意' },
-                    { id: 'D', label: '有冲击力，有记忆点，让人记住我' },
-                    { id: 'E', label: '柔美动人，有女人味，让人想靠近' },
-                    { id: 'F', label: '成熟大气，有力量，让人信任' },
-                  ]}
-                  value={style.ideal}
-                  onChange={v => setStyle(p => ({ ...p, ideal: v }))}
-                />
+                <SingleSelect options={[
+                  { id: 'A', label: '轻盈优雅，有气质，像在电影里' },
+                  { id: 'B', label: '干净利落，有品位，不用解释' },
+                  { id: 'C', label: '自然松弛，有态度，不刻意' },
+                  { id: 'D', label: '有冲击力，有记忆点，让人记住我' },
+                  { id: 'E', label: '柔美动人，有女人味，让人想靠近' },
+                  { id: 'F', label: '成熟大气，有力量，让人信任' },
+                ]} value={style.ideal} onChange={v => setStyle(p => ({ ...p, ideal: v }))} />
                 <div style={{ display: 'flex', gap: '12px' }}>
                   <BackBtn onClick={() => setStyleStep(2)} />
                   <button onClick={() => setStyleStep(4)} disabled={!style.ideal} style={!style.ideal ? btnDisabled : btnGold}>继续</button>
                 </div>
               </>
             )}
-
             {styleStep === 4 && (
               <>
                 <StepHeader tag="模块 D · 风格主测试 5/6" title="你更喜欢哪种廓形？" />
-                <SingleSelect
-                  options={[
-                    { id: 'A', label: '收腰、强调曲线' },
-                    { id: 'B', label: '直线型、宽松廓形' },
-                    { id: 'C', label: '结构感强、有肩线' },
-                    { id: 'D', label: '流动柔软、没有明确廓形' },
-                    { id: 'E', label: '对比感强、宽上窄下或反之' },
-                  ]}
-                  value={style.silhouette}
-                  onChange={v => setStyle(p => ({ ...p, silhouette: v }))}
-                />
+                <SingleSelect options={[
+                  { id: 'A', label: '收腰、强调曲线' },
+                  { id: 'B', label: '直线型、宽松廓形' },
+                  { id: 'C', label: '结构感强、有肩线' },
+                  { id: 'D', label: '流动柔软、没有明确廓形' },
+                  { id: 'E', label: '对比感强、宽上窄下或反之' },
+                ]} value={style.silhouette} onChange={v => setStyle(p => ({ ...p, silhouette: v }))} />
                 <div style={{ display: 'flex', gap: '12px' }}>
                   <BackBtn onClick={() => setStyleStep(3)} />
                   <button onClick={() => setStyleStep(5)} disabled={!style.silhouette} style={!style.silhouette ? btnDisabled : btnGold}>继续</button>
                 </div>
               </>
             )}
-
             {styleStep === 5 && (
               <>
                 <StepHeader tag="模块 D · 风格主测试 6/6" title="你最喜欢哪种面料的感觉？" subtitle="最多选2个" />
-                <MultiSelect
-                  max={2}
-                  options={[
-                    { id: 'A', label: '柔软贴身', sub: '丝绸、天鹅绒、莫代尔' },
-                    { id: 'B', label: '轻盈飘逸', sub: '雪纺、欧根纱、薄纱' },
-                    { id: 'C', label: '挺括有型', sub: '西装面料、硬质棉、皮质' },
-                    { id: 'D', label: '自然质朴', sub: '棉麻、灯芯绒、针织' },
-                    { id: 'E', label: '有光泽感', sub: '缎面、金属感面料、漆皮' },
-                  ]}
-                  selected={style.fabric}
-                  onChange={v => setStyle(p => ({ ...p, fabric: v }))}
-                />
+                <MultiSelect max={2} options={[
+                  { id: 'A', label: '柔软贴身', sub: '丝绸、天鹅绒、莫代尔' },
+                  { id: 'B', label: '轻盈飘逸', sub: '雪纺、欧根纱、薄纱' },
+                  { id: 'C', label: '挺括有型', sub: '西装面料、硬质棉、皮质' },
+                  { id: 'D', label: '自然质朴', sub: '棉麻、灯芯绒、针织' },
+                  { id: 'E', label: '有光泽感', sub: '缎面、金属感面料、漆皮' },
+                ]} selected={style.fabric} onChange={v => setStyle(p => ({ ...p, fabric: v }))} />
                 <div style={{ display: 'flex', gap: '12px' }}>
                   <BackBtn onClick={() => setStyleStep(4)} />
                   <button onClick={() => { setStyleStep(0); setPhase('scenario') }} disabled={style.fabric.length === 0} style={style.fabric.length === 0 ? btnDisabled : btnGold}>继续</button>
@@ -1063,89 +929,56 @@ export default function StyleTestPage() {
           </div>
         )}
 
-        {/* ── 模块E：场景需求 ── */}
         {phase === 'scenario' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-            <StepHeader
-              tag="模块 E · 场景需求层"
-              title="你最希望 AIFFD 帮你解决哪三个穿搭场景？"
-              subtitle="选3个，系统将优先为这些场景生成建议"
-            />
-            <MultiSelect
-              max={3}
-              options={[
-                { id: '1', label: '上班 / 日常通勤', sub: '需要专业感又不失个人风格' },
-                { id: '2', label: '商务会议 / 客户见面', sub: '需要权威感、信任感' },
-                { id: '3', label: '周末休闲 / 日常出行', sub: '轻松自在但有质感' },
-                { id: '4', label: '约会 / 重要晚餐', sub: '显魅力、有女人味' },
-                { id: '5', label: '旅行 / 拍照留念', sub: '上镜、有故事感、舒适' },
-                { id: '6', label: '重要活动 / 社交聚会', sub: '有存在感、被记住' },
-                { id: '7', label: '买衣服前判断是否适合我', sub: '购物决策辅助' },
-                { id: '8', label: '整理衣橱 / 淘汰不适合的', sub: '衣橱优化' },
-              ]}
-              selected={scenario.scenes}
-              onChange={v => setScenario(p => ({ ...p, scenes: v }))}
-            />
-
+            <StepHeader tag="模块 E · 场景需求层" title="你最希望 AIFFD 帮你解决哪三个穿搭场景？" subtitle="选3个，系统将优先为这些场景生成建议" />
+            <MultiSelect max={3} options={[
+              { id: '1', label: '上班 / 日常通勤', sub: '需要专业感又不失个人风格' },
+              { id: '2', label: '商务会议 / 客户见面', sub: '需要权威感、信任感' },
+              { id: '3', label: '周末休闲 / 日常出行', sub: '轻松自在但有质感' },
+              { id: '4', label: '约会 / 重要晚餐', sub: '显魅力、有女人味' },
+              { id: '5', label: '旅行 / 拍照留念', sub: '上镜、有故事感、舒适' },
+              { id: '6', label: '重要活动 / 社交聚会', sub: '有存在感、被记住' },
+              { id: '7', label: '买衣服前判断是否适合我', sub: '购物决策辅助' },
+              { id: '8', label: '整理衣橱 / 淘汰不适合的', sub: '衣橱优化' },
+            ]} selected={scenario.scenes} onChange={v => setScenario(p => ({ ...p, scenes: v }))} />
             {scenario.scenes.length === 3 && (
               <>
                 <StepHeader tag="" title="在你最重要的场景里，服装最需要帮你完成什么？" subtitle="最多选3个" />
-                <MultiSelect
-                  max={3}
-                  options={[
-                    { id: 'A', label: '显专业、有权威感' },
-                    { id: 'B', label: '显瘦 / 修饰身材' },
-                    { id: 'C', label: '表达我是谁、我的品位' },
-                    { id: 'D', label: '让人感觉亲切、有亲和力' },
-                    { id: 'E', label: '让自己感觉更好、更自信' },
-                    { id: 'F', label: '减少「穿什么」的决策焦虑' },
-                  ]}
-                  selected={scenario.functions}
-                  onChange={v => setScenario(p => ({ ...p, functions: v }))}
-                />
+                <MultiSelect max={3} options={[
+                  { id: 'A', label: '显专业、有权威感' },
+                  { id: 'B', label: '显瘦 / 修饰身材' },
+                  { id: 'C', label: '表达我是谁、我的品位' },
+                  { id: 'D', label: '让人感觉亲切、有亲和力' },
+                  { id: 'E', label: '让自己感觉更好、更自信' },
+                  { id: 'F', label: '减少「穿什么」的决策焦虑' },
+                ]} selected={scenario.functions} onChange={v => setScenario(p => ({ ...p, functions: v }))} />
               </>
             )}
-
             {scenario.scenes.length === 3 && scenario.functions.length > 0 && (
               <>
                 <StepHeader tag="" title="你的单件服装平均预算是？" />
-                <SingleSelect
-                  options={[
-                    { id: 'A', label: '200元以下' },
-                    { id: 'B', label: '200 - 500元' },
-                    { id: 'C', label: '500 - 1500元' },
-                    { id: 'D', label: '1500 - 3000元' },
-                    { id: 'E', label: '3000元以上' },
-                    { id: 'F', label: '视情况而定，没有固定预算' },
-                  ]}
-                  value={scenario.budget}
-                  onChange={v => setScenario(p => ({ ...p, budget: v }))}
-                />
+                <SingleSelect options={[
+                  { id: 'A', label: '200元以下' },
+                  { id: 'B', label: '200 - 500元' },
+                  { id: 'C', label: '500 - 1500元' },
+                  { id: 'D', label: '1500 - 3000元' },
+                  { id: 'E', label: '3000元以上' },
+                  { id: 'F', label: '视情况而定，没有固定预算' },
+                ]} value={scenario.budget} onChange={v => setScenario(p => ({ ...p, budget: v }))} />
               </>
             )}
-
             <div style={{ display: 'flex', gap: '12px' }}>
               <BackBtn onClick={() => { setStyleStep(5); setPhase('style') }} />
-              <button
-                onClick={computeAndFinish}
-                disabled={scenario.scenes.length < 3 || scenario.functions.length === 0 || !scenario.budget}
-                style={scenario.scenes.length < 3 || scenario.functions.length === 0 || !scenario.budget ? btnDisabled : btnGold}
-              >
+              <button onClick={computeAndFinish} disabled={scenario.scenes.length < 3 || scenario.functions.length === 0 || !scenario.budget} style={scenario.scenes.length < 3 || scenario.functions.length === 0 || !scenario.budget ? btnDisabled : btnGold}>
                 生成我的风格报告
               </button>
             </div>
           </div>
         )}
 
-        {/* ── 报告页 ── */}
         {phase === 'report' && styleResult && (
-          <StyleReport
-            styleType={styleResult}
-            body={body}
-            color={color}
-            scenario={scenario}
-            onReset={reset}
-          />
+          <StyleReport styleType={styleResult} body={body} color={color} scenario={scenario} onReset={reset} />
         )}
 
       </div>
