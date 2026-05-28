@@ -14,6 +14,7 @@ import StyleTestPage from './pages/StyleTestPage'
 import VirtualFitPage from './pages/VirtualFitPage'
 import SubscribePage from './pages/SubscribePage'
 import { useAuth } from './hooks/useAuth'
+import ColorElementPage from './pages/ColorElementPage'
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { token } = useAuth()
@@ -37,6 +38,7 @@ export default function App() {
             <Route path="/test/body" element={<BodyTestPage />} />
             <Route path="/test/color" element={<ColorTestPage />} />
             <Route path="/test/color/season" element={<ColorSeasonPage />} />
+            <Route path="/test/color/element" element={<ColorElementPage />} />
             <Route path="/test/style" element={<StyleTestPage />} />
             <Route path="/test/fashion" element={
               <PlaceholderPage title="时尚个性测试" description="时尚个性测试即将上线" />
