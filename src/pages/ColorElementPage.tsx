@@ -90,36 +90,7 @@ function BackBtn({ onClick }: { onClick: () => void }) {
   )
 }
 
-function ElementCard({ el, selected, onClick }: { el: ElementResult; selected: boolean; onClick: () => void }) {
-  const meta = ELEMENT_META[el]
-  const q = ELEMENT_QUESTIONS[el]
-  return (
-    <button onClick={onClick} style={{
-      border: `2px solid ${selected ? meta.color : C.border}`,
-      borderRadius: '10px', background: selected ? '#fdf8ee' : '#fff',
-      padding: '16px 18px', cursor: 'pointer', textAlign: 'left',
-      transition: 'all 0.2s', width: '100%',
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: meta.color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <span style={{ fontFamily: 'Georgia, serif', fontSize: '14px', color: '#fff' }}>{meta.name}</span>
-        </div>
-        <div>
-          <p style={{ fontFamily: 'Georgia, serif', fontSize: '15px', color: selected ? C.h2 : C.body, margin: 0 }}>{meta.name} · {meta.desc.split('、')[0]}</p>
-          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted, margin: '2px 0 0' }}>{q.sub}</p>
-        </div>
-      </div>
-      <div style={{ display: 'flex', gap: '6px', paddingLeft: '44px' }}>
-        {q.colors.map(([name, hex]) => (
-          <div key={name} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px' }}>
-            <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: hex, border: `1px solid ${C.border}` }} />
-            <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '9px', color: C.muted }}>{name}</span>
-          </div>
-        ))}
-      </div>
-    </button>
-  )
-}
+
 
 // ─── 最终报告 ─────────────────────────────────────────────────
 function FinalReport({ season, seasonName, element }: {
