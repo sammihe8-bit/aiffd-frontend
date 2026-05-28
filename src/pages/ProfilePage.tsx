@@ -221,7 +221,7 @@ export default function ProfilePage() {
                 <div>
                   <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '2px', color: C.muted, marginBottom: '12px' }}>风格关键词</p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                    {profile.styleDirections.map(s => (
+                    {profile?.styleDirections.map(s => (
                       <span key={s} style={{ border: `1px solid ${C.gold}`, color: C.gold, padding: '4px 14px', fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '1px' }}>{s}</span>
                     ))}
                   </div>
@@ -231,7 +231,7 @@ export default function ProfilePage() {
                 <div>
                   <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '2px', color: C.muted, marginBottom: '12px' }}>主要穿衣困扰</p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                    {profile.concerns.map(c => (
+                    {profile?.concerns.map(c => (
                       <span key={c} style={{ background: '#f5f5f3', color: C.body, padding: '4px 14px', fontFamily: 'Inter, sans-serif', fontSize: '11px' }}>{c}</span>
                     ))}
                   </div>
@@ -254,9 +254,9 @@ export default function ProfilePage() {
             <SectionTitle label="基础信息" />
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1px', background: C.border }}>
               {[
-                { label: '年龄段', value: profile.ageRange },
-                { label: '预算区间', value: profile.budget },
-                { label: '肤色倾向', value: profile.skinTone },
+                { label: '年龄段', value: profile?.ageRange },
+                { label: '预算区间', value: profile?.budget },
+                { label: '肤色倾向', value: profile?.skinTone },
               ].map((item, i) => (
                 <div key={i} style={{ background: '#fff', padding: '20px' }}>
                   <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '2px', color: C.muted, marginBottom: '8px' }}>{item.label}</p>
