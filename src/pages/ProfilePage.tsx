@@ -217,7 +217,7 @@ export default function ProfilePage() {
                   <p style={{ fontFamily: 'Georgia, serif', fontSize: '20px', color: C.gold, margin: 0 }}>{styleResult}</p>
                 </div>
               )}
-              {profile?.styleDirections?.length > 0 && (
+              {(profile?.styleDirections?.length ?? 0) > 0 && (
                 <div>
                   <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '2px', color: C.muted, marginBottom: '12px' }}>风格关键词</p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
@@ -227,7 +227,7 @@ export default function ProfilePage() {
                   </div>
                 </div>
               )}
-              {profile?.concerns?.length > 0 && (
+              {(profile?.concerns?.length ?? 0) > 0 && (
                 <div>
                   <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '2px', color: C.muted, marginBottom: '12px' }}>主要穿衣困扰</p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
