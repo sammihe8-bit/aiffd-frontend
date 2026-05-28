@@ -209,7 +209,7 @@ export default function ProfilePage() {
         {/* ── 风格档案 ── */}
         <div style={{ background: '#fff', border: `1px solid ${C.border}`, borderRadius: '8px', padding: '28px', marginBottom: '24px' }}>
           <SectionTitle label="风格档案" />
-          {(profile?.styleDirections?.length > 0 || styleResult) ? (
+          {((profile?.styleDirections?.length ?? 0) > 0 || styleResult) ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               {styleResult && (
                 <div>
