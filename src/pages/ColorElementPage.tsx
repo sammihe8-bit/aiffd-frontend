@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 
 const C = {
   h1: '#111111', h2: '#222222', sub: '#444444',
@@ -225,7 +225,6 @@ function FinalReport({ season, seasonName, element }: {
 // ─── 主页面 ───────────────────────────────────────────────────
 export default function ColorElementPage() {
   const location = useLocation()
-  const navigate = useNavigate()
 
   const season: SeasonResult = (
     location.state?.season ||
