@@ -250,7 +250,7 @@ const btnDisabled: React.CSSProperties = {
 const btnOutline: React.CSSProperties = {
   background: 'transparent', color: C.muted, border: `1px solid ${C.border}`,
   borderRadius: '6px', padding: '14px 20px', fontFamily: 'Inter, sans-serif',
-  fontSize: '13px', cursor: 'pointer',
+  fontSize: '13px', cursor: 'pointer',whiteSpace: 'nowrap',
 }
 
 const BackBtn = ({ onClick }: { onClick: () => void }) => (
