@@ -7,14 +7,13 @@ const C = {
 }
 
 type WarmCoolResult = 'warm' | 'cool' | 'neutral_warm' | 'neutral_cool' | 'olive'
-type StepKey = 'intro' | 'q0' | 'q1' | 'q2' | 'q3' | 'q4' | 'q5' | 'report'
+type StepKey = 'intro' | 'photo' | 'tips' | 'q0' | 'q1' | 'q2' | 'q3' | 'q4' | 'q5' | 'report'
 
 interface Answers {
   q0: string; q1: string; q2: string; q3: string; q4: string; q5: string
 }
 
 function computeWarmCool(a: Answers): WarmCoolResult {
-  // q0 明度方向：A=偏白 B=偏黄，影响后续四季层，本层暂记录不计分
   let warm = 0; let cool = 0; let olive = 0
   if (a.q1 === 'A') warm += 1
   else if (a.q1 === 'B') cool += 1
@@ -218,7 +217,6 @@ function ColorReport({ result, onReset }: { result: WarmCoolResult; onReset: () 
           onClick={() => {
             localStorage.setItem('aiffd_warmcool', result)
             localStorage.setItem('aiffd_color_result', JSON.stringify({ experience: ['done'], colorGroup: result }))
-            // 如果是从风格测试跳过来，色彩测试完成后继续进入五季，五季完成后跳回
             navigate('/test/color/season')
           }}
           style={{ background: C.gold, color: '#fff', border: 'none', borderRadius: '6px', padding: '13px 28px', fontFamily: 'Inter, sans-serif', fontSize: '13px', letterSpacing: '1px', cursor: 'pointer' }}
@@ -238,26 +236,31 @@ export default function ColorTestPage() {
   const [step, setStep] = useState<StepKey>('intro')
   const [answers, setAnswers] = useState<Answers>({ q0: '', q1: '', q2: '', q3: '', q4: '', q5: '' })
   const set = (key: keyof Answers) => (val: string) => setAnswers(prev => ({ ...prev, [key]: val }))
-  const stepOrder: StepKey[] = ['intro', 'q0', 'q1', 'q2', 'q3', 'q4', 'q5', 'report']
+
+  const stepOrder: StepKey[] = ['intro', 'photo', 'tips', 'q0', 'q1', 'q2', 'q3', 'q4', 'q5', 'report']
   const next = () => { const i = stepOrder.indexOf(step); if (i < stepOrder.length - 1) setStep(stepOrder[i + 1]) }
   const back = () => {
-    const m: Partial<Record<StepKey, StepKey>> = { q0: 'intro', q1: 'q0', q2: 'q1', q3: 'q2', q4: 'q3', q5: 'q4', report: 'q5' }
+    const m: Partial<Record<StepKey, StepKey>> = {
+      photo: 'intro', tips: 'photo', q0: 'tips',
+      q1: 'q0', q2: 'q1', q3: 'q2', q4: 'q3', q5: 'q4', report: 'q5',
+    }
     const p = m[step]; if (p) setStep(p)
   }
   const reset = () => { setAnswers({ q0: '', q1: '', q2: '', q3: '', q4: '', q5: '' }); setStep('intro') }
   const result = computeWarmCool(answers)
-  const stepIndex: Record<StepKey, number> = { intro: 0, q0: 1, q1: 2, q2: 3, q3: 4, q4: 5, q5: 6, report: 7 }
-  const progress = step === 'intro' ? 0 : step === 'report' ? 100 : (stepIndex[step] / 6) * 100
+  const stepIndex: Record<StepKey, number> = { intro: 0, photo: 0, tips: 0, q0: 1, q1: 2, q2: 3, q3: 4, q4: 5, q5: 6, report: 7 }
+  const progress = step === 'intro' || step === 'photo' || step === 'tips' ? 0 : step === 'report' ? 100 : (stepIndex[step] / 6) * 100
 
   return (
     <div style={{ minHeight: '100vh', background: '#faf9f7', paddingBottom: '60px' }}>
-      {step !== 'intro' && step !== 'report' && (
+      {!['intro', 'photo', 'tips', 'report'].includes(step) && (
         <div style={{ height: '3px', background: C.border }}>
           <div style={{ height: '100%', width: `${progress}%`, background: C.gold, transition: 'width 0.3s ease' }} />
         </div>
       )}
       <div style={{ maxWidth: '680px', margin: '0 auto', padding: '40px 32px' }}>
 
+        {/* ── 介绍页 ── */}
         {step === 'intro' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
             <div>
@@ -276,11 +279,177 @@ export default function ColorTestPage() {
             <div style={{ background: '#fdf8ee', borderRadius: '8px', padding: '16px 20px', borderLeft: `3px solid ${C.gold}` }}>
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.sub, margin: 0, lineHeight: 1.7 }}>💡 黄皮 ≠ 暖皮。这是亚洲女性色彩测试最常见的误区，本测试会帮你纠正。</p>
             </div>
-            <button onClick={() => setStep('q0')} style={btnPrimaryStyle}>开始冷暖测试</button>
+            <button onClick={() => setStep('photo')} style={{ ...btnPrimaryStyle, padding: '16px 0', fontSize: '15px' }}>
+              上传照片，开始分析
+            </button>
+            <button onClick={() => setStep('q0')} style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted,
+              textDecoration: 'underline', textUnderlineOffset: '3px',
+            }}>
+              跳过，直接开始问卷测试
+            </button>
           </div>
         )}
 
+        {/* ── 照片上传页 ── */}
+        {step === 'photo' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+            <div>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '3px', textTransform: 'uppercase', marginBottom: '12px' }}>色彩测试 · 照片分析</p>
+              <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '32px', color: C.h1, fontWeight: 400, lineHeight: 1.3, margin: '0 0 16px' }}>
+                上传一张照片<br />立即发现你的色彩季节
+              </h1>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: C.muted, lineHeight: 1.9, margin: 0 }}>
+                上传一张照片，即可立即发现您的色彩季节、底色以及最适合您的颜色。
+              </p>
+            </div>
 
+            {/* 安全承诺标签 */}
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' as const }}>
+              {[
+                { icon: '🔒', text: '100% 安全' },
+                { icon: '⏱', text: '照片自动删除' },
+                { icon: '✨', text: '即时分析结果' },
+              ].map(item => (
+                <div key={item.text} style={{
+                  display: 'flex', alignItems: 'center', gap: '8px',
+                  padding: '6px 14px', background: '#fff',
+                  border: `1px solid ${C.border}`, borderRadius: '20px',
+                }}>
+                  <span style={{ fontSize: '15px' }}>{item.icon}</span>
+                  <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.body }}>{item.text}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* 上传区域 */}
+            <div
+              style={{
+                border: `2px dashed ${C.gold}`, borderRadius: '12px',
+                padding: '56px 24px', textAlign: 'center', background: '#fdf8ee',
+                cursor: 'pointer', transition: 'background .2s',
+              }}
+              onClick={() => document.getElementById('colorPhotoInput')?.click()}
+            >
+              <div style={{ fontSize: '52px', marginBottom: '16px' }}>📷</div>
+              <p style={{ fontFamily: 'Georgia, serif', fontSize: '20px', color: C.h2, marginBottom: '8px', margin: '0 0 8px' }}>
+                点击上传照片
+              </p>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, margin: 0 }}>
+                支持 JPG、PNG 格式 · 建议正面素颜照
+              </p>
+              <input
+                id="colorPhotoInput"
+                type="file"
+                accept="image/*"
+                capture="user"
+                style={{ display: 'none' }}
+                onChange={() => {/* 照片 AI 分析功能预留 */}}
+              />
+            </div>
+
+            {/* 技巧提示 */}
+            <button onClick={() => setStep('tips')} style={{
+              background: '#fff', border: `1px solid ${C.border}`, borderRadius: '8px',
+              padding: '14px 20px', cursor: 'pointer', textAlign: 'left',
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            }}>
+              <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.body }}>
+                📋 查看照片拍摄技巧，拍出最佳效果
+              </span>
+              <span style={{ color: C.gold, fontSize: '16px' }}>→</span>
+            </button>
+
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <BackBtn onClick={() => setStep('intro')} />
+              <button onClick={() => setStep('tips')} style={btnPrimaryStyle}>
+                查看拍摄技巧
+              </button>
+            </div>
+
+            <button onClick={() => setStep('q0')} style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted,
+              textDecoration: 'underline', textUnderlineOffset: '3px',
+            }}>
+              没有合适照片？直接开始问卷测试
+            </button>
+          </div>
+        )}
+
+        {/* ── 拍摄技巧页 ── */}
+        {step === 'tips' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+            <div>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '3px', textTransform: 'uppercase', marginBottom: '12px' }}>照片拍摄技巧</p>
+              <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '28px', color: C.h1, fontWeight: 400, lineHeight: 1.3, margin: '0 0 8px' }}>
+                助您拍出最佳照片
+              </h2>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: C.muted, margin: 0 }}>
+                准确的照片，让分析结果更精准
+              </p>
+            </div>
+
+            {/* 准备清单 */}
+            <div style={{ background: '#fff', border: `1px solid ${C.border}`, borderRadius: '10px', overflow: 'hidden' }}>
+              <div style={{ padding: '16px 20px', background: C.gold }}>
+                <p style={{ fontFamily: 'Georgia, serif', fontSize: '14px', color: '#fff', margin: 0, letterSpacing: '1px' }}>
+                  照片准备清单
+                </p>
+              </div>
+              {[
+                { icon: '☀️', title: '自然光', desc: '靠近窗户，避免强烈的阳光直射' },
+                { icon: '💆', title: '素颜', desc: '不化妆，以便进行准确分析' },
+                { icon: '🏠', title: '中性背景', desc: '白色、灰色或素色墙面' },
+                { icon: '👁', title: '面向前方', desc: '表情放松，双眼睁开' },
+                { icon: '💇', title: '头发向后梳', desc: '清晰地露出发际线和耳朵' },
+              ].map((item, i, arr) => (
+                <div key={item.title} style={{
+                  display: 'flex', gap: '16px', alignItems: 'flex-start',
+                  padding: '18px 20px',
+                  borderBottom: i < arr.length - 1 ? `1px solid ${C.border}` : 'none',
+                }}>
+                  <div style={{
+                    width: '40px', height: '40px', borderRadius: '50%',
+                    background: '#fdf8ee', border: `1px solid ${C.border}`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexShrink: 0, fontSize: '18px',
+                  }}>
+                    {item.icon}
+                  </div>
+                  <div>
+                    <p style={{ fontFamily: 'Georgia, serif', fontSize: '15px', color: C.h2, margin: '0 0 4px' }}>{item.title}</p>
+                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, margin: 0, lineHeight: 1.6 }}>{item.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ background: '#fdf8ee', borderRadius: '8px', padding: '16px 20px', borderLeft: `3px solid ${C.gold}` }}>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.sub, margin: 0, lineHeight: 1.7 }}>
+                💡 没有合适照片？没关系——你也可以跳过照片上传，直接通过问卷完成色彩测试，结果同样准确。
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <BackBtn onClick={() => setStep('photo')} />
+              <button onClick={() => setStep('photo')} style={{ ...btnPrimaryStyle, background: '#fff', color: C.gold, border: `1px solid ${C.gold}` }}>
+                返回上传照片
+              </button>
+            </div>
+
+            <button onClick={() => setStep('q0')} style={{
+              width: '100%', padding: '14px', background: C.gold, color: '#fff',
+              border: 'none', borderRadius: '6px', fontFamily: 'Inter, sans-serif',
+              fontSize: '14px', letterSpacing: '1px', cursor: 'pointer',
+            }}>
+              跳过照片，直接开始问卷测试 →
+            </button>
+          </div>
+        )}
+
+        {/* ── 问卷 q0–q5 ── */}
         {step === 'q0' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
             <div>
@@ -289,10 +458,7 @@ export default function ColorTestPage() {
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '8px' }}>在自然光下，素颜观察手腕内侧或脸部</p>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              {[
-                { id: 'A', label: '偏白', img: '/whiteface.png' },
-                { id: 'B', label: '偏黄', img: '/yellowface.png' },
-              ].map(o => (
+              {[{ id: 'A', label: '偏白', img: '/whiteface.png' }, { id: 'B', label: '偏黄', img: '/yellowface.png' }].map(o => (
                 <button key={o.id} onClick={() => set('q0')(o.id)} style={{
                   border: `2px solid ${answers.q0 === o.id ? C.gold : C.border}`,
                   borderRadius: '8px', background: answers.q0 === o.id ? '#fdf8ee' : '#fff',
@@ -306,7 +472,7 @@ export default function ColorTestPage() {
               ))}
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
-              <BackBtn onClick={() => setStep('intro')} />
+              <BackBtn onClick={() => setStep('tips')} />
               <button onClick={next} disabled={!answers.q0} style={!answers.q0 ? btnDisabledStyle : btnPrimaryStyle}>继续</button>
             </div>
           </div>
@@ -329,14 +495,14 @@ export default function ColorTestPage() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {[
-                { id: 'A', label: '金色更显气色、柔和、健康', sub: '' },
-                { id: 'B', label: '银色更显干净、清透、高级', sub: '' },
-                { id: 'C', label: '金银都可以，没有明显差别', sub: '' },
-                { id: 'D', label: '金银都一般，都不太衬我', sub: '' },
+                { id: 'A', label: '金色更显气色、柔和、健康' },
+                { id: 'B', label: '银色更显干净、清透、高级' },
+                { id: 'C', label: '金银都可以，没有明显差别' },
+                { id: 'D', label: '金银都一般，都不太衬我' },
               ].map(o => <OptionBtn key={o.id} {...o} active={answers.q1 === o.id} onClick={() => set('q1')(o.id)} />)}
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
-              <BackBtn onClick={() => setStep('intro')} />
+              <BackBtn onClick={back} />
               <button onClick={next} disabled={!answers.q1} style={!answers.q1 ? btnDisabledStyle : btnPrimaryStyle}>继续</button>
             </div>
           </div>
@@ -367,10 +533,10 @@ export default function ColorTestPage() {
             ))}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {[
-                { id: 'A', label: '暖调组更好看，更提气色', sub: '' },
-                { id: 'B', label: '冷调组更好看，更干净清透', sub: '' },
-                { id: 'C', label: '两组都可以，没有明显差别', sub: '' },
-                { id: 'D', label: '两组都一般，放上去都不好看', sub: '' },
+                { id: 'A', label: '暖调组更好看，更提气色' },
+                { id: 'B', label: '冷调组更好看，更干净清透' },
+                { id: 'C', label: '两组都可以，没有明显差别' },
+                { id: 'D', label: '两组都一般，放上去都不好看' },
               ].map(o => <OptionBtn key={o.id} {...o} active={answers.q2 === o.id} onClick={() => set('q2')(o.id)} />)}
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
@@ -397,10 +563,10 @@ export default function ColorTestPage() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {[
-                { id: 'A', label: '更有气色、更温暖、更健康', sub: '' },
-                { id: 'B', label: '更黄、更土、更暗沉', sub: '' },
-                { id: 'C', label: '有时可以，有时不稳定', sub: '' },
-                { id: 'D', label: '很少穿，不确定', sub: '' },
+                { id: 'A', label: '更有气色、更温暖、更健康' },
+                { id: 'B', label: '更黄、更土、更暗沉' },
+                { id: 'C', label: '有时可以，有时不稳定' },
+                { id: 'D', label: '很少穿，不确定' },
               ].map(o => <OptionBtn key={o.id} {...o} active={answers.q3 === o.id} onClick={() => set('q3')(o.id)} />)}
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
@@ -426,11 +592,11 @@ export default function ColorTestPage() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {[
-                { id: 'A', label: '蜜桃粉、珊瑚粉更显气色', sub: '' },
-                { id: 'B', label: '玫瑰粉、冷粉更显干净', sub: '' },
-                { id: 'C', label: '大多数粉色都显脏、显灰', sub: '' },
-                { id: 'D', label: '粉色都还可以，没有明显差别', sub: '' },
-                { id: 'E', label: '不确定', sub: '' },
+                { id: 'A', label: '蜜桃粉、珊瑚粉更显气色' },
+                { id: 'B', label: '玫瑰粉、冷粉更显干净' },
+                { id: 'C', label: '大多数粉色都显脏、显灰' },
+                { id: 'D', label: '粉色都还可以，没有明显差别' },
+                { id: 'E', label: '不确定' },
               ].map(o => <OptionBtn key={o.id} {...o} active={answers.q4 === o.id} onClick={() => set('q4')(o.id)} />)}
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
@@ -449,25 +615,21 @@ export default function ColorTestPage() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {[
-                { id: 'A', label: '焦糖、橘红、暖驼、奶油白', sub: '', colors: ['#C68642','#E8734A','#C4A882','#F5F0E8'] },
-                { id: 'B', label: '玫瑰粉、冰白、浅蓝、银灰', sub: '', colors: ['#F4A0B8','#F0F4F8','#AED6F1','#B0B8C4'] },
-                { id: 'C', label: '墨绿、灰蓝、炭灰、酒红、深咖', sub: '', colors: ['#2D5A3D','#5A7A9A','#4A4A4A','#7B1A2A','#5A3A20'] },
-                { id: 'D', label: '都不明显，没有特别突出的那组', sub: '' },
+                { id: 'A', label: '焦糖、橘红、暖驼、奶油白', colors: ['#C68642','#E8734A','#C4A882','#F5F0E8'] },
+                { id: 'B', label: '玫瑰粉、冰白、浅蓝、银灰', colors: ['#F4A0B8','#F0F4F8','#AED6F1','#B0B8C4'] },
+                { id: 'C', label: '墨绿、灰蓝、炭灰、酒红、深咖', colors: ['#2D5A3D','#5A7A9A','#4A4A4A','#7B1A2A','#5A3A20'] },
+                { id: 'D', label: '都不明显，没有特别突出的那组', colors: [] },
               ].map(o => (
                 <button key={o.id} onClick={() => set('q5')(o.id)} style={{
                   border: `1.5px solid ${answers.q5 === o.id ? C.gold : C.border}`,
                   borderRadius: '8px', background: answers.q5 === o.id ? '#fdf8ee' : '#fff',
-                  padding: '16px 20px', cursor: 'pointer', textAlign: 'left',
-                  transition: 'all 0.2s', width: '100%',
+                  padding: '16px 20px', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s', width: '100%',
                 }}>
-                  <div style={{ display: 'flex', gap: '14px', alignItems: 'center', marginBottom: 'colors' in o && o.colors ? '10px' : 0 }}>
+                  <div style={{ display: 'flex', gap: '14px', alignItems: 'center', marginBottom: o.colors.length ? '10px' : 0 }}>
                     <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: answers.q5 === o.id ? C.gold : C.muted, letterSpacing: '1px', flexShrink: 0 }}>{o.id}</span>
-                    <div>
-                      <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: answers.q5 === o.id ? C.h2 : C.body, margin: 0 }}>{o.label}</p>
-                      <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted, marginTop: '3px', marginBottom: 0 }}>{o.sub}</p>
-                    </div>
+                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: answers.q5 === o.id ? C.h2 : C.body, margin: 0 }}>{o.label}</p>
                   </div>
-                  {'colors' in o && o.colors && (
+                  {o.colors.length > 0 && (
                     <div style={{ display: 'flex', gap: '8px', paddingLeft: '26px' }}>
                       {o.colors.map((hex, i) => (
                         <div key={i} style={{ width: '32px', height: '32px', borderRadius: '50%', background: hex, border: `1px solid ${C.border}` }} />
