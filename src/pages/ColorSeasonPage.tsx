@@ -286,7 +286,7 @@ const BackBtn = ({ onClick }: { onClick: () => void }) => (
   <button onClick={onClick} style={{
     padding: '14px 20px', background: 'transparent', border: `1px solid ${C.border}`,
     borderRadius: '6px', fontFamily: 'Inter, sans-serif', fontSize: '13px',
-    color: C.muted, cursor: 'pointer',whiteSpace: 'nowrap'
+    color: C.muted, cursor: 'pointer', whiteSpace: 'nowrap'
   }}>← 返回</button>
 )
 
