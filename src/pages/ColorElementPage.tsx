@@ -19,7 +19,6 @@ const ELEMENT_META: Record<ElementResult, { name: string; zh: string; color: str
   water: { name: '水', zh: 'Water', color: '#2C5F8A', desc: '深邃、冷深、暗色、收敛沉静' },
 }
 
-// 各五季对应的25季细分描述
 const SEASON_ELEMENT_PROFILES: Record<string, Record<ElementResult, {
   finalType: string
   goodColors: { name: string; hex: string }[]
@@ -63,7 +62,6 @@ const SEASON_ELEMENT_PROFILES: Record<string, Record<ElementResult, {
   },
 }
 
-// 长夏深/浅/标准 复用长夏副气
 const resolveProfile = (season: SeasonResult, element: ElementResult) => {
   const baseKey = season.startsWith('changxia') ? 'changxia' : season
   return SEASON_ELEMENT_PROFILES[baseKey]?.[element] || SEASON_ELEMENT_PROFILES.changxia[element]
@@ -86,57 +84,39 @@ const btnDisabled: React.CSSProperties = { ...btnGold, background: '#e0e0e0', co
 
 function BackBtn({ onClick }: { onClick: () => void }) {
   return (
-    <button onClick={onClick} style={{ padding: '14px 20px', background: 'transparent', border: `1px solid ${C.border}`, borderRadius: '6px', fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, cursor: 'pointer' }}>← 返回</button>
+    <button onClick={onClick} style={{
+      padding: '14px 20px', background: 'transparent', border: `1px solid ${C.border}`,
+      borderRadius: '6px', fontFamily: 'Inter, sans-serif', fontSize: '13px',
+      color: C.muted, cursor: 'pointer', whiteSpace: 'nowrap' as const,
+    }}>← 返回</button>
   )
 }
 
-
-
-// ─── 最终报告 ─────────────────────────────────────────────────
 function FinalReport({ season, seasonName, element }: {
-  season: SeasonResult
-  seasonName: string
-  element: ElementResult
+  season: SeasonResult; seasonName: string; element: ElementResult
 }) {
   const elMeta = ELEMENT_META[element]
   const profile = resolveProfile(season, element)
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-
-      {/* 标题 */}
       <div style={{ textAlign: 'center', padding: '32px 0 24px', borderBottom: `1px solid ${C.border}` }}>
-        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '3px', textTransform: 'uppercase', marginBottom: '12px' }}>
-          第三层 · 东方 25 季结果
-        </p>
+        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '3px', textTransform: 'uppercase', marginBottom: '12px' }}>第三层 · 东方 25 季结果</p>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
           <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: elMeta.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <span style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: '#fff' }}>{elMeta.name}</span>
           </div>
-          <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '48px', color: C.h1, fontWeight: 400, margin: 0 }}>
-            {profile.finalType}
-          </h1>
+          <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '48px', color: C.h1, fontWeight: 400, margin: 0 }}>{profile.finalType}</h1>
         </div>
-        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, margin: '0 0 8px' }}>
-          主季：{seasonName} · 副气：{elMeta.name}
-        </p>
-        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.gold, letterSpacing: '1px' }}>
-          AIFFD 东方 25 季 · {profile.finalType}
-        </p>
+        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, margin: '0 0 8px' }}>主季：{seasonName} · 副气：{elMeta.name}</p>
+        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.gold, letterSpacing: '1px' }}>AIFFD 东方 25 季 · {profile.finalType}</p>
       </div>
-
-      {/* 解读 */}
       <div style={{ background: '#fff', border: `1px solid ${C.border}`, borderRadius: '10px', padding: '24px' }}>
         <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', marginBottom: '12px' }}>AIFFD 25季解读</p>
         <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '15px', color: C.body, lineHeight: 1.9, margin: '0 0 16px' }}>{profile.desc}</p>
         <div style={{ background: '#fdf8ee', borderRadius: '6px', padding: '12px 16px', borderLeft: `3px solid ${C.gold}` }}>
-          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.sub, margin: 0, lineHeight: 1.7 }}>
-            💡 {elMeta.name}副气特质：{elMeta.desc}
-          </p>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.sub, margin: 0, lineHeight: 1.7 }}>💡 {elMeta.name}副气特质：{elMeta.desc}</p>
         </div>
       </div>
-
-      {/* 推荐色 + 避开色 */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
         <div style={{ background: '#fff', border: `1px solid ${C.border}`, borderRadius: '10px', padding: '20px' }}>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', marginBottom: '16px' }}>精准推荐色</p>
@@ -163,50 +143,31 @@ function FinalReport({ season, seasonName, element }: {
           </div>
         </div>
       </div>
-
-      {/* 档案已保存提示 */}
       <div style={{ background: '#f0f9f0', border: '1px solid #a8d8a8', borderRadius: '10px', padding: '20px' }}>
         <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: '#4A8A4A', letterSpacing: '2px', marginBottom: '8px' }}>✓ 已保存到档案</p>
         <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: C.body, lineHeight: 1.8, margin: 0 }}>
           你的色彩档案已完整建立：<br />
-          <strong>五季主型</strong>：{seasonName} ·
-          <strong> 副气</strong>：{elMeta.name} ·
-          <strong> 25季分类</strong>：{profile.finalType}
+          <strong>五季主型</strong>：{seasonName} · <strong>副气</strong>：{elMeta.name} · <strong>25季分类</strong>：{profile.finalType}
         </p>
       </div>
-
-      {/* 操作按钮 */}
       <div style={{ display: 'flex', gap: '12px' }}>
         <Link to="/profile" style={{ flex: 1, padding: '14px', background: C.gold, border: 'none', borderRadius: '6px', fontFamily: 'Inter, sans-serif', fontSize: '14px', color: '#fff', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', letterSpacing: '1px' }}>
           查看我的完整档案 →
         </Link>
       </div>
       <div style={{ display: 'flex', gap: '12px' }}>
-        <Link to="/onboarding" style={{ flex: 1, padding: '14px', background: 'transparent', border: `1px solid ${C.border}`, borderRadius: '6px', fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          返回测试中心
-        </Link>
-        <Link to="/test/style" style={{ flex: 1, padding: '14px', background: '#f5f0e8', border: 'none', borderRadius: '6px', fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.h2, textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          去做风格测试 →
-        </Link>
+        <Link to="/onboarding" style={{ flex: 1, padding: '14px', background: 'transparent', border: `1px solid ${C.border}`, borderRadius: '6px', fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>返回测试中心</Link>
+        <Link to="/test/style" style={{ flex: 1, padding: '14px', background: '#f5f0e8', border: 'none', borderRadius: '6px', fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.h2, textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>去做风格测试 →</Link>
       </div>
     </div>
   )
 }
 
-// ─── 主页面 ───────────────────────────────────────────────────
 export default function ColorElementPage() {
   const location = useLocation()
 
-  const season: SeasonResult = (
-    location.state?.season ||
-    localStorage.getItem('aiffd_season_result') ||
-    'changxia'
-  ) as SeasonResult
-  const seasonName: string = (
-    location.state?.seasonName ||
-    localStorage.getItem('aiffd_season_name') ||
-    '长夏'
-  )
+  const season: SeasonResult = (location.state?.season || localStorage.getItem('aiffd_season_result') || 'changxia') as SeasonResult
+  const seasonName: string = (location.state?.seasonName || localStorage.getItem('aiffd_season_name') || '长夏')
 
   type Step = 'intro' | 'wood' | 'fire' | 'earth' | 'metal' | 'water' | 'confirm' | 'report'
   const STEPS: Step[] = ['intro', 'wood', 'fire', 'earth', 'metal', 'water', 'confirm', 'report']
@@ -218,31 +179,23 @@ export default function ColorElementPage() {
 
   const currentIndex = STEPS.indexOf(step)
   const progress = step === 'intro' ? 0 : step === 'report' ? 100 : (currentIndex / (STEPS.length - 2)) * 100
-
   const setScore = (el: ElementResult, val: string) => setScores(p => ({ ...p, [el]: val }))
 
   const computeElement = (): ElementResult => {
-    // 将答案转为分数
     const pts: Record<ElementResult, number> = { wood: 0, fire: 0, earth: 0, metal: 0, water: 0 }
     ELEMENTS.forEach(el => {
       if (scores[el] === 'A') pts[el] += 3
       else if (scores[el] === 'B') pts[el] += 1
-      else if (scores[el] === 'C') pts[el] += 0
     })
-    let top: ElementResult = 'earth'
-    let topScore = -1
+    let top: ElementResult = 'earth'; let topScore = -1
     ELEMENTS.forEach(el => { if (pts[el] > topScore) { topScore = pts[el]; top = el } })
     return top
   }
 
   const next = () => {
     if (step === 'water') {
-      // 进入确认页
-      const el = computeElement()
-      setFinalElement(el)
-      setStep('confirm')
+      const el = computeElement(); setFinalElement(el); setStep('confirm')
     } else if (step === 'confirm') {
-      // 保存并进报告
       if (finalElement) {
         localStorage.setItem('aiffd_element_result', finalElement)
         localStorage.setItem('aiffd_element_name', ELEMENT_META[finalElement].name)
@@ -250,15 +203,12 @@ export default function ColorElementPage() {
       }
       setStep('report')
     } else {
-      const nextStep = STEPS[currentIndex + 1]
-      setStep(nextStep)
+      setStep(STEPS[currentIndex + 1])
     }
   }
 
   const back = () => { if (currentIndex > 0) setStep(STEPS[currentIndex - 1]) }
-  const canCurrent = step === 'intro' || step === 'confirm' || step === 'report'
-    ? true : !!scores[step as ElementResult]
-
+  const canCurrent = step === 'intro' || step === 'confirm' || step === 'report' ? true : !!scores[step as ElementResult]
   const seasonElementKey = season.startsWith('changxia') ? 'changxia' : season
 
   return (
@@ -270,20 +220,15 @@ export default function ColorElementPage() {
       )}
       <div style={{ maxWidth: '680px', margin: '0 auto', padding: '40px 32px' }}>
 
-        {/* 介绍页 */}
         {step === 'intro' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
             <div>
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '3px', textTransform: 'uppercase', marginBottom: '12px' }}>色彩测试 · 第三层</p>
-              <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '34px', color: C.h1, fontWeight: 400, lineHeight: 1.3, margin: '0 0 16px' }}>
-                五行副气测试<br />锁定东方 25 季
-              </h1>
+              <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '34px', color: C.h1, fontWeight: 400, lineHeight: 1.3, margin: '0 0 16px' }}>五行副气测试<br />锁定东方 25 季</h1>
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: C.muted, lineHeight: 1.9, margin: 0 }}>
                 你的五季主型已确认为<strong style={{ color: C.gold }}>「{seasonName}」</strong>。现在进入第三层测试，判断你的五行副气方向（木 / 火 / 土 / 金 / 水），完成东方 25 季精准分类。
               </p>
             </div>
-
-            {/* 25季矩阵预览 */}
             <div style={{ background: '#fff', border: `1px solid ${C.border}`, borderRadius: '10px', padding: '20px' }}>
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', marginBottom: '16px' }}>你所在季型的 5 个分支</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -304,17 +249,13 @@ export default function ColorElementPage() {
                 })}
               </div>
             </div>
-
             <div style={{ background: '#fdf8ee', borderRadius: '8px', padding: '16px 20px', borderLeft: `3px solid ${C.gold}` }}>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.sub, margin: 0, lineHeight: 1.7 }}>
-                💡 共 5 组色卡题，每组判断一个五行副气方向对你肤色的稳定程度，约3分钟。
-              </p>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.sub, margin: 0, lineHeight: 1.7 }}>💡 共 5 组色卡题，每组判断一个五行副气方向对你肤色的稳定程度，约3分钟。</p>
             </div>
             <button onClick={next} style={{ ...btnGold, width: '100%', padding: '14px' }}>开始副气测试</button>
           </div>
         )}
 
-        {/* 五个副气题 */}
         {ELEMENTS.map((el, idx) => {
           if (step !== el) return null
           const meta = ELEMENT_META[el]
@@ -363,7 +304,6 @@ export default function ColorElementPage() {
           )
         })}
 
-        {/* 确认副气 */}
         {step === 'confirm' && finalElement && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
             <div style={{ textAlign: 'center', padding: '24px 0', borderBottom: `1px solid ${C.border}` }}>
@@ -380,16 +320,10 @@ export default function ColorElementPage() {
             </div>
             <div style={{ background: '#fff', border: `1px solid ${C.border}`, borderRadius: '10px', padding: '20px' }}>
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginBottom: '8px' }}>你的东方 25 季分类</p>
-              <p style={{ fontFamily: 'Georgia, serif', fontSize: '32px', color: C.gold, margin: 0 }}>
-                {resolveProfile(season, finalElement).finalType}
-              </p>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.body, lineHeight: 1.8, marginTop: '12px' }}>
-                {resolveProfile(season, finalElement).desc}
-              </p>
+              <p style={{ fontFamily: 'Georgia, serif', fontSize: '32px', color: C.gold, margin: 0 }}>{resolveProfile(season, finalElement).finalType}</p>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.body, lineHeight: 1.8, marginTop: '12px' }}>{resolveProfile(season, finalElement).desc}</p>
             </div>
-            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, textAlign: 'center' }}>
-              如感觉结果不准确，可重新选择副气方向
-            </p>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, textAlign: 'center' }}>如感觉结果不准确，可重新选择副气方向</p>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px' }}>
               {ELEMENTS.map(el => {
                 const meta = ELEMENT_META[el]
@@ -398,15 +332,12 @@ export default function ColorElementPage() {
                   <button key={el} onClick={() => setFinalElement(el)} style={{
                     border: `2px solid ${isSelected ? meta.color : C.border}`,
                     borderRadius: '8px', background: isSelected ? '#fdf8ee' : '#fff',
-                    padding: '12px 8px', cursor: 'pointer', textAlign: 'center',
-                    transition: 'all 0.2s',
+                    padding: '12px 8px', cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s',
                   }}>
                     <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: meta.color, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 6px' }}>
                       <span style={{ fontFamily: 'Georgia, serif', fontSize: '14px', color: '#fff' }}>{meta.name}</span>
                     </div>
-                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', color: isSelected ? meta.color : C.muted, margin: 0 }}>
-                      {resolveProfile(season, el).finalType}
-                    </p>
+                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', color: isSelected ? meta.color : C.muted, margin: 0 }}>{resolveProfile(season, el).finalType}</p>
                   </button>
                 )
               })}
@@ -418,7 +349,6 @@ export default function ColorElementPage() {
           </div>
         )}
 
-        {/* 最终报告 */}
         {step === 'report' && finalElement && (
           <FinalReport season={season} seasonName={seasonName} element={finalElement} />
         )}
