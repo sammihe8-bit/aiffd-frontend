@@ -513,17 +513,19 @@ export default function BodyTestPage() {
                 <summary style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.gold, listStyle: 'none' }}>
                   不知道怎么测量？点击查看说明
                 </summary>
-                <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {[
-                    ['胸围', '穿无衬垫内衣，软尺经过胸部最高点水平绕一圈'],
-                    ['腰围', '自然站立，软尺在肋骨最下端和髋骨最上端中间绕一圈'],
-                    ['臀围', '软尺经过臀部最丰满处水平绕一圈'],
-                    ['肩宽', '从左肩峰到右肩峰的直线距离'],
-                  ].map(([k, v]) => (
-                    <p key={k} style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.body, margin: 0, lineHeight: 1.7 }}>
-                      <strong style={{ color: C.gold }}>{k}：</strong>{v}
-                    </p>
-                  ))}
+                <div style={{ marginTop: '14px' }}>
+                  <img
+                    src="/measure-guide.png"
+                    alt="身体尺寸测量方法：胸围、腰围、臀围、肩宽测量示意图"
+                    style={{
+                      width: '100%',
+                      maxWidth: '100%',
+                      height: 'auto',
+                      display: 'block',
+                      borderRadius: '8px',
+                      border: `1px solid ${C.border}`,
+                    }}
+                  />
                 </div>
               </details>
 
