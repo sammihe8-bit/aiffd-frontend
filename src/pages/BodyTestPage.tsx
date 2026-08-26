@@ -535,36 +535,33 @@ export default function BodyTestPage() {
 
         {/* ── Step 2: 骨架测试（7题）── */}
         {phase === 'skeleton' && (() => {
-          const questions = [
-            { title: '你的身高区间？', value: heightRange, set: setHeightRange, options: [
+          // 索引映射：0身高 1骨架大小(图片) 2肩形 3腰型 4四肢长度 5手脚大小 6体型(特殊)
+          const textQuestions: Record<number, { title: string; value: string; set: (v: string) => void; options: { id: string; label: string; sub?: string }[] }> = {
+            0: { title: '你的身高区间？', value: heightRange, set: setHeightRange, options: [
               { id: '160以下', label: '160cm 以下' },
               { id: '160-165', label: '160cm - 165cm' },
               { id: '165-170', label: '165cm - 170cm' },
               { id: '170以上', label: '170cm 以上' },
             ]},
-            { title: '你的骨架大小？', value: boneScale, set: setBoneScale, options: [
-              { id: 'small', label: '小骨架', sub: '手腕、脚踝纤细，整体精致小巧' },
-              { id: 'medium', label: '中等骨架', sub: '不大不小，比例均衡' },
-              { id: 'large', label: '大骨架', sub: '手腕、肩部宽阔，存在感强、气场大' },
-            ]},
-            { title: '你的肩形更接近哪种？', value: shoulderShape, set: setShoulderShape, options: [
+            2: { title: '你的肩形更接近哪种？', value: shoulderShape, set: setShoulderShape, options: [
               { id: '圆肩溜肩', label: '圆肩 / 溜肩', sub: '肩线圆润，带一点点溜肩' },
               { id: '方肩平肩', label: '方肩 / 平肩', sub: '肩线平直，棱角分明' },
               { id: '宽厚肩', label: '宽厚肩', sub: '肩宽且厚，结构感强' },
             ]},
-            { title: '你的腰型更接近哪种？', value: waistType, set: setWaistType, options: [
+            3: { title: '你的腰型更接近哪种？', value: waistType, set: setWaistType, options: [
               { id: '细腰明显收', label: '细腰，明显收细' },
               { id: '腰适中', label: '腰适中，不明显收细也不宽' },
               { id: '腰宽或偏直筒', label: '腰宽或偏直筒' },
             ]},
-            { title: '你的四肢长度？', value: limbLength, set: setLimbLength, options: [
+            4: { title: '你的四肢长度？', value: limbLength, set: setLimbLength, options: [
               { id: '偏短', label: '偏短' }, { id: '适中', label: '适中' }, { id: '偏长', label: '偏长' },
             ]},
-            { title: '你的手脚大小？', value: handFootSize, set: setHandFootSize, options: [
+            5: { title: '你的手脚大小？', value: handFootSize, set: setHandFootSize, options: [
               { id: '娇小', label: '娇小' }, { id: '适中', label: '适中' }, { id: '偏大', label: '偏大' },
             ]},
-          ]
+          }
 
+          const isBoneScaleQ = skeletonIdx === 1
           const isBodyShapeQ = skeletonIdx === 6
 
           const selectAndAdvance = (set: (v: string) => void, val: string) => {
@@ -578,6 +575,12 @@ export default function BodyTestPage() {
             else { setShowXTrap(false); setTimeout(goNextSkeleton, AUTO_ADVANCE_DELAY) }
           }
 
+          const boneScaleOptions = [
+            { id: 'small', img: '/bone-small.png' },
+            { id: 'medium', img: '/bone-medium.png' },
+            { id: 'large', img: '/bone-large.png' },
+          ]
+
           return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
               <div>
@@ -585,16 +588,30 @@ export default function BodyTestPage() {
                   STEP 01 · 骨架测试 · {skeletonIdx + 1} / 7
                 </p>
                 <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '26px', color: C.h2, fontWeight: 400, margin: 0 }}>
-                  {isBodyShapeQ ? '你的体型（骨骼轮廓）更接近哪种？' : questions[skeletonIdx].title}
+                  {isBodyShapeQ ? '你的体型（骨骼轮廓）更接近哪种？' : isBoneScaleQ ? '你的骨架大小更接近哪种？' : textQuestions[skeletonIdx].title}
                 </h2>
               </div>
 
-              {!isBodyShapeQ && (
+              {isBoneScaleQ && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+                  {boneScaleOptions.map(o => (
+                    <button key={o.id} onClick={() => selectAndAdvance(setBoneScale, o.id)} style={{
+                      border: `2px solid ${boneScale === o.id ? C.gold : C.border}`,
+                      borderRadius: '8px', padding: 0, cursor: 'pointer', overflow: 'hidden',
+                      background: boneScale === o.id ? '#fdf8ee' : '#fff', transition: 'all 0.2s',
+                    }}>
+                      <img src={o.img} alt={o.id} style={{ width: '100%', height: 'auto', display: 'block' }} />
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {!isBoneScaleQ && !isBodyShapeQ && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {questions[skeletonIdx].options.map(o => (
-                    <OptionCard key={o.id} label={o.label} sub={(o as { sub?: string }).sub}
-                      active={questions[skeletonIdx].value === o.id}
-                      onClick={() => selectAndAdvance(questions[skeletonIdx].set, o.id)} />
+                  {textQuestions[skeletonIdx].options.map(o => (
+                    <OptionCard key={o.id} label={o.label} sub={o.sub}
+                      active={textQuestions[skeletonIdx].value === o.id}
+                      onClick={() => selectAndAdvance(textQuestions[skeletonIdx].set, o.id)} />
                   ))}
                 </div>
               )}
