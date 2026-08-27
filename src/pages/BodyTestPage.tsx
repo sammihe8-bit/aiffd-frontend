@@ -828,11 +828,11 @@ export default function BodyTestPage() {
               </div>
 
               {isBoneRoundnessQ && (
-                <div style={{ display: 'flex', gap: '20px', alignItems: 'stretch' }}>
+                <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
                   <img
                     src="/joint-prominence.png"
                     alt="骨点观察示意图：肩峰、手腕、膝盖、脚踝"
-                    style={{ height: '100%', width: 'auto', maxWidth: '140px', flexShrink: 0, objectFit: 'contain', display: 'block', borderRadius: '8px' }}
+                    style={{ height: '340px', width: 'auto', maxWidth: '200px', flexShrink: 0, objectFit: 'contain', display: 'block', borderRadius: '8px' }}
                   />
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1 }}>
                     {textQuestions[skeletonIdx].options.map((o, i) => (
