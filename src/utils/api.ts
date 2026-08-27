@@ -50,4 +50,17 @@ export const authAPI = {
     api.get('/user/me'),
 }
 
+// 测试进度存档 API（2026-08-27 新增）——只对已登录用户生效，未登录访客仍用 localStorage 兜底
+// testType: 'body' | 'style' | 'color' | 'fashion'
+export const testProgressAPI = {
+  save: (testType: string, status: 'in_progress' | 'completed', data: object) =>
+    api.post('/test-progress', { testType, status, data }),
+
+  get: (testType: string) =>
+    api.get(`/test-progress/${testType}`),
+
+  clear: (testType: string) =>
+    api.delete(`/test-progress/${testType}`),
+}
+
 export default api
