@@ -588,9 +588,10 @@ export default function BodyTestPage() {
           }
 
           const boneScaleOptions = [
-            { id: 'S', img: '/bone-small.png' },
-            { id: 'M', img: '/bone-medium.png' },
-            { id: 'L', img: '/bone-large.png' },
+            { id: 'S', img: '/bone-small-2.png' },
+            { id: 'M', img: '/bone-medium-2.png' },
+            { id: 'L', img: '/bone-large-2.png' },
+          ]ge.png' },
           ]
 
           const comboTitle = isBoneShapeQ ? '你的骨架形状接近哪些描述？（可多选）'
