@@ -262,15 +262,25 @@ export default function BodyTestPage() {
   const [method, setMethod] = useState<'manual' | 'ai' | ''>('')
 
   // 2026-08-27 新增：进度存档与续测提醒。
-  // 先用 localStorage 算一个初始值（访客场景直接生效）；如果检测到已登录，下面的 useEffect 会去查数据库，查完后用数据库结果覆盖这里的初始值
+  // 已登录用户：初始不弹窗，等下面的 useEffect 真正查到数据库结果后再决定弹不弹（避免被本机残留的旧 localStorage 记录误导）
+  // 访客（没有 token）：直接用 localStorage 判断，本来就没有"查数据库"这一步可等
   const [resumeChoice, setResumeChoice] = useState<'none' | 'completed' | 'inprogress'>(() => {
     if (typeof window === 'undefined') return 'none'
+    if (token) return 'none'
     if (localStorage.getItem('aiffd_body_progress')) return 'inprogress'
     if (localStorage.getItem('aiffd_body_result')) return 'completed'
     return 'none'
   })
   // 已登录用户的存档内容从数据库读回来后放这里；restoreProgress / loadCompletedResult 会优先用这个，而不是 localStorage
   const [remoteSnapshot, setRemoteSnapshot] = useState<BodySnapshot | null>(null)
+
+  // 本机 localStorage 里是否有残留记录（可能是登录前、以访客身份测过一半留下的），供数据库查询失败时兜底用
+  const checkLocalFallback = () => {
+    if (typeof window === 'undefined') return
+    if (localStorage.getItem('aiffd_body_progress')) setResumeChoice('inprogress')
+    else if (localStorage.getItem('aiffd_body_result')) setResumeChoice('completed')
+    else setResumeChoice('none')
+  }
 
   useEffect(() => {
     if (!token) return // 访客：沿用上面 localStorage 算出的初始值，不用查数据库
@@ -283,10 +293,10 @@ export default function BodyTestPage() {
           setRemoteSnapshot(progress.data as BodySnapshot)
           setResumeChoice(progress.status === 'completed' ? 'completed' : 'inprogress')
         } else {
-          setResumeChoice('none') // 数据库里没有这个用户的存档
+          checkLocalFallback() // 数据库里没有这个用户的存档，退回看看本机有没有登录前留下的记录
         }
       })
-      .catch(() => { /* 查询失败就不弹提示，当没有存档处理，不阻塞用户测试 */ })
+      .catch(() => { if (!cancelled) checkLocalFallback() /* 查询失败就退回本机记录，而不是什么都不做 */ })
     return () => { cancelled = true }
   }, [token])
 
@@ -468,8 +478,9 @@ export default function BodyTestPage() {
   // "继续测试"：从存档里把所有答案和当前所在题目位置恢复回来
   const restoreProgress = () => {
     try {
-      if (token) {
-        if (remoteSnapshot) { applySnapshot(remoteSnapshot); setPhase(remoteSnapshot.phase ?? 'skeleton') }
+      // 优先用数据库存档；只有查不到（remoteSnapshot 为空，包括查询失败退回本机的情况）才读本机 localStorage
+      if (remoteSnapshot) {
+        applySnapshot(remoteSnapshot); setPhase(remoteSnapshot.phase ?? 'skeleton')
       } else {
         const raw = localStorage.getItem('aiffd_body_progress')
         if (raw) { const s = JSON.parse(raw); applySnapshot(s); setPhase(s.phase ?? 'skeleton') }
@@ -493,8 +504,9 @@ export default function BodyTestPage() {
   // "查看结果"（已完成过测试时）：把存好的答案重新组装成报告页需要的形状，直接跳到报告页
   const loadCompletedResult = () => {
     try {
-      if (token) {
-        if (remoteSnapshot) { setResult(buildResultFromSnapshot(remoteSnapshot)); setPhase('report') }
+      // 同样优先用数据库存档，查不到再退回本机 localStorage
+      if (remoteSnapshot) {
+        setResult(buildResultFromSnapshot(remoteSnapshot)); setPhase('report')
       } else {
         const bodyRaw = localStorage.getItem('aiffd_body_result')
         if (bodyRaw) {
@@ -832,7 +844,7 @@ export default function BodyTestPage() {
                   <img
                     src="/joint-prominence.png"
                     alt="骨点观察示意图：肩峰、手腕、膝盖、脚踝"
-                    style={{ height: '340px', width: 'auto', maxWidth: '200px', flexShrink: 0, objectFit: 'contain', display: 'block', borderRadius: '8px' }}
+                    style={{ height: '400px', width: 'auto', maxWidth: '320px', flexShrink: 0, objectFit: 'contain', display: 'block', borderRadius: '8px' }}
                   />
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1 }}>
                     {textQuestions[skeletonIdx].options.map((o, i) => (
