@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
 const C = {
@@ -60,6 +60,11 @@ const btnOutline: React.CSSProperties = {
   background: 'transparent', color: C.body, border: `1px solid ${C.border}`,
   borderRadius: '4px', padding: '14px 24px', fontFamily: 'Inter, sans-serif',
   fontSize: '12px', cursor: 'pointer',
+}
+
+// 选项字母标注：A/B/C/D...，帮助用户明确区分选项（2026-08-27 新增）
+function letterOf(i: number): string {
+  return String.fromCharCode(65 + i)
 }
 
 function OptionCard({ label, sub, active, onClick }: {
@@ -228,6 +233,15 @@ export default function BodyTestPage() {
   const fromStyle = typeof window !== 'undefined' && localStorage.getItem('aiffd_return_to') === 'style_body'
   const [method, setMethod] = useState<'manual' | 'ai' | ''>('')
 
+  // 2026-08-27 新增：进度存档与续测提醒。
+  // 'checking' 只是初始占位，实际值在下面的 useState 初始化函数里同步算出，不会真的停留在这个值上
+  const [resumeChoice, setResumeChoice] = useState<'none' | 'completed' | 'inprogress'>(() => {
+    if (typeof window === 'undefined') return 'none'
+    if (localStorage.getItem('aiffd_body_progress')) return 'inprogress'
+    if (localStorage.getItem('aiffd_body_result')) return 'completed'
+    return 'none'
+  })
+
   // 测量数据（AI / 手动 共用，用于辅助预填）
   const [bust, setBust] = useState('')
   const [waist, setWaist] = useState('')
@@ -306,6 +320,7 @@ export default function BodyTestPage() {
     }))
     // 气血 4 题结果单独存放，供色彩测试计算五行主辅百分比使用，不参与风格测试打分
     localStorage.setItem('aiffd_qixue_result', JSON.stringify({ qiXueState, q1, q2, q3, q4 }))
+    localStorage.removeItem('aiffd_body_progress') // 测试已完整做完，清掉中途存档
     setPhase('report')
   }
 
@@ -354,8 +369,115 @@ export default function BodyTestPage() {
     else { setPhase('flesh'); setFleshIdx(2) }
   }
 
+  // ── 进度自动存档：只要用户已经开始答题（不在 method / report），且已经处理完续测提示，
+  // 每次答案或页面位置变化就把完整快照写进 localStorage，方便中途退出后能真正"继续测试"
+  useEffect(() => {
+    if (resumeChoice !== 'none') return
+    if (phase === 'method' || phase === 'report') return
+    const snapshot = {
+      phase, method, bust, waist, hip,
+      heightRange, boneScale, boneRoundness, boneWidth, shoulderShape, waistType,
+      limbLength, handFootSize, bodyShape, hipProtrude, chestProtrude, fleshTexture,
+      q1, q2, q3, q4, skeletonIdx, fleshIdx, qixueIdx,
+      savedAt: Date.now(),
+    }
+    localStorage.setItem('aiffd_body_progress', JSON.stringify(snapshot))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, skeletonIdx, fleshIdx, qixueIdx, method, bust, waist, hip, heightRange, boneScale,
+      boneRoundness, boneWidth, shoulderShape, waistType, limbLength, handFootSize, bodyShape,
+      hipProtrude, chestProtrude, fleshTexture, q1, q2, q3, q4, resumeChoice])
+
+  // "继续测试"：从存档里把所有答案和当前所在题目位置恢复回来
+  const restoreProgress = () => {
+    try {
+      const raw = localStorage.getItem('aiffd_body_progress')
+      if (raw) {
+        const s = JSON.parse(raw)
+        setMethod(s.method ?? ''); setBust(s.bust ?? ''); setWaist(s.waist ?? ''); setHip(s.hip ?? '')
+        setHeightRange(s.heightRange ?? ''); setBoneScale(s.boneScale ?? '')
+        setBoneRoundness(s.boneRoundness ?? ''); setBoneWidth(s.boneWidth ?? '')
+        setShoulderShape(s.shoulderShape ?? []); setWaistType(s.waistType ?? [])
+        setLimbLength(s.limbLength ?? ''); setHandFootSize(s.handFootSize ?? '')
+        setBodyShape(s.bodyShape ?? [])
+        setHipProtrude(s.hipProtrude ?? []); setChestProtrude(s.chestProtrude ?? []); setFleshTexture(s.fleshTexture ?? [])
+        setQ1(s.q1 ?? ''); setQ2(s.q2 ?? ''); setQ3(s.q3 ?? ''); setQ4(s.q4 ?? '')
+        setSkeletonIdx(s.skeletonIdx ?? 0); setFleshIdx(s.fleshIdx ?? 0); setQixueIdx(s.qixueIdx ?? 0)
+        setPhase(s.phase ?? 'skeleton')
+      }
+    } catch { /* 存档损坏就当没有，走重新测试 */ }
+    setResumeChoice('none')
+  }
+
+  // "重新测试"：清空存档和已完成结果，从头开始
+  const discardAndRestart = () => {
+    localStorage.removeItem('aiffd_body_progress')
+    localStorage.removeItem('aiffd_body_result')
+    localStorage.removeItem('aiffd_qixue_result')
+    setResumeChoice('none')
+  }
+
+  // "查看结果"（已完成过测试时）：把存好的最终结果重新组装成报告页需要的形状，直接跳到报告页
+  const loadCompletedResult = () => {
+    try {
+      const bodyRaw = localStorage.getItem('aiffd_body_result')
+      if (bodyRaw) {
+        const b = JSON.parse(bodyRaw)
+        const qixueRaw = localStorage.getItem('aiffd_qixue_result')
+        const q = qixueRaw ? JSON.parse(qixueRaw) : null
+        const qiXueState = q?.qiXueState ?? '阴阳和谐'
+        const qiXueInfo = FAMILY_INFO[qiXueState] || FAMILY_INFO['阴阳和谐']
+        const boneArr: string[] = Array.isArray(b.boneScale) ? b.boneScale : []
+        setResult({
+          heightRange: b.height ?? '', boneScale: boneArr[0] ?? '', boneShape: boneArr.slice(1),
+          shoulderShape: b.shoulder ?? [], waistType: b.waist ?? [],
+          limbLength: b.limb ?? '', handFootSize: b.handFoot ?? '', bodyShape: b.bodyShape ?? [],
+          hipProtrude: b.hip ?? [], chestProtrude: b.chest ?? [], fleshTexture: b.fleshTexture ?? [],
+          qiXueState, qiXueFamily: qiXueInfo.familyName, qiXueElement: qiXueInfo.element,
+        })
+        setPhase('report')
+      }
+    } catch { /* 存档损坏就当没有 */ }
+    setResumeChoice('none')
+  }
+
+  // "跳过"：不处理这份存档/结果，直接离开去测试中心选别的测试
+  const skipToOtherTests = () => {
+    navigate('/onboarding')
+  }
+
   return (
     <div style={{ minHeight: '100vh', background: '#faf9f7' }}>
+      {/* 续测提醒弹窗：检测到本机存过体型测试的存档时显示 */}
+      {resumeChoice !== 'none' && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(15,15,13,0.5)', zIndex: 100,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px',
+        }}>
+          <div style={{ background: '#faf9f7', borderRadius: '10px', padding: '32px', maxWidth: '420px', width: '100%' }}>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.gold, marginBottom: '10px' }}>
+              {resumeChoice === 'inprogress' ? '发现未完成的体型测试' : '你已经完成过体型测试'}
+            </p>
+            <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h1, fontWeight: 400, margin: '0 0 12px' }}>
+              {resumeChoice === 'inprogress' ? '要继续上次的进度吗？' : '要重新测一次吗？'}
+            </h2>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.body, lineHeight: 1.8, marginBottom: '24px' }}>
+              {resumeChoice === 'inprogress'
+                ? '本设备上保存了一份还没做完的记录，可以选择继续、重新开始，或者先去做别的测试。'
+                : '本设备上已经保存了一份完整的体型测试结果，可以直接查看，也可以重新测一次覆盖它。'}
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {resumeChoice === 'inprogress' ? (
+                <button onClick={restoreProgress} style={btnGold}>继续测试</button>
+              ) : (
+                <button onClick={loadCompletedResult} style={btnGold}>查看上次结果</button>
+              )}
+              <button onClick={discardAndRestart} style={btnOutline}>重新测试</button>
+              <button onClick={skipToOtherTests} style={{ ...btnOutline, border: 'none', color: C.muted }}>跳过，去做别的测试 →</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div style={{ maxWidth: '680px', margin: '0 auto', padding: '48px 32px 80px' }}>
 
         {phase === 'data' && <ProgressBar current={1} total={4} label="BODY TEST" />}
@@ -536,9 +658,9 @@ export default function BodyTestPage() {
               { id: '>170', label: '170cm 以上' },
             ]},
             2: { title: '你的手腕和关节骨感更接近哪一种？', value: boneRoundness, set: setBoneRoundness, options: [
-              { id: '圆', label: 'A · 骨点较弱', sub: '手腕和关节轮廓柔和，骨点不明显' },
-              { id: '匀', label: 'B · 骨点适中', sub: '能看到一定骨骼轮廓，但不会特别突出' },
-              { id: '角', label: 'C · 骨点明显', sub: '手腕、脚踝或关节骨点清楚，结构感较强' },
+              { id: '圆', label: '骨点较弱', sub: '手腕和关节轮廓柔和，骨点不明显' },
+              { id: '匀', label: '骨点适中', sub: '能看到一定骨骼轮廓，但不会特别突出' },
+              { id: '角', label: '骨点明显', sub: '手腕、脚踝或关节骨点清楚，结构感较强' },
             ]},
             3: { title: '你的肩部横向展开感更接近哪一种？', value: boneWidth, set: setBoneWidth, options: [
               { id: '窄', label: '偏窄', sub: '肩部收窄，横向存在感较弱' },
@@ -618,7 +740,7 @@ export default function BodyTestPage() {
                   STEP 01 · 骨架测试 · {skeletonIdx + 1} / 9
                 </p>
                 <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '26px', color: C.h2, fontWeight: 400, margin: 0 }}>
-                  {isComboQ ? comboTitle : isBoneScaleQ ? '你的骨架大小更接近哪种？' : textQuestions[skeletonIdx].title}
+                  Q{currentQuestionNumber} · {isComboQ ? comboTitle : isBoneScaleQ ? '你的骨架大小更接近哪种？' : textQuestions[skeletonIdx].title}
                 </h2>
                 {isBoneRoundnessQ && (
                   <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '10px', lineHeight: 1.7 }}>
@@ -635,8 +757,8 @@ export default function BodyTestPage() {
                     style={{ height: '100%', width: 'auto', maxWidth: '140px', flexShrink: 0, objectFit: 'contain', display: 'block', borderRadius: '8px' }}
                   />
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1 }}>
-                    {textQuestions[skeletonIdx].options.map(o => (
-                      <OptionCard key={o.id} label={o.label} sub={o.sub}
+                    {textQuestions[skeletonIdx].options.map((o, i) => (
+                      <OptionCard key={o.id} label={`${letterOf(i)} · ${o.label}`} sub={o.sub}
                         active={textQuestions[skeletonIdx].value === o.id}
                         onClick={() => selectAndAdvance(textQuestions[skeletonIdx].set, o.id)} />
                     ))}
@@ -646,12 +768,19 @@ export default function BodyTestPage() {
 
               {isBoneScaleQ && (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
-                  {boneScaleOptions.map(o => (
+                  {boneScaleOptions.map((o, i) => (
                     <button key={o.id} onClick={() => selectAndAdvance(setBoneScale, o.id)} style={{
                       border: `2px solid ${boneScale === o.id ? C.gold : C.border}`,
                       borderRadius: '8px', padding: 0, cursor: 'pointer', overflow: 'hidden',
                       background: boneScale === o.id ? '#fdf8ee' : '#fff', transition: 'all 0.2s',
+                      position: 'relative',
                     }}>
+                      <span style={{
+                        position: 'absolute', top: '8px', left: '8px', width: '22px', height: '22px', borderRadius: '50%',
+                        background: boneScale === o.id ? C.gold : 'rgba(0,0,0,0.5)', color: '#fff',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontFamily: 'Inter, sans-serif', fontSize: '12px',
+                      }}>{letterOf(i)}</span>
                       <img src={o.img} alt={o.id} style={{ width: '100%', height: 'auto', display: 'block' }} />
                     </button>
                   ))}
@@ -660,8 +789,8 @@ export default function BodyTestPage() {
 
               {!isBoneScaleQ && !isBoneRoundnessQ && isTextQ && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {textQuestions[skeletonIdx].options.map(o => (
-                    <OptionCard key={o.id} label={o.label} sub={o.sub}
+                  {textQuestions[skeletonIdx].options.map((o, i) => (
+                    <OptionCard key={o.id} label={`${letterOf(i)} · ${o.label}`} sub={o.sub}
                       active={textQuestions[skeletonIdx].value === o.id}
                       onClick={() => selectAndAdvance(textQuestions[skeletonIdx].set, o.id)} />
                   ))}
@@ -670,8 +799,8 @@ export default function BodyTestPage() {
 
               {isComboQ && !isBodyShapeQ && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {comboConfig.options.map(o => (
-                    <MultiOptionCard key={o.id} label={o.label} sub={o.sub}
+                  {comboConfig.options.map((o, i) => (
+                    <MultiOptionCard key={o.id} label={`${letterOf(i)} · ${o.label}`} sub={o.sub}
                       active={comboConfig.value.includes(o.id)}
                       onClick={() => toggle(comboConfig.value, comboConfig.set, o.id)} />
                   ))}
@@ -681,8 +810,8 @@ export default function BodyTestPage() {
               {isBodyShapeQ && (
                 <div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    {bodyShapeOptions.map(o => (
-                      <MultiOptionCard key={o.id} label={o.label} sub={o.sub}
+                    {bodyShapeOptions.map((o, i) => (
+                      <MultiOptionCard key={o.id} label={`${letterOf(i)} · ${o.label}`} sub={o.sub}
                         active={bodyShape.includes(o.id)}
                         onClick={() => {
                           toggle(bodyShape, setBodyShape, o.id)
@@ -757,12 +886,14 @@ export default function BodyTestPage() {
                 <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', marginBottom: '8px' }}>
                   STEP 02 · 皮肉测试 · {fleshIdx + 1} / 3
                 </p>
-                <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '26px', color: C.h2, fontWeight: 400, margin: 0 }}>{current.title}</h2>
+                <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '26px', color: C.h2, fontWeight: 400, margin: 0 }}>
+                  Q{currentQuestionNumber} · {current.title}
+                </h2>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {current.options.map(o => (
-                  <MultiOptionCard key={o.id} label={o.label} sub={o.sub} active={current.value.includes(o.id)}
+                {current.options.map((o, i) => (
+                  <MultiOptionCard key={o.id} label={`${letterOf(i)} · ${o.label}`} sub={o.sub} active={current.value.includes(o.id)}
                     onClick={() => toggle(current.value, current.set, o.id)} />
                 ))}
               </div>
@@ -811,7 +942,9 @@ export default function BodyTestPage() {
                 <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', marginBottom: '8px' }}>
                   STEP 03 · 气血态 · {idx + 1} / 4
                 </p>
-                <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '26px', color: C.h2, fontWeight: 400, margin: 0 }}>{titles[idx]}</h2>
+                <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '26px', color: C.h2, fontWeight: 400, margin: 0 }}>
+                  Q{currentQuestionNumber} · {titles[idx]}
+                </h2>
                 {idx === 0 && (
                   <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, marginTop: '8px' }}>
                     气血态决定你的 13 型所属大类家族（浪漫 / 少年 / 经典 / 自然 / 戏剧）
@@ -820,13 +953,13 @@ export default function BodyTestPage() {
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {options.map(o => (
+                {options.map((o, i) => (
                   <button key={o.id} onClick={() => selectAndAdvance(o.id)} style={{
                     border: `1px solid ${values[idx] === o.id ? C.gold : C.border}`,
                     background: values[idx] === o.id ? '#fdf8ee' : '#fff',
                     padding: '14px 18px', textAlign: 'left', cursor: 'pointer', borderRadius: '6px',
                   }}>
-                    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: values[idx] === o.id ? C.h2 : C.body }}>{o.text}</span>
+                    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: values[idx] === o.id ? C.h2 : C.body }}>{letterOf(i)} · {o.text}</span>
                   </button>
                 ))}
               </div>
