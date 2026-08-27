@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../hooks/useAuth'
+import { testProgressAPI } from '../utils/api'
 
 const C = {
   h1: '#111111', h2: '#222222', sub: '#444444',
@@ -48,6 +50,31 @@ function calcQiXue(q1: string, q2: string, q3: string, q4: string): string {
   const tied = sorted.filter(([, v]) => v === top)
   if (tied.length > 1) return '阴阳和谐'
   return sorted[0][0]
+}
+
+// 进度快照的形状（存进 localStorage 或后端 test_progress 表的 data_json，两边格式统一）
+interface BodySnapshot {
+  phase: Phase; method: string; bust: string; waist: string; hip: string
+  heightRange: string; boneScale: string; boneRoundness: string; boneWidth: string
+  shoulderShape: string[]; waistType: string[]; limbLength: string; handFootSize: string
+  bodyShape: string[]; hipProtrude: string[]; chestProtrude: string[]; fleshTexture: string[]
+  q1: string; q2: string; q3: string; q4: string
+  skeletonIdx: number; fleshIdx: number; qixueIdx: number
+}
+
+// 不依赖当前组件 state，直接从一份存档快照算出报告页需要的 result 对象
+// 供"继续测试后直接看已完成结果"和"查看历史完成结果"两种场景共用
+function buildResultFromSnapshot(s: BodySnapshot) {
+  const qiXueState = calcQiXue(s.q1, s.q2, s.q3, s.q4)
+  const qiXueInfo = FAMILY_INFO[qiXueState] || FAMILY_INFO['阴阳和谐']
+  return {
+    heightRange: s.heightRange, boneScale: s.boneScale,
+    boneShape: [s.boneRoundness, s.boneWidth].filter(Boolean),
+    shoulderShape: s.shoulderShape, waistType: s.waistType,
+    limbLength: s.limbLength, handFootSize: s.handFootSize, bodyShape: s.bodyShape,
+    hipProtrude: s.hipProtrude, chestProtrude: s.chestProtrude, fleshTexture: s.fleshTexture,
+    qiXueState, qiXueFamily: qiXueInfo.familyName, qiXueElement: qiXueInfo.element,
+  }
 }
 
 // ── 公共样式
@@ -229,18 +256,39 @@ function ReportView({ result, onReset, onReturnToStyle }: {
 // ── 主页面
 export default function BodyTestPage() {
   const navigate = useNavigate()
+  const { token } = useAuth() // 登录用户走数据库存档；token 为空则是访客，走 localStorage
   const [phase, setPhase] = useState<Phase>('method')
   const fromStyle = typeof window !== 'undefined' && localStorage.getItem('aiffd_return_to') === 'style_body'
   const [method, setMethod] = useState<'manual' | 'ai' | ''>('')
 
   // 2026-08-27 新增：进度存档与续测提醒。
-  // 'checking' 只是初始占位，实际值在下面的 useState 初始化函数里同步算出，不会真的停留在这个值上
+  // 先用 localStorage 算一个初始值（访客场景直接生效）；如果检测到已登录，下面的 useEffect 会去查数据库，查完后用数据库结果覆盖这里的初始值
   const [resumeChoice, setResumeChoice] = useState<'none' | 'completed' | 'inprogress'>(() => {
     if (typeof window === 'undefined') return 'none'
     if (localStorage.getItem('aiffd_body_progress')) return 'inprogress'
     if (localStorage.getItem('aiffd_body_result')) return 'completed'
     return 'none'
   })
+  // 已登录用户的存档内容从数据库读回来后放这里；restoreProgress / loadCompletedResult 会优先用这个，而不是 localStorage
+  const [remoteSnapshot, setRemoteSnapshot] = useState<BodySnapshot | null>(null)
+
+  useEffect(() => {
+    if (!token) return // 访客：沿用上面 localStorage 算出的初始值，不用查数据库
+    let cancelled = false
+    testProgressAPI.get('body')
+      .then(res => {
+        if (cancelled) return
+        const progress = res.data?.progress
+        if (progress && progress.data) {
+          setRemoteSnapshot(progress.data as BodySnapshot)
+          setResumeChoice(progress.status === 'completed' ? 'completed' : 'inprogress')
+        } else {
+          setResumeChoice('none') // 数据库里没有这个用户的存档
+        }
+      })
+      .catch(() => { /* 查询失败就不弹提示，当没有存档处理，不阻塞用户测试 */ })
+    return () => { cancelled = true }
+  }, [token])
 
   // 测量数据（AI / 手动 共用，用于辅助预填）
   const [bust, setBust] = useState('')
@@ -313,6 +361,7 @@ export default function BodyTestPage() {
 
     // 供打分引擎使用的原始维度（键名对应 src/data/styleMatrix.ts 里的 DIMENSIONS[].id）
     // 骨架大小是 combo 类型，把"尺寸(S/M/L)"和"形状(圆/角/匀/宽/窄)"两屏答案合并成一个数组
+    // 这两个 key 是给 StyleTestPage 用的引擎输入，不管有没有登录都固定存本机 localStorage
     localStorage.setItem('aiffd_body_result', JSON.stringify({
       boneScale: [boneScale, ...boneShape], height: heightRange, shoulder: shoulderShape, waist: waistType,
       limb: limbLength, handFoot: handFootSize, bodyShape,
@@ -320,7 +369,19 @@ export default function BodyTestPage() {
     }))
     // 气血 4 题结果单独存放，供色彩测试计算五行主辅百分比使用，不参与风格测试打分
     localStorage.setItem('aiffd_qixue_result', JSON.stringify({ qiXueState, q1, q2, q3, q4 }))
-    localStorage.removeItem('aiffd_body_progress') // 测试已完整做完，清掉中途存档
+
+    // 续测存档：标记为已完成
+    const snapshot: BodySnapshot = {
+      phase: 'report', method, bust, waist, hip,
+      heightRange, boneScale, boneRoundness, boneWidth, shoulderShape, waistType,
+      limbLength, handFootSize, bodyShape, hipProtrude, chestProtrude, fleshTexture,
+      q1, q2, q3, q4, skeletonIdx, fleshIdx, qixueIdx,
+    }
+    if (token) {
+      testProgressAPI.save('body', 'completed', snapshot).catch(() => {})
+    } else {
+      localStorage.removeItem('aiffd_body_progress') // 测试已完整做完，清掉中途存档
+    }
     setPhase('report')
   }
 
@@ -370,39 +431,48 @@ export default function BodyTestPage() {
   }
 
   // ── 进度自动存档：只要用户已经开始答题（不在 method / report），且已经处理完续测提示，
-  // 每次答案或页面位置变化就把完整快照写进 localStorage，方便中途退出后能真正"继续测试"
+  // 每次答案或页面位置变化就把完整快照写进去，方便中途退出后能真正"继续测试"
+  // 已登录 → 存进数据库（跨设备都能续）；访客 → 存 localStorage（仅本机本浏览器有效）
   useEffect(() => {
     if (resumeChoice !== 'none') return
     if (phase === 'method' || phase === 'report') return
-    const snapshot = {
+    const snapshot: BodySnapshot = {
       phase, method, bust, waist, hip,
       heightRange, boneScale, boneRoundness, boneWidth, shoulderShape, waistType,
       limbLength, handFootSize, bodyShape, hipProtrude, chestProtrude, fleshTexture,
       q1, q2, q3, q4, skeletonIdx, fleshIdx, qixueIdx,
-      savedAt: Date.now(),
     }
-    localStorage.setItem('aiffd_body_progress', JSON.stringify(snapshot))
+    if (token) {
+      testProgressAPI.save('body', 'in_progress', snapshot).catch(() => { /* 网络失败就先不管，下次答题会再存一次 */ })
+    } else {
+      localStorage.setItem('aiffd_body_progress', JSON.stringify(snapshot))
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, skeletonIdx, fleshIdx, qixueIdx, method, bust, waist, hip, heightRange, boneScale,
       boneRoundness, boneWidth, shoulderShape, waistType, limbLength, handFootSize, bodyShape,
-      hipProtrude, chestProtrude, fleshTexture, q1, q2, q3, q4, resumeChoice])
+      hipProtrude, chestProtrude, fleshTexture, q1, q2, q3, q4, resumeChoice, token])
+
+  // 把存档快照里的所有字段恢复回各自的 state
+  const applySnapshot = (s: BodySnapshot) => {
+    setMethod((s.method as 'manual' | 'ai' | '') ?? ''); setBust(s.bust ?? ''); setWaist(s.waist ?? ''); setHip(s.hip ?? '')
+    setHeightRange(s.heightRange ?? ''); setBoneScale(s.boneScale ?? '')
+    setBoneRoundness(s.boneRoundness ?? ''); setBoneWidth(s.boneWidth ?? '')
+    setShoulderShape(s.shoulderShape ?? []); setWaistType(s.waistType ?? [])
+    setLimbLength(s.limbLength ?? ''); setHandFootSize(s.handFootSize ?? '')
+    setBodyShape(s.bodyShape ?? [])
+    setHipProtrude(s.hipProtrude ?? []); setChestProtrude(s.chestProtrude ?? []); setFleshTexture(s.fleshTexture ?? [])
+    setQ1(s.q1 ?? ''); setQ2(s.q2 ?? ''); setQ3(s.q3 ?? ''); setQ4(s.q4 ?? '')
+    setSkeletonIdx(s.skeletonIdx ?? 0); setFleshIdx(s.fleshIdx ?? 0); setQixueIdx(s.qixueIdx ?? 0)
+  }
 
   // "继续测试"：从存档里把所有答案和当前所在题目位置恢复回来
   const restoreProgress = () => {
     try {
-      const raw = localStorage.getItem('aiffd_body_progress')
-      if (raw) {
-        const s = JSON.parse(raw)
-        setMethod(s.method ?? ''); setBust(s.bust ?? ''); setWaist(s.waist ?? ''); setHip(s.hip ?? '')
-        setHeightRange(s.heightRange ?? ''); setBoneScale(s.boneScale ?? '')
-        setBoneRoundness(s.boneRoundness ?? ''); setBoneWidth(s.boneWidth ?? '')
-        setShoulderShape(s.shoulderShape ?? []); setWaistType(s.waistType ?? [])
-        setLimbLength(s.limbLength ?? ''); setHandFootSize(s.handFootSize ?? '')
-        setBodyShape(s.bodyShape ?? [])
-        setHipProtrude(s.hipProtrude ?? []); setChestProtrude(s.chestProtrude ?? []); setFleshTexture(s.fleshTexture ?? [])
-        setQ1(s.q1 ?? ''); setQ2(s.q2 ?? ''); setQ3(s.q3 ?? ''); setQ4(s.q4 ?? '')
-        setSkeletonIdx(s.skeletonIdx ?? 0); setFleshIdx(s.fleshIdx ?? 0); setQixueIdx(s.qixueIdx ?? 0)
-        setPhase(s.phase ?? 'skeleton')
+      if (token) {
+        if (remoteSnapshot) { applySnapshot(remoteSnapshot); setPhase(remoteSnapshot.phase ?? 'skeleton') }
+      } else {
+        const raw = localStorage.getItem('aiffd_body_progress')
+        if (raw) { const s = JSON.parse(raw); applySnapshot(s); setPhase(s.phase ?? 'skeleton') }
       }
     } catch { /* 存档损坏就当没有，走重新测试 */ }
     setResumeChoice('none')
@@ -410,31 +480,39 @@ export default function BodyTestPage() {
 
   // "重新测试"：清空存档和已完成结果，从头开始
   const discardAndRestart = () => {
-    localStorage.removeItem('aiffd_body_progress')
-    localStorage.removeItem('aiffd_body_result')
-    localStorage.removeItem('aiffd_qixue_result')
+    if (token) {
+      testProgressAPI.clear('body').catch(() => { /* 清不掉也不阻塞，反正下次答题会用新数据覆盖 */ })
+    } else {
+      localStorage.removeItem('aiffd_body_progress')
+      localStorage.removeItem('aiffd_body_result')
+      localStorage.removeItem('aiffd_qixue_result')
+    }
     setResumeChoice('none')
   }
 
-  // "查看结果"（已完成过测试时）：把存好的最终结果重新组装成报告页需要的形状，直接跳到报告页
+  // "查看结果"（已完成过测试时）：把存好的答案重新组装成报告页需要的形状，直接跳到报告页
   const loadCompletedResult = () => {
     try {
-      const bodyRaw = localStorage.getItem('aiffd_body_result')
-      if (bodyRaw) {
-        const b = JSON.parse(bodyRaw)
-        const qixueRaw = localStorage.getItem('aiffd_qixue_result')
-        const q = qixueRaw ? JSON.parse(qixueRaw) : null
-        const qiXueState = q?.qiXueState ?? '阴阳和谐'
-        const qiXueInfo = FAMILY_INFO[qiXueState] || FAMILY_INFO['阴阳和谐']
-        const boneArr: string[] = Array.isArray(b.boneScale) ? b.boneScale : []
-        setResult({
-          heightRange: b.height ?? '', boneScale: boneArr[0] ?? '', boneShape: boneArr.slice(1),
-          shoulderShape: b.shoulder ?? [], waistType: b.waist ?? [],
-          limbLength: b.limb ?? '', handFootSize: b.handFoot ?? '', bodyShape: b.bodyShape ?? [],
-          hipProtrude: b.hip ?? [], chestProtrude: b.chest ?? [], fleshTexture: b.fleshTexture ?? [],
-          qiXueState, qiXueFamily: qiXueInfo.familyName, qiXueElement: qiXueInfo.element,
-        })
-        setPhase('report')
+      if (token) {
+        if (remoteSnapshot) { setResult(buildResultFromSnapshot(remoteSnapshot)); setPhase('report') }
+      } else {
+        const bodyRaw = localStorage.getItem('aiffd_body_result')
+        if (bodyRaw) {
+          const b = JSON.parse(bodyRaw)
+          const qixueRaw = localStorage.getItem('aiffd_qixue_result')
+          const q = qixueRaw ? JSON.parse(qixueRaw) : null
+          const qiXueState = q?.qiXueState ?? '阴阳和谐'
+          const qiXueInfo = FAMILY_INFO[qiXueState] || FAMILY_INFO['阴阳和谐']
+          const boneArr: string[] = Array.isArray(b.boneScale) ? b.boneScale : []
+          setResult({
+            heightRange: b.height ?? '', boneScale: boneArr[0] ?? '', boneShape: boneArr.slice(1),
+            shoulderShape: b.shoulder ?? [], waistType: b.waist ?? [],
+            limbLength: b.limb ?? '', handFootSize: b.handFoot ?? '', bodyShape: b.bodyShape ?? [],
+            hipProtrude: b.hip ?? [], chestProtrude: b.chest ?? [], fleshTexture: b.fleshTexture ?? [],
+            qiXueState, qiXueFamily: qiXueInfo.familyName, qiXueElement: qiXueInfo.element,
+          })
+          setPhase('report')
+        }
       }
     } catch { /* 存档损坏就当没有 */ }
     setResumeChoice('none')
