@@ -628,11 +628,20 @@ export default function BodyTestPage() {
               </div>
 
               {isBoneRoundnessQ && (
-                <img
-                  src="/joint-prominence.png"
-                  alt="骨点观察示意图：肩峰、手腕、膝盖、脚踝"
-                  style={{ width: '100%', maxWidth: '360px', margin: '0 auto', display: 'block', borderRadius: '8px' }}
-                />
+                <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
+                  <img
+                    src="/joint-prominence.png"
+                    alt="骨点观察示意图：肩峰、手腕、膝盖、脚踝"
+                    style={{ width: '120px', flexShrink: 0, height: 'auto', display: 'block', borderRadius: '8px' }}
+                  />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1 }}>
+                    {textQuestions[skeletonIdx].options.map(o => (
+                      <OptionCard key={o.id} label={o.label} sub={o.sub}
+                        active={textQuestions[skeletonIdx].value === o.id}
+                        onClick={() => selectAndAdvance(textQuestions[skeletonIdx].set, o.id)} />
+                    ))}
+                  </div>
+                </div>
               )}
 
               {isBoneScaleQ && (
@@ -649,7 +658,7 @@ export default function BodyTestPage() {
                 </div>
               )}
 
-              {!isBoneScaleQ && isTextQ && (
+              {!isBoneScaleQ && !isBoneRoundnessQ && isTextQ && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   {textQuestions[skeletonIdx].options.map(o => (
                     <OptionCard key={o.id} label={o.label} sub={o.sub}
