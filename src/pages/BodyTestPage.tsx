@@ -240,7 +240,11 @@ export default function BodyTestPage() {
   // 肩型 / 腰型 / 体格 三项在表格里会出现组合词（如"圆+溜"），改为多选，存成数组
   const [heightRange, setHeightRange] = useState('')
   const [boneScale, setBoneScale] = useState('')
-  const [boneShape, setBoneShape] = useState<string[]>([]) // 骨架形状多选：圆/角/匀/宽/窄
+  // 骨架形状原本是一道多选题（圆/角/匀/宽/窄），2026-08-27 改为两道单选子题：
+  // 骨点明显程度（圆润↔有棱角）+ 肩部横向展开感（偏窄↔偏宽），两个答案合并成 boneShape 数组
+  const [boneRoundness, setBoneRoundness] = useState('') // 骨点较弱→圆 / 骨点适中→匀 / 骨点明显→角
+  const [boneWidth, setBoneWidth] = useState('') // 偏窄→窄 / 适中→匀 / 偏宽→宽
+  const boneShape = [boneRoundness, boneWidth].filter(Boolean)
   const [shoulderShape, setShoulderShape] = useState<string[]>([])
   const [waistType, setWaistType] = useState<string[]>([])
   const [limbLength, setLimbLength] = useState('')
@@ -309,7 +313,7 @@ export default function BodyTestPage() {
     setPhase('method'); setMethod(''); setResult(null)
     setBust(''); setWaist(''); setHip(''); setConflict('')
     setAiStatus('idle'); setPreviewUrl('')
-    setHeightRange(''); setBoneScale(''); setBoneShape([]); setShoulderShape([]); setWaistType([])
+    setHeightRange(''); setBoneScale(''); setBoneRoundness(''); setBoneWidth(''); setShoulderShape([]); setWaistType([])
     setLimbLength(''); setHandFootSize(''); setBodyShape([]); setShowXTrap(false)
     setHipProtrude([]); setChestProtrude([]); setFleshTexture([])
     setQ1(''); setQ2(''); setQ3(''); setQ4('')
@@ -317,16 +321,16 @@ export default function BodyTestPage() {
   }
 
   // 骨架(8) + 皮肉(3) + 气血态(4) = 15 题，跨环节统一计数，方便一屏一题的进度展示
-  const TOTAL_QUESTIONS = 15
+  const TOTAL_QUESTIONS = 16
   const currentQuestionNumber =
     phase === 'skeleton' ? skeletonIdx + 1 :
-    phase === 'flesh' ? 8 + fleshIdx + 1 :
-    phase === 'qixue' ? 8 + 3 + qixueIdx + 1 : 0
+    phase === 'flesh' ? 9 + fleshIdx + 1 :
+    phase === 'qixue' ? 9 + 3 + qixueIdx + 1 : 0
 
   // 选完一题后延迟自动跳下一题，让用户先看到选中态再切换
   const AUTO_ADVANCE_DELAY = 260
   const goNextSkeleton = () => {
-    if (skeletonIdx < 7) setSkeletonIdx(skeletonIdx + 1)
+    if (skeletonIdx < 8) setSkeletonIdx(skeletonIdx + 1)
     else { setPhase('flesh'); setFleshIdx(0) }
   }
   const goBackSkeleton = () => {
@@ -407,7 +411,7 @@ export default function BodyTestPage() {
                 setAiStatus('analyzing')
                 setTimeout(() => {
                   setAiStatus('done')
-                  setHeightRange('165-170'); setBoneScale('M'); setBoneShape(['匀']); setShoulderShape(['圆', '溜'])
+                  setHeightRange('165-170'); setBoneScale('M'); setBoneRoundness('匀'); setBoneWidth('匀'); setShoulderShape(['圆', '溜'])
                   setWaistType(['匀']); setLimbLength('适中'); setHandFootSize('适中'); setBodyShape(['H型'])
                   setHipProtrude(['适中']); setChestProtrude(['适中']); setFleshTexture(['适中'])
                 }, 2000)
@@ -519,9 +523,10 @@ export default function BodyTestPage() {
           )
         })()}
 
-        {/* ── Step 2: 骨架测试（8题）── */}
+        {/* ── Step 2: 骨架测试（9题）── */}
         {phase === 'skeleton' && (() => {
-          // 索引映射：0身高 1骨架大小(图片) 2骨架形状(多选) 3肩形(多选) 4腰型(多选) 5四肢长度 6手脚大小 7体型(多选，特殊)
+          // 索引映射：0身高 1骨架大小(图片) 2骨点明显程度 3肩部横向展开感 4肩形(多选) 5腰型(多选) 6四肢长度 7手脚大小 8体型(多选，特殊)
+          // 2026-08-27：原"骨架形状多选(圆/角/匀/宽/窄)"拆成 2 和 3 这两道单选子题，分别对应圆润↔有棱角、偏窄↔偏宽两条轴
           const textQuestions: Record<number, { title: string; value: string; set: (v: string) => void; options: { id: string; label: string; sub?: string }[] }> = {
             0: { title: '你的身高区间？', value: heightRange, set: setHeightRange, options: [
               { id: '<155', label: '155cm 以下' },
@@ -530,22 +535,25 @@ export default function BodyTestPage() {
               { id: '165-170', label: '165cm - 170cm' },
               { id: '>170', label: '170cm 以上' },
             ]},
-            5: { title: '你的四肢长度？', value: limbLength, set: setLimbLength, options: [
+            2: { title: '你的手腕和关节骨感更接近哪一种？', value: boneRoundness, set: setBoneRoundness, options: [
+              { id: '圆', label: '骨点较弱', sub: '手腕和关节轮廓柔和，骨点不明显' },
+              { id: '匀', label: '骨点适中', sub: '能看到一定骨骼轮廓，但不会特别突出' },
+              { id: '角', label: '骨点明显', sub: '手腕、脚踝或关节骨点清楚，结构感较强' },
+            ]},
+            3: { title: '你的肩部横向展开感更接近哪一种？', value: boneWidth, set: setBoneWidth, options: [
+              { id: '窄', label: '偏窄', sub: '肩部收窄，横向存在感较弱' },
+              { id: '匀', label: '适中', sub: '肩宽与整体比例协调，不宽不窄' },
+              { id: '宽', label: '偏宽', sub: '肩部明显展开，横向存在感较强' },
+            ]},
+            6: { title: '你的四肢长度？', value: limbLength, set: setLimbLength, options: [
               { id: '偏短', label: '偏短' }, { id: '适中', label: '适中' }, { id: '偏长', label: '偏长' },
             ]},
-            6: { title: '你的手脚大小？', value: handFootSize, set: setHandFootSize, options: [
+            7: { title: '你的手脚大小？', value: handFootSize, set: setHandFootSize, options: [
               { id: '娇小', label: '娇小' }, { id: '适中', label: '适中' }, { id: '偏大', label: '偏大' },
             ]},
           }
 
-          // 骨架形状 / 肩型 / 腰型 表格里会出现组合词（如"圆+溜"），做成多选：可以勾多个描述词
-          const boneShapeOptions = [
-            { id: '圆', label: '圆', sub: '骨骼线条圆润' },
-            { id: '角', label: '角', sub: '骨骼带棱角，线条分明' },
-            { id: '匀', label: '匀', sub: '骨架匀称对称' },
-            { id: '宽', label: '宽', sub: '骨架偏宽' },
-            { id: '窄', label: '窄', sub: '骨架偏窄' },
-          ]
+          // 肩型 / 腰型 表格里会出现组合词（如"圆+溜"），做成多选：可以勾多个描述词
           const shoulderOptions = [
             { id: '圆', label: '圆', sub: '肩线圆润' },
             { id: '直', label: '直', sub: '肩线平直' },
@@ -571,18 +579,19 @@ export default function BodyTestPage() {
           ]
 
           const isBoneScaleQ = skeletonIdx === 1
-          const isBoneShapeQ = skeletonIdx === 2
-          const isShoulderQ = skeletonIdx === 3
-          const isWaistQ = skeletonIdx === 4
-          const isBodyShapeQ = skeletonIdx === 7
-          const isComboQ = isBoneShapeQ || isShoulderQ || isWaistQ || isBodyShapeQ
+          const isBoneRoundnessQ = skeletonIdx === 2
+          const isShoulderQ = skeletonIdx === 4
+          const isWaistQ = skeletonIdx === 5
+          const isBodyShapeQ = skeletonIdx === 8
+          const isComboQ = isShoulderQ || isWaistQ || isBodyShapeQ
+          const isTextQ = skeletonIdx in textQuestions
 
           const selectAndAdvance = (set: (v: string) => void, val: string) => {
             set(val)
             setTimeout(goNextSkeleton, AUTO_ADVANCE_DELAY)
           }
 
-          // 多选题的勾选切换（骨架形状/肩型/腰型/体格通用）
+          // 多选题的勾选切换（肩型/腰型/体格通用）
           const toggle = (arr: string[], set: (v: string[]) => void, val: string) => {
             set(arr.includes(val) ? arr.filter(v => v !== val) : [...arr, val])
           }
@@ -593,14 +602,12 @@ export default function BodyTestPage() {
             { id: 'L', img: '/bone-large-2.png' },
           ]
 
-          const comboTitle = isBoneShapeQ ? '你的骨架形状接近哪些描述？（可多选）'
-            : isShoulderQ ? '你的肩形接近哪些描述？（可多选）'
+          const comboTitle = isShoulderQ ? '你的肩形接近哪些描述？（可多选）'
             : isWaistQ ? '你的腰型接近哪些描述？（可多选）'
             : '你的体型（骨骼轮廓）接近哪些？（可多选）'
 
-          // 当前多选题对应的选项列表 + 已选值 + 更新函数（合并渲染逻辑，避免 4 段重复 JSX）
-          const comboConfig = isBoneShapeQ ? { options: boneShapeOptions, value: boneShape, set: setBoneShape }
-            : isShoulderQ ? { options: shoulderOptions, value: shoulderShape, set: setShoulderShape }
+          // 当前多选题对应的选项列表 + 已选值 + 更新函数（合并渲染逻辑，避免 3 段重复 JSX）
+          const comboConfig = isShoulderQ ? { options: shoulderOptions, value: shoulderShape, set: setShoulderShape }
             : isWaistQ ? { options: waistOptions, value: waistType, set: setWaistType }
             : { options: bodyShapeOptions, value: bodyShape, set: setBodyShape }
 
@@ -608,12 +615,25 @@ export default function BodyTestPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
               <div>
                 <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', marginBottom: '8px' }}>
-                  STEP 01 · 骨架测试 · {skeletonIdx + 1} / 8
+                  STEP 01 · 骨架测试 · {skeletonIdx + 1} / 9
                 </p>
                 <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '26px', color: C.h2, fontWeight: 400, margin: 0 }}>
                   {isComboQ ? comboTitle : isBoneScaleQ ? '你的骨架大小更接近哪种？' : textQuestions[skeletonIdx].title}
                 </h2>
+                {isBoneRoundnessQ && (
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '10px', lineHeight: 1.7 }}>
+                    观察手腕、脚踝、肩峰、膝盖等位置的骨点是否明显
+                  </p>
+                )}
               </div>
+
+              {isBoneRoundnessQ && (
+                <img
+                  src="/joint-prominence.png"
+                  alt="骨点观察示意图：肩峰、手腕、膝盖、脚踝"
+                  style={{ width: '100%', maxWidth: '360px', margin: '0 auto', display: 'block', borderRadius: '8px' }}
+                />
+              )}
 
               {isBoneScaleQ && (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
@@ -629,7 +649,7 @@ export default function BodyTestPage() {
                 </div>
               )}
 
-              {!isBoneScaleQ && !isComboQ && (
+              {!isBoneScaleQ && isTextQ && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   {textQuestions[skeletonIdx].options.map(o => (
                     <OptionCard key={o.id} label={o.label} sub={o.sub}
