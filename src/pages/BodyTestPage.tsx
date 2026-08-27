@@ -536,9 +536,9 @@ export default function BodyTestPage() {
               { id: '>170', label: '170cm 以上' },
             ]},
             2: { title: '你的手腕和关节骨感更接近哪一种？', value: boneRoundness, set: setBoneRoundness, options: [
-              { id: '圆', label: '骨点较弱', sub: '手腕和关节轮廓柔和，骨点不明显' },
-              { id: '匀', label: '骨点适中', sub: '能看到一定骨骼轮廓，但不会特别突出' },
-              { id: '角', label: '骨点明显', sub: '手腕、脚踝或关节骨点清楚，结构感较强' },
+              { id: '圆', label: 'A · 骨点较弱', sub: '手腕和关节轮廓柔和，骨点不明显' },
+              { id: '匀', label: 'B · 骨点适中', sub: '能看到一定骨骼轮廓，但不会特别突出' },
+              { id: '角', label: 'C · 骨点明显', sub: '手腕、脚踝或关节骨点清楚，结构感较强' },
             ]},
             3: { title: '你的肩部横向展开感更接近哪一种？', value: boneWidth, set: setBoneWidth, options: [
               { id: '窄', label: '偏窄', sub: '肩部收窄，横向存在感较弱' },
@@ -628,11 +628,11 @@ export default function BodyTestPage() {
               </div>
 
               {isBoneRoundnessQ && (
-                <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
+                <div style={{ display: 'flex', gap: '20px', alignItems: 'stretch' }}>
                   <img
                     src="/joint-prominence.png"
                     alt="骨点观察示意图：肩峰、手腕、膝盖、脚踝"
-                    style={{ width: '120px', flexShrink: 0, height: 'auto', display: 'block', borderRadius: '8px' }}
+                    style={{ height: '100%', width: 'auto', maxWidth: '140px', flexShrink: 0, objectFit: 'contain', display: 'block', borderRadius: '8px' }}
                   />
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1 }}>
                     {textQuestions[skeletonIdx].options.map(o => (
