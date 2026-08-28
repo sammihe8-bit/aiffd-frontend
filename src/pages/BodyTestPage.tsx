@@ -752,10 +752,10 @@ export default function BodyTestPage() {
               { id: '匀', label: '骨点适中', sub: '能看到一定骨骼轮廓，但不会特别突出' },
               { id: '角', label: '骨点明显', sub: '手腕、脚踝或关节骨点清楚，结构感较强' },
             ]},
-            3: { title: '你的肩部横向展开感更接近哪一种？', value: boneWidth, set: setBoneWidth, options: [
-              { id: '窄', label: '偏窄', sub: '肩部收窄，横向存在感较弱' },
-              { id: '匀', label: '适中', sub: '肩宽与整体比例协调，不宽不窄' },
-              { id: '宽', label: '偏宽', sub: '肩部明显展开，横向存在感较强' },
+            3: { title: '你的肩线走向更接近哪一种？', value: boneWidth, set: setBoneWidth, options: [
+              { id: '溜', label: '溜肩', sub: '从颈部向肩端下降明显' },
+              { id: '匀', label: '自然肩', sub: '下降程度适中' },
+              { id: '直', label: '平直肩', sub: '肩线较水平' },
             ]},
             6: { title: '你的四肢长度？', value: limbLength, set: setLimbLength, options: [
               { id: '偏短', label: '偏短' }, { id: '适中', label: '适中' }, { id: '偏长', label: '偏长' },
@@ -792,6 +792,7 @@ export default function BodyTestPage() {
 
           const isBoneScaleQ = skeletonIdx === 1
           const isBoneRoundnessQ = skeletonIdx === 2
+          const isBoneWidthQ = skeletonIdx === 3
           const isShoulderQ = skeletonIdx === 4
           const isWaistQ = skeletonIdx === 5
           const isBodyShapeQ = skeletonIdx === 8
@@ -877,7 +878,24 @@ export default function BodyTestPage() {
                 </div>
               )}
 
-              {!isBoneScaleQ && !isBoneRoundnessQ && isTextQ && (
+              {isBoneWidthQ && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  <img
+                    src="/shoulder-slope.png"
+                    alt="肩线走向示意图：溜肩、自然肩、平直肩"
+                    style={{ width: '100%', maxWidth: '480px', height: 'auto', display: 'block', borderRadius: '8px', margin: '0 auto' }}
+                  />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    {textQuestions[skeletonIdx].options.map((o, i) => (
+                      <OptionCard key={o.id} label={`${letterOf(i)} · ${o.label}`} sub={o.sub}
+                        active={textQuestions[skeletonIdx].value === o.id}
+                        onClick={() => selectAndAdvance(textQuestions[skeletonIdx].set, o.id)} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {!isBoneScaleQ && !isBoneRoundnessQ && !isBoneWidthQ && isTextQ && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   {textQuestions[skeletonIdx].options.map((o, i) => (
                     <OptionCard key={o.id} label={`${letterOf(i)} · ${o.label}`} sub={o.sub}
