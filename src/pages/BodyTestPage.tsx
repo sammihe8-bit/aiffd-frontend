@@ -815,6 +815,12 @@ export default function BodyTestPage() {
             { id: 'L', img: '/bone-large-3.png' },
           ]
 
+          const shoulderSlopeOptions = [
+            { id: '溜', img: '/shoulder-luo.png' },
+            { id: '匀', img: '/shoulder-ziran.png' },
+            { id: '直', img: '/shoulder-pingzhi.png' },
+          ]
+
           const comboTitle = isShoulderQ ? '你的肩形接近哪些描述？（可多选）'
             : isWaistQ ? '你的腰型接近哪些描述？（可多选）'
             : '你的体型（骨骼轮廓）接近哪些？（可多选）'
@@ -872,19 +878,16 @@ export default function BodyTestPage() {
               )}
 
               {isBoneWidthQ && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                  <img
-                    src="/shoulder-slope.png"
-                    alt="肩线走向示意图：溜肩、自然肩、平直肩"
-                    style={{ width: '100%', maxWidth: '480px', height: 'auto', display: 'block', borderRadius: '8px', margin: '0 auto' }}
-                  />
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    {textQuestions[skeletonIdx].options.map((o, i) => (
-                      <OptionCard key={o.id} label={`${letterOf(i)} · ${o.label}`} sub={o.sub}
-                        active={textQuestions[skeletonIdx].value === o.id}
-                        onClick={() => selectAndAdvance(textQuestions[skeletonIdx].set, o.id)} />
-                    ))}
-                  </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+                  {shoulderSlopeOptions.map(o => (
+                    <button key={o.id} onClick={() => selectAndAdvance(setBoneWidth, o.id)} style={{
+                      border: `2px solid ${boneWidth === o.id ? C.gold : C.border}`,
+                      borderRadius: '8px', padding: 0, cursor: 'pointer', overflow: 'hidden',
+                      background: boneWidth === o.id ? '#fdf8ee' : '#fff', transition: 'all 0.2s',
+                    }}>
+                      <img src={o.img} alt={o.id} style={{ width: '100%', height: 'auto', display: 'block' }} />
+                    </button>
+                  ))}
                 </div>
               )}
 
