@@ -859,19 +859,12 @@ export default function BodyTestPage() {
 
               {isBoneScaleQ && (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
-                  {boneScaleOptions.map((o, i) => (
+                  {boneScaleOptions.map((o) => (
                     <button key={o.id} onClick={() => selectAndAdvance(setBoneScale, o.id)} style={{
                       border: `2px solid ${boneScale === o.id ? C.gold : C.border}`,
                       borderRadius: '8px', padding: 0, cursor: 'pointer', overflow: 'hidden',
                       background: boneScale === o.id ? '#fdf8ee' : '#fff', transition: 'all 0.2s',
-                      position: 'relative',
                     }}>
-                      <span style={{
-                        position: 'absolute', top: '8px', left: '8px', width: '22px', height: '22px', borderRadius: '50%',
-                        background: boneScale === o.id ? C.gold : 'rgba(0,0,0,0.5)', color: '#fff',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontFamily: 'Inter, sans-serif', fontSize: '12px',
-                      }}>{letterOf(i)}</span>
                       <img src={o.img} alt={o.id} style={{ width: '100%', height: 'auto', display: 'block' }} />
                     </button>
                   ))}
