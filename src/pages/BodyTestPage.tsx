@@ -810,9 +810,9 @@ export default function BodyTestPage() {
           }
 
           const boneScaleOptions = [
-            { id: 'S', img: '/bone-small-2.png' },
-            { id: 'M', img: '/bone-medium-2.png' },
-            { id: 'L', img: '/bone-large-2.png' },
+            { id: 'S', img: '/bone-small-3.png' },
+            { id: 'M', img: '/bone-medium-3.png' },
+            { id: 'L', img: '/bone-large-3.png' },
           ]
 
           const comboTitle = isShoulderQ ? '你的肩形接近哪些描述？（可多选）'
