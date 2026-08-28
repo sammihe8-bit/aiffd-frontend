@@ -56,7 +56,7 @@ function calcQiXue(q1: string, q2: string, q3: string, q4: string): string {
 interface BodySnapshot {
   phase: Phase; method: string; bust: string; waist: string; hip: string
   heightRange: string; boneScale: string; boneRoundness: string; boneWidth: string
-  shoulderShape: string[]; waistType: string[]; limbLength: string; handFootSize: string
+  shoulderShape: string[]; waistType: string[]; waistLength: string; limbLength: string; handFootSize: string
   bodyShape: string[]; hipProtrude: string[]; chestProtrude: string[]; fleshTexture: string[]
   q1: string; q2: string; q3: string; q4: string
   skeletonIdx: number; fleshIdx: number; qixueIdx: number
@@ -95,11 +95,11 @@ function letterOf(i: number): string {
   return String.fromCharCode(65 + i)
 }
 
-// 腰型选项 → 体格倾向提示码（2026-08-28 新增）
-// 用户界面只显示"细/匀/直/宽/短"，这套 X/V/H/O/A 编码完全不对用户展示，
+// 腰型选项 → 体格倾向提示码（2026-08-28 新增，2026-08-28 再调整：短已挪到 Q7 纵向比例，这里只留 Q6 的 4 个词）
+// 用户界面只显示"细/匀/直/宽"，这套 X/V/H/O 编码完全不对用户展示，
 // 只在后台数据里额外附加一份 body_shape_hint，作为体格(H/X/A/V)判定的辅助信号，
 // 和用户在 Q9 体格题里的直接选择一起合并进打分引擎的 bodyShape 维度
-const WAIST_BODYSHAPE_HINT: Record<string, string> = { 细: 'X', 匀: 'V', 直: 'H', 宽: 'O', 短: 'A' }
+const WAIST_BODYSHAPE_HINT: Record<string, string> = { 细: 'X', 匀: 'V', 直: 'H', 宽: 'O' }
 
 function OptionCard({ label, sub, active, onClick }: {
   label: string; sub?: string; active: boolean; onClick: () => void
@@ -325,7 +325,10 @@ export default function BodyTestPage() {
   const [boneWidth, setBoneWidth] = useState('') // 偏窄→窄 / 适中→匀 / 偏宽→宽
   const boneShape = [boneRoundness, boneWidth].filter(Boolean)
   const [shoulderShape, setShoulderShape] = useState<string[]>([])
+  // 2026-08-28 腰型拆成两道题：Q6 横向轮廓(细/匀/直/宽，多选) + Q7 纵向比例(短/适中/长，单选)
+  // 两边答案最后合并成一个数组喂给打分引擎的 waist 维度，跟原表格"细+匀+长"这类组合完全对应
   const [waistType, setWaistType] = useState<string[]>([])
+  const [waistLength, setWaistLength] = useState('') // 短 / 适中(不贡献任何词) / 长
   const [limbLength, setLimbLength] = useState('')
   const [handFootSize, setHandFootSize] = useState('')
   const [bodyShape, setBodyShape] = useState<string[]>([]) // 多选：H型/X型/A型/V型（与打分矩阵词汇一致，带"型"字）
@@ -368,11 +371,10 @@ export default function BodyTestPage() {
   const computeResult = () => {
     const qiXueState = calcQiXue(q1, q2, q3, q4)
     const qiXueInfo = FAMILY_INFO[qiXueState] || FAMILY_INFO['阴阳和谐']
-    // 腰型答案派生出的体格倾向提示（X/V/H/O/A），只在后台数据里出现，界面从不展示
+    // 腰型答案派生出的体格倾向提示（X/V/H/O），只在后台数据里出现，界面从不展示
     const bodyShapeHint = waistType.map(w => WAIST_BODYSHAPE_HINT[w]).filter(Boolean)
-    // 四肢偏短 → 反推腰段偏长的信号（身高一定时，四肢越短躯干/腰段相对越长），
-    // 用来补回"长"这个腰型词（5 选项界面里已经去掉了它，但表格部分款式的精匹配仍然需要它）
-    const waistLengthHint = limbLength === '偏短' ? ['长'] : []
+    // Q6(横向轮廓) + Q7(纵向比例) 合并成最终喂给引擎的腰型组合词，"适中"不贡献任何词
+    const waistCombined = waistLength === '适中' ? waistType : [...waistType, ...(waistLength ? [waistLength] : [])]
 
     const resultData = {
       heightRange, boneScale, boneShape, shoulderShape, waistType, limbLength, handFootSize, bodyShape,
@@ -383,14 +385,14 @@ export default function BodyTestPage() {
 
     // 供打分引擎使用的原始维度（键名对应 src/data/styleMatrix.ts 里的 DIMENSIONS[].id）
     // 骨架大小是 combo 类型，把"尺寸(S/M/L)"和"形状(圆/角/匀/宽/窄)"两屏答案合并成一个数组
-    // waist 数组额外合并了"长"的反推信号；bodyShape 数组额外合并了腰型派生出的体格提示码
+    // waist 数组是 Q6+Q7 的合并结果；bodyShape 数组额外合并了腰型派生出的体格提示码
     // 这两个 key 是给 StyleTestPage 用的引擎输入，不管有没有登录都固定存本机 localStorage
     localStorage.setItem('aiffd_body_result', JSON.stringify({
       boneScale: [boneScale, ...boneShape], height: heightRange, shoulder: shoulderShape,
-      waist: [...waistType, ...waistLengthHint],
+      waist: waistCombined,
       limb: limbLength, handFoot: handFootSize, bodyShape: [...bodyShape, ...bodyShapeHint.map(h => `${h}型`)],
       fleshTexture, hip: hipProtrude, chest: chestProtrude,
-      waist_ui_label: waistType, body_shape_hint: bodyShapeHint, // 额外保留两层数据，供后台/分析使用
+      waist_ui_label: waistCombined, body_shape_hint: bodyShapeHint, // 额外保留两层数据，供后台/分析使用
     }))
     // 气血 4 题结果单独存放，供色彩测试计算五行主辅百分比使用，不参与风格测试打分
     localStorage.setItem('aiffd_qixue_result', JSON.stringify({ qiXueState, q1, q2, q3, q4 }))
@@ -398,7 +400,7 @@ export default function BodyTestPage() {
     // 续测存档：标记为已完成
     const snapshot: BodySnapshot = {
       phase: 'report', method, bust, waist, hip,
-      heightRange, boneScale, boneRoundness, boneWidth, shoulderShape, waistType,
+      heightRange, boneScale, boneRoundness, boneWidth, shoulderShape, waistType, waistLength,
       limbLength, handFootSize, bodyShape, hipProtrude, chestProtrude, fleshTexture,
       q1, q2, q3, q4, skeletonIdx, fleshIdx, qixueIdx,
       waist_ui_label: waistType, body_shape_hint: bodyShapeHint,
@@ -416,23 +418,23 @@ export default function BodyTestPage() {
     setBust(''); setWaist(''); setHip(''); setConflict('')
     setAiStatus('idle'); setPreviewUrl('')
     setHeightRange(''); setBoneScale(''); setBoneRoundness(''); setBoneWidth(''); setShoulderShape([]); setWaistType([])
-    setLimbLength(''); setHandFootSize(''); setBodyShape([]); setShowXTrap(false)
+    setWaistLength(''); setLimbLength(''); setHandFootSize(''); setBodyShape([]); setShowXTrap(false)
     setHipProtrude([]); setChestProtrude([]); setFleshTexture([])
     setQ1(''); setQ2(''); setQ3(''); setQ4('')
     setSkeletonIdx(0); setFleshIdx(0); setQixueIdx(0)
   }
 
-  // 骨架(8) + 皮肉(3) + 气血态(4) = 15 题，跨环节统一计数，方便一屏一题的进度展示
-  const TOTAL_QUESTIONS = 16
+  // 骨架(10) + 皮肉(3) + 气血态(4) = 17 题，跨环节统一计数，方便一屏一题的进度展示
+  const TOTAL_QUESTIONS = 17
   const currentQuestionNumber =
     phase === 'skeleton' ? skeletonIdx + 1 :
-    phase === 'flesh' ? 9 + fleshIdx + 1 :
-    phase === 'qixue' ? 9 + 3 + qixueIdx + 1 : 0
+    phase === 'flesh' ? 10 + fleshIdx + 1 :
+    phase === 'qixue' ? 10 + 3 + qixueIdx + 1 : 0
 
   // 选完一题后延迟自动跳下一题，让用户先看到选中态再切换
   const AUTO_ADVANCE_DELAY = 260
   const goNextSkeleton = () => {
-    if (skeletonIdx < 8) setSkeletonIdx(skeletonIdx + 1)
+    if (skeletonIdx < 9) setSkeletonIdx(skeletonIdx + 1)
     else { setPhase('flesh'); setFleshIdx(0) }
   }
   const goBackSkeleton = () => {
@@ -445,7 +447,7 @@ export default function BodyTestPage() {
   }
   const goBackFlesh = () => {
     if (fleshIdx > 0) setFleshIdx(fleshIdx - 1)
-    else { setPhase('skeleton'); setSkeletonIdx(6) }
+    else { setPhase('skeleton'); setSkeletonIdx(9) }
   }
   const goNextQixue = () => {
     if (qixueIdx < 3) setQixueIdx(qixueIdx + 1)
@@ -464,7 +466,7 @@ export default function BodyTestPage() {
     if (phase === 'method' || phase === 'report') return
     const snapshot: BodySnapshot = {
       phase, method, bust, waist, hip,
-      heightRange, boneScale, boneRoundness, boneWidth, shoulderShape, waistType,
+      heightRange, boneScale, boneRoundness, boneWidth, shoulderShape, waistType, waistLength,
       limbLength, handFootSize, bodyShape, hipProtrude, chestProtrude, fleshTexture,
       q1, q2, q3, q4, skeletonIdx, fleshIdx, qixueIdx,
     }
@@ -475,7 +477,7 @@ export default function BodyTestPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, skeletonIdx, fleshIdx, qixueIdx, method, bust, waist, hip, heightRange, boneScale,
-      boneRoundness, boneWidth, shoulderShape, waistType, limbLength, handFootSize, bodyShape,
+      boneRoundness, boneWidth, shoulderShape, waistType, waistLength, limbLength, handFootSize, bodyShape,
       hipProtrude, chestProtrude, fleshTexture, q1, q2, q3, q4, resumeChoice, token])
 
   // 把存档快照里的所有字段恢复回各自的 state
@@ -483,7 +485,7 @@ export default function BodyTestPage() {
     setMethod((s.method as 'manual' | 'ai' | '') ?? ''); setBust(s.bust ?? ''); setWaist(s.waist ?? ''); setHip(s.hip ?? '')
     setHeightRange(s.heightRange ?? ''); setBoneScale(s.boneScale ?? '')
     setBoneRoundness(s.boneRoundness ?? ''); setBoneWidth(s.boneWidth ?? '')
-    setShoulderShape(s.shoulderShape ?? []); setWaistType(s.waistType ?? [])
+    setShoulderShape(s.shoulderShape ?? []); setWaistType(s.waistType ?? []); setWaistLength(s.waistLength ?? '')
     setLimbLength(s.limbLength ?? ''); setHandFootSize(s.handFootSize ?? '')
     setBodyShape(s.bodyShape ?? [])
     setHipProtrude(s.hipProtrude ?? []); setChestProtrude(s.chestProtrude ?? []); setFleshTexture(s.fleshTexture ?? [])
@@ -773,10 +775,15 @@ export default function BodyTestPage() {
               { id: '匀', label: '自然肩', sub: '下降程度适中' },
               { id: '直', label: '平直肩', sub: '肩线较水平' },
             ]},
-            6: { title: '你的四肢长度？', value: limbLength, set: setLimbLength, options: [
+            6: { title: '你的腰部纵向比例更接近哪一种？', value: waistLength, set: setWaistLength, options: [
+              { id: '短', label: '短', sub: '腰段偏短，下半身量感更明显' },
+              { id: '适中', label: '适中', sub: '腰段长度适中，比例均衡' },
+              { id: '长', label: '长', sub: '腰段偏长，上半身占比更明显' },
+            ]},
+            7: { title: '你的四肢长度？', value: limbLength, set: setLimbLength, options: [
               { id: '偏短', label: '偏短' }, { id: '适中', label: '适中' }, { id: '偏长', label: '偏长' },
             ]},
-            7: { title: '你的手脚大小？', value: handFootSize, set: setHandFootSize, options: [
+            8: { title: '你的手脚大小？', value: handFootSize, set: setHandFootSize, options: [
               { id: '娇小', label: '娇小' }, { id: '适中', label: '适中' }, { id: '偏大', label: '偏大' },
             ]},
           }
@@ -796,7 +803,6 @@ export default function BodyTestPage() {
             { id: '匀', img: '/waist-evenly.png' },
             { id: '直', img: '/waist-straight.png' },
             { id: '宽', img: '/waist-wide.png' },
-            { id: '短', img: '/waist-short.png' },
           ]
           const bodyShapeOptions = [
             { id: 'H型', label: 'H 型', sub: '肩宽≈髋宽，腰部不明显，整体较方正' },
@@ -810,7 +816,7 @@ export default function BodyTestPage() {
           const isBoneWidthQ = skeletonIdx === 3
           const isShoulderQ = skeletonIdx === 4
           const isWaistQ = skeletonIdx === 5
-          const isBodyShapeQ = skeletonIdx === 8
+          const isBodyShapeQ = skeletonIdx === 9
           const isComboQ = isShoulderQ || isWaistQ || isBodyShapeQ
           const isTextQ = skeletonIdx in textQuestions
 
@@ -848,7 +854,7 @@ export default function BodyTestPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
               <div>
                 <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', marginBottom: '8px' }}>
-                  STEP 01 · 骨架测试 · {skeletonIdx + 1} / 9
+                  STEP 01 · 骨架测试 · {skeletonIdx + 1} / 10
                 </p>
                 <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '26px', color: C.h2, fontWeight: 400, margin: 0 }}>
                   Q{currentQuestionNumber} · {isComboQ ? comboTitle : isBoneScaleQ ? '你的骨架大小更接近哪种？' : textQuestions[skeletonIdx].title}
