@@ -816,8 +816,8 @@ export default function BodyTestPage() {
           ]
 
           const shoulderSlopeOptions = [
-            { id: '溜', img: '/shoulder-luo.png' },
-            { id: '匀', img: '/shoulder-ziran.png' },
+            { id: '溜', img: '/Shoulder-luo.png' },
+            { id: '匀', img: '/Shoulder-ziran.png' },
             { id: '直', img: '/shoulder-pingzhi.png' },
           ]
 
@@ -851,7 +851,7 @@ export default function BodyTestPage() {
                   <img
                     src="/joint-prominence.png"
                     alt="骨点观察示意图：肩峰、手腕、膝盖、脚踝"
-                    style={{ height: '400px', width: 'auto', maxWidth: '320px', flexShrink: 0, objectFit: 'contain', display: 'block', borderRadius: '8px' }}
+                    style={{ height: '400px', width: 'auto', maxWidth: '320px', flexShrink: 0, objectFit: 'contain', display: 'block', borderRadius: '8px', border: `1px solid ${C.border}` }}
                   />
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1 }}>
                     {textQuestions[skeletonIdx].options.map((o, i) => (
@@ -867,11 +867,11 @@ export default function BodyTestPage() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
                   {boneScaleOptions.map((o) => (
                     <button key={o.id} onClick={() => selectAndAdvance(setBoneScale, o.id)} style={{
-                      border: `2px solid ${boneScale === o.id ? C.gold : C.border}`,
+                      border: 'none', boxShadow: boneScale === o.id ? `0 0 0 2px ${C.gold}` : 'none',
                       borderRadius: '8px', padding: 0, cursor: 'pointer', overflow: 'hidden',
                       background: boneScale === o.id ? '#fdf8ee' : '#fff', transition: 'all 0.2s',
                     }}>
-                      <img src={o.img} alt={o.id} style={{ width: '100%', height: 'auto', display: 'block' }} />
+                      <img src={o.img} alt={o.id} style={{ width: '100%', height: '480px', objectFit: 'cover', display: 'block' }} />
                     </button>
                   ))}
                 </div>
@@ -881,11 +881,11 @@ export default function BodyTestPage() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
                   {shoulderSlopeOptions.map(o => (
                     <button key={o.id} onClick={() => selectAndAdvance(setBoneWidth, o.id)} style={{
-                      border: `2px solid ${boneWidth === o.id ? C.gold : C.border}`,
+                      border: 'none', boxShadow: boneWidth === o.id ? `0 0 0 2px ${C.gold}` : 'none',
                       borderRadius: '8px', padding: 0, cursor: 'pointer', overflow: 'hidden',
                       background: boneWidth === o.id ? '#fdf8ee' : '#fff', transition: 'all 0.2s',
                     }}>
-                      <img src={o.img} alt={o.id} style={{ width: '100%', height: 'auto', display: 'block' }} />
+                      <img src={o.img} alt={o.id} style={{ width: '100%', height: '480px', objectFit: 'cover', display: 'block' }} />
                     </button>
                   ))}
                 </div>
