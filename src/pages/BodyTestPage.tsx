@@ -60,6 +60,7 @@ interface BodySnapshot {
   bodyShape: string[]; hipProtrude: string[]; chestProtrude: string[]; fleshTexture: string[]
   q1: string; q2: string; q3: string; q4: string
   skeletonIdx: number; fleshIdx: number; qixueIdx: number
+  waist_ui_label?: string[]; body_shape_hint?: string[] // 2026-08-28 新增，见 WAIST_BODYSHAPE_HINT 注释
 }
 
 // 不依赖当前组件 state，直接从一份存档快照算出报告页需要的 result 对象
@@ -93,6 +94,12 @@ const btnOutline: React.CSSProperties = {
 function letterOf(i: number): string {
   return String.fromCharCode(65 + i)
 }
+
+// 腰型选项 → 体格倾向提示码（2026-08-28 新增）
+// 用户界面只显示"细/匀/直/宽/短"，这套 X/V/H/O/A 编码完全不对用户展示，
+// 只在后台数据里额外附加一份 body_shape_hint，作为体格(H/X/A/V)判定的辅助信号，
+// 和用户在 Q9 体格题里的直接选择一起合并进打分引擎的 bodyShape 维度
+const WAIST_BODYSHAPE_HINT: Record<string, string> = { 细: 'X', 匀: 'V', 直: 'H', 宽: 'O', 短: 'A' }
 
 function OptionCard({ label, sub, active, onClick }: {
   label: string; sub?: string; active: boolean; onClick: () => void
@@ -361,6 +368,11 @@ export default function BodyTestPage() {
   const computeResult = () => {
     const qiXueState = calcQiXue(q1, q2, q3, q4)
     const qiXueInfo = FAMILY_INFO[qiXueState] || FAMILY_INFO['阴阳和谐']
+    // 腰型答案派生出的体格倾向提示（X/V/H/O/A），只在后台数据里出现，界面从不展示
+    const bodyShapeHint = waistType.map(w => WAIST_BODYSHAPE_HINT[w]).filter(Boolean)
+    // 四肢偏短 → 反推腰段偏长的信号（身高一定时，四肢越短躯干/腰段相对越长），
+    // 用来补回"长"这个腰型词（5 选项界面里已经去掉了它，但表格部分款式的精匹配仍然需要它）
+    const waistLengthHint = limbLength === '偏短' ? ['长'] : []
 
     const resultData = {
       heightRange, boneScale, boneShape, shoulderShape, waistType, limbLength, handFootSize, bodyShape,
@@ -371,11 +383,14 @@ export default function BodyTestPage() {
 
     // 供打分引擎使用的原始维度（键名对应 src/data/styleMatrix.ts 里的 DIMENSIONS[].id）
     // 骨架大小是 combo 类型，把"尺寸(S/M/L)"和"形状(圆/角/匀/宽/窄)"两屏答案合并成一个数组
+    // waist 数组额外合并了"长"的反推信号；bodyShape 数组额外合并了腰型派生出的体格提示码
     // 这两个 key 是给 StyleTestPage 用的引擎输入，不管有没有登录都固定存本机 localStorage
     localStorage.setItem('aiffd_body_result', JSON.stringify({
-      boneScale: [boneScale, ...boneShape], height: heightRange, shoulder: shoulderShape, waist: waistType,
-      limb: limbLength, handFoot: handFootSize, bodyShape,
+      boneScale: [boneScale, ...boneShape], height: heightRange, shoulder: shoulderShape,
+      waist: [...waistType, ...waistLengthHint],
+      limb: limbLength, handFoot: handFootSize, bodyShape: [...bodyShape, ...bodyShapeHint.map(h => `${h}型`)],
       fleshTexture, hip: hipProtrude, chest: chestProtrude,
+      waist_ui_label: waistType, body_shape_hint: bodyShapeHint, // 额外保留两层数据，供后台/分析使用
     }))
     // 气血 4 题结果单独存放，供色彩测试计算五行主辅百分比使用，不参与风格测试打分
     localStorage.setItem('aiffd_qixue_result', JSON.stringify({ qiXueState, q1, q2, q3, q4 }))
@@ -386,6 +401,7 @@ export default function BodyTestPage() {
       heightRange, boneScale, boneRoundness, boneWidth, shoulderShape, waistType,
       limbLength, handFootSize, bodyShape, hipProtrude, chestProtrude, fleshTexture,
       q1, q2, q3, q4, skeletonIdx, fleshIdx, qixueIdx,
+      waist_ui_label: waistType, body_shape_hint: bodyShapeHint,
     }
     if (token) {
       testProgressAPI.save('body', 'completed', snapshot).catch(() => {})
@@ -776,12 +792,11 @@ export default function BodyTestPage() {
             { id: '尖', label: '尖', sub: '肩峰尖锐突出' },
           ]
           const waistOptions = [
-            { id: '细', label: '细', sub: '腰部明显收细' },
-            { id: '直', label: '直', sub: '腰线平直，收细不明显' },
-            { id: '匀', label: '匀', sub: '腰身匀称适中' },
-            { id: '宽', label: '宽', sub: '腰部偏宽' },
-            { id: '长', label: '长', sub: '腰线偏长' },
-            { id: '短', label: '短', sub: '腰线偏短' },
+            { id: '细', img: '/waist-slim.png' },
+            { id: '匀', img: '/waist-evenly.png' },
+            { id: '直', img: '/waist-straight.png' },
+            { id: '宽', img: '/waist-wide.png' },
+            { id: '短', img: '/waist-short.png' },
           ]
           const bodyShapeOptions = [
             { id: 'H型', label: 'H 型', sub: '肩宽≈髋宽，腰部不明显，整体较方正' },
@@ -825,10 +840,9 @@ export default function BodyTestPage() {
             : isWaistQ ? '你的腰型接近哪些描述？（可多选）'
             : '你的体型（骨骼轮廓）接近哪些？（可多选）'
 
-          // 当前多选题对应的选项列表 + 已选值 + 更新函数（合并渲染逻辑，避免 3 段重复 JSX）
-          const comboConfig = isShoulderQ ? { options: shoulderOptions, value: shoulderShape, set: setShoulderShape }
-            : isWaistQ ? { options: waistOptions, value: waistType, set: setWaistType }
-            : { options: bodyShapeOptions, value: bodyShape, set: setBodyShape }
+          // 当前多选题对应的选项列表 + 已选值 + 更新函数（现在只有肩型走这条通用文字checkbox路径，
+          // 腰型改成了下面独立的图片多选区块，体格 X 型陷阱逻辑也是独立区块，见下方）
+          const comboConfig = { options: shoulderOptions, value: shoulderShape, set: setShoulderShape }
 
           return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
@@ -901,13 +915,38 @@ export default function BodyTestPage() {
                 </div>
               )}
 
-              {isComboQ && !isBodyShapeQ && (
+              {isShoulderQ && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   {comboConfig.options.map((o, i) => (
                     <MultiOptionCard key={o.id} label={`${letterOf(i)} · ${o.label}`} sub={o.sub}
                       active={comboConfig.value.includes(o.id)}
                       onClick={() => toggle(comboConfig.value, comboConfig.set, o.id)} />
                   ))}
+                </div>
+              )}
+
+              {isWaistQ && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '10px' }}>
+                  {waistOptions.map(o => {
+                    const active = waistType.includes(o.id)
+                    return (
+                      <button key={o.id} onClick={() => toggle(waistType, setWaistType, o.id)} style={{
+                        border: 'none', boxShadow: active ? `0 0 0 2px ${C.gold}` : 'none',
+                        borderRadius: '8px', padding: 0, cursor: 'pointer', overflow: 'hidden', position: 'relative',
+                        background: active ? '#fdf8ee' : '#fff', transition: 'all 0.2s',
+                      }}>
+                        <img src={o.img} alt={o.id} style={{ width: '100%', height: '280px', objectFit: 'cover', display: 'block' }} />
+                        <span style={{
+                          position: 'absolute', top: '8px', right: '8px', width: '20px', height: '20px', borderRadius: '5px',
+                          border: `1.5px solid ${active ? C.gold : 'rgba(255,255,255,0.9)'}`,
+                          background: active ? C.gold : 'rgba(255,255,255,0.5)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        }}>
+                          {active && <span style={{ color: '#fff', fontSize: '12px', lineHeight: 1 }}>✓</span>}
+                        </span>
+                      </button>
+                    )
+                  })}
                 </div>
               )}
 
@@ -939,15 +978,18 @@ export default function BodyTestPage() {
 
               <div style={{ display: 'flex', gap: '12px' }}>
                 <button onClick={goBackSkeleton} style={btnOutline}>← 返回</button>
-                {isComboQ && (
-                  <button
-                    onClick={goNextSkeleton}
-                    disabled={comboConfig.value.length === 0}
-                    style={comboConfig.value.length > 0
-                      ? { ...btnGold, flex: 1 } : { ...btnGold, flex: 1, background: '#e0e0e0', cursor: 'not-allowed' }}>
-                    继续
-                  </button>
-                )}
+                {isComboQ && (() => {
+                  const currentValue = isShoulderQ ? shoulderShape : isWaistQ ? waistType : bodyShape
+                  return (
+                    <button
+                      onClick={goNextSkeleton}
+                      disabled={currentValue.length === 0}
+                      style={currentValue.length > 0
+                        ? { ...btnGold, flex: 1 } : { ...btnGold, flex: 1, background: '#e0e0e0', cursor: 'not-allowed' }}>
+                      继续
+                    </button>
+                  )
+                })()}
               </div>
             </div>
           )
