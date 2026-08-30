@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { authAPI } from '../utils/api'
 import { Eye, EyeOff } from 'lucide-react'
@@ -39,6 +39,12 @@ const inputStyle: React.CSSProperties = {
   WebkitAppearance: 'none' as any,
 }
 
+// PrivateRoute 跳转过来时会带的 state 形状
+interface AuthRedirectState {
+  reason?: 'login_required'
+  from?: string
+}
+
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -47,7 +53,13 @@ export default function AuthPage() {
   const [debugInfo, setDebugInfo] = useState('')
 
   const navigate = useNavigate()
+  const location = useLocation()
   const { login } = useAuth()
+
+  // 从 PrivateRoute 传过来的跳转原因和来源页面
+  const redirectState = (location.state as AuthRedirectState | null) ?? null
+  const cameFromProtectedRoute = redirectState?.reason === 'login_required'
+  const redirectTarget = redirectState?.from || '/profile'
 
   const [formData, setFormData] = useState({
     name: '', email: '', password: '', confirmPassword: '',
@@ -86,7 +98,8 @@ export default function AuthPage() {
 
       const { token, user } = response.data
       login(token, user)
-      navigate('/profile')
+      // 如果是从受保护页面（比如测试页）被拦截过来的，登录/注册成功后送回原本要去的地方
+      navigate(redirectTarget)
     } catch (err: any) {
       const status = err.response?.status
       const msg = err.response?.data?.error || err.response?.data?.message
@@ -95,7 +108,11 @@ export default function AuthPage() {
       setDebugInfo(`状态码: ${status || '无响应'} | ${JSON.stringify(err.response?.data || err.message)}`)
 
       if (status === 401) setError('邮箱或密码错误')
-      else if (status === 409) setError('该邮箱已注册，请直接登录')
+      else if (status === 409) {
+        // 该邮箱已注册：这种情况下用户其实是"已注册未登录"，直接帮TA切到登录tab更顺
+        setError('该邮箱已注册，请直接登录')
+        setIsLogin(true)
+      }
       else if (status === 400) setError(msg || '填写内容有误，请检查')
       else if (!status) setError('网络错误，请检查网络连接')
       else setError(msg || `${isLogin ? '登录' : '注册'}失败，请稍后重试`)
@@ -127,6 +144,17 @@ export default function AuthPage() {
       {/* 主体 */}
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '48px 24px' }}>
         <div style={{ width: '100%', maxWidth: '360px' }}>
+
+          {/* 从受保护页面跳转过来的提示条 */}
+          {cameFromProtectedRoute && (
+            <div style={{
+              marginBottom: '24px', padding: '14px 16px',
+              border: `1px solid ${F.gold}`, background: '#fdf8ee',
+              fontFamily: F.serif, fontSize: '13px', color: '#8a6a1f', lineHeight: 1.7,
+            }}>
+              请先注册成为 AIFFD 会员或登录，才能开始测试并保存你的专属档案。
+            </div>
+          )}
 
           {/* 标题 */}
           <div style={{ marginBottom: '40px' }}>
