@@ -608,8 +608,6 @@ export default function BodyTestPage() {
                       </div>
                       <p style={{ fontFamily: 'Georgia, serif', fontSize: '18px', color: active ? C.gold : C.h2, fontWeight: 400, margin: 0 }}>{o.label}</p>
                     </div>
-                    {/* 描述文字 */}
-                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, lineHeight: 1.7, padding: '8px 16px 12px', margin: 0 }}>{o.desc}</p>
                     {/* 插图 */}
                     <img src={o.img} alt={o.label} style={{ width: '100%', display: 'block', objectFit: 'contain', background: '#f7f4ef' }} />
                   </button>
@@ -696,8 +694,6 @@ export default function BodyTestPage() {
                       </div>
                       <p style={{ fontFamily: 'Georgia, serif', fontSize: '18px', color: active ? C.gold : C.h2, fontWeight: 400, margin: 0 }}>{o.label}</p>
                     </div>
-                    {/* 描述文字 */}
-                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, lineHeight: 1.7, padding: '8px 16px 12px', margin: 0 }}>{o.desc}</p>
                     {/* 插图 */}
                     <img src={o.img} alt={o.label} style={{ width: '100%', display: 'block', objectFit: 'contain', background: '#f7f4ef' }} />
                   </button>
