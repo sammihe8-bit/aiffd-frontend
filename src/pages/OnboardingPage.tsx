@@ -1,12 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
-const C = {
-  h1: '#111111', h2: '#222222', sub: '#444444',
-  body: '#666666', muted: '#999999', gold: '#B8973A', border: '#e8e8e4',
-  bg: '#faf9f7', dark: '#0f0f0d',
-}
-
 const MODULES = [
   {
     id: 'style', num: '01', tag: 'STYLE TEST', title: '风格测试',
