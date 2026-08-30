@@ -150,15 +150,13 @@ function ArchivePage() {
             </div>
           </div>
           {/* 右侧配图 */}
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px 32px 32px 0' }}>
-            <div style={{ position: 'relative', width: '100%', height: '100%', maxHeight: '416px', overflow: 'hidden', borderRadius: '2px' }}>
-              <img
-                src="/hero-profile.jpg"
-                alt="AIFFD 风格档案"
-                style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'center center', display: 'block' }}
-              />
-              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, #faf9f7 0%, transparent 18%)' }} />
-            </div>
+          <div style={{ position: 'relative', overflow: 'hidden', minHeight: '480px' }}>
+            <img
+              src="/hero-profile.jpg"
+              alt="AIFFD 风格档案"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: '35% top', display: 'block' }}
+            />
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, #faf9f7 0%, transparent 16%)' }} />
           </div>
         </div>
       </div>
