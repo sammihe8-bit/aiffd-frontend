@@ -113,13 +113,15 @@ function ArchivePage() {
     <div style={{ minHeight: '100vh', background: '#faf9f7' }}>
 
       {/* Hero */}
-      <div style={{ background: '#0f0f0d', padding: '72px 24px 56px' }}>
-        <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+      <div style={{ background: '#0f0f0d', padding: '0 0 0 0', overflow: 'hidden' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', minHeight: '520px' }}>
+          {/* 左侧文字 */}
+          <div style={{ padding: '72px 48px 56px 32px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '4px', color: '#B8973A', marginBottom: '20px' }}>AIFFD · 个人风格档案</p>
-          <h1 style={{ fontFamily: 'Georgia, serif', fontSize: 'clamp(32px, 4vw, 52px)', fontWeight: 400, color: '#fff', lineHeight: 1.2, margin: '0 0 20px', maxWidth: '640px' }}>
+          <h1 style={{ fontFamily: 'Georgia, serif', fontSize: 'clamp(32px, 4vw, 52px)', fontWeight: 400, color: '#fff', lineHeight: 1.2, margin: '0 0 20px' }}>
             建立你的<br /><em style={{ color: '#B8973A', fontStyle: 'normal' }}>完整风格档案</em>
           </h1>
-          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '15px', color: 'rgba(255,255,255,0.6)', lineHeight: 1.9, maxWidth: '520px', margin: '0 0 40px' }}>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '15px', color: 'rgba(255,255,255,0.6)', lineHeight: 1.9, margin: '0 0 40px' }}>
             三项测试，从先天底色到后天个性，构建专属于你的风格判断系统。档案不是一次成型——它会在每一次交互中持续完善，最终为你匹配一对一的造型师服务。
           </p>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0', flexWrap: 'wrap' }}>
@@ -137,6 +139,16 @@ function ArchivePage() {
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', color: '#B8973A', letterSpacing: '2px', margin: '0 0 2px' }}>完成</p>
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: '#B8973A', margin: 0 }}>风格档案</p>
             </div>
+          </div>
+          </div>
+          {/* 右侧配图 */}
+          <div style={{ position: 'relative', overflow: 'hidden' }}>
+            <img
+              src="/hero-profile.jpg"
+              alt="AIFFD 风格档案"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top', display: 'block' }}
+            />
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, #0f0f0d 0%, transparent 35%)' }} />
           </div>
         </div>
       </div>
