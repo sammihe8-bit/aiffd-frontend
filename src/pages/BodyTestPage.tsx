@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { testProgressAPI } from '../utils/api'
+import { userScopedKey } from '../utils/userStorage'
 
 const C = {
   h1: '#111111', h2: '#222222', sub: '#444444',
@@ -263,7 +264,7 @@ function ReportView({ result, onReset, onReturnToStyle }: {
 // ── 主页面
 export default function BodyTestPage() {
   const navigate = useNavigate()
-  const { token } = useAuth() // 登录用户走数据库存档；token 为空则是访客，走 localStorage
+  const { token, user } = useAuth() // 登录用户走数据库存档；token 为空则是访客，走 localStorage
   const [phase, setPhase] = useState<Phase>('method')
   const fromStyle = typeof window !== 'undefined' && localStorage.getItem('aiffd_return_to') === 'style_body'
   const [method, setMethod] = useState<'manual' | 'ai' | ''>('')
@@ -274,8 +275,8 @@ export default function BodyTestPage() {
   const [resumeChoice, setResumeChoice] = useState<'none' | 'completed' | 'inprogress'>(() => {
     if (typeof window === 'undefined') return 'none'
     if (token) return 'none'
-    if (localStorage.getItem('aiffd_body_progress')) return 'inprogress'
-    if (localStorage.getItem('aiffd_body_result')) return 'completed'
+    if (localStorage.getItem(userScopedKey('aiffd_body_progress', user))) return 'inprogress'
+    if (localStorage.getItem(userScopedKey('aiffd_body_result', user))) return 'completed'
     return 'none'
   })
   // 已登录用户的存档内容从数据库读回来后放这里；restoreProgress / loadCompletedResult 会优先用这个，而不是 localStorage
@@ -284,8 +285,8 @@ export default function BodyTestPage() {
   // 本机 localStorage 里是否有残留记录（可能是登录前、以访客身份测过一半留下的），供数据库查询失败时兜底用
   const checkLocalFallback = () => {
     if (typeof window === 'undefined') return
-    if (localStorage.getItem('aiffd_body_progress')) setResumeChoice('inprogress')
-    else if (localStorage.getItem('aiffd_body_result')) setResumeChoice('completed')
+    if (localStorage.getItem(userScopedKey('aiffd_body_progress', user))) setResumeChoice('inprogress')
+    else if (localStorage.getItem(userScopedKey('aiffd_body_result', user))) setResumeChoice('completed')
     else setResumeChoice('none')
   }
 
@@ -386,8 +387,8 @@ export default function BodyTestPage() {
     // 供打分引擎使用的原始维度（键名对应 src/data/styleMatrix.ts 里的 DIMENSIONS[].id）
     // 骨架大小是 combo 类型，把"尺寸(S/M/L)"和"形状(圆/角/匀/宽/窄)"两屏答案合并成一个数组
     // waist 数组是 Q6+Q7 的合并结果；bodyShape 数组额外合并了腰型派生出的体格提示码
-    // 这两个 key 是给 StyleTestPage 用的引擎输入，不管有没有登录都固定存本机 localStorage
-    localStorage.setItem('aiffd_body_result', JSON.stringify({
+    // 这两个 key 现在带用户 ID 前缀，登录用户之间互不干扰；访客统一落在 'guest' 桶里
+    localStorage.setItem(userScopedKey('aiffd_body_result', user), JSON.stringify({
       boneScale: [boneScale, ...boneShape], height: heightRange, shoulder: shoulderShape,
       waist: waistCombined,
       limb: limbLength, handFoot: handFootSize, bodyShape: [...bodyShape, ...bodyShapeHint.map(h => `${h}型`)],
@@ -395,7 +396,7 @@ export default function BodyTestPage() {
       waist_ui_label: waistCombined, body_shape_hint: bodyShapeHint, // 额外保留两层数据，供后台/分析使用
     }))
     // 气血 4 题结果单独存放，供色彩测试计算五行主辅百分比使用，不参与风格测试打分
-    localStorage.setItem('aiffd_qixue_result', JSON.stringify({ qiXueState, q1, q2, q3, q4 }))
+    localStorage.setItem(userScopedKey('aiffd_qixue_result', user), JSON.stringify({ qiXueState, q1, q2, q3, q4 }))
 
     // 续测存档：标记为已完成
     const snapshot: BodySnapshot = {
@@ -408,7 +409,7 @@ export default function BodyTestPage() {
     if (token) {
       testProgressAPI.save('body', 'completed', snapshot).catch(() => {})
     } else {
-      localStorage.removeItem('aiffd_body_progress') // 测试已完整做完，清掉中途存档
+      localStorage.removeItem(userScopedKey('aiffd_body_progress', user)) // 测试已完整做完，清掉中途存档
     }
     setPhase('report')
   }
@@ -473,7 +474,7 @@ export default function BodyTestPage() {
     if (token) {
       testProgressAPI.save('body', 'in_progress', snapshot).catch(() => { /* 网络失败就先不管，下次答题会再存一次 */ })
     } else {
-      localStorage.setItem('aiffd_body_progress', JSON.stringify(snapshot))
+      localStorage.setItem(userScopedKey('aiffd_body_progress', user), JSON.stringify(snapshot))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, skeletonIdx, fleshIdx, qixueIdx, method, bust, waist, hip, heightRange, boneScale,
@@ -500,7 +501,7 @@ export default function BodyTestPage() {
       if (remoteSnapshot) {
         applySnapshot(remoteSnapshot); setPhase(remoteSnapshot.phase ?? 'skeleton')
       } else {
-        const raw = localStorage.getItem('aiffd_body_progress')
+        const raw = localStorage.getItem(userScopedKey('aiffd_body_progress', user))
         if (raw) { const s = JSON.parse(raw); applySnapshot(s); setPhase(s.phase ?? 'skeleton') }
       }
     } catch { /* 存档损坏就当没有，走重新测试 */ }
@@ -512,9 +513,9 @@ export default function BodyTestPage() {
     if (token) {
       testProgressAPI.clear('body').catch(() => { /* 清不掉也不阻塞，反正下次答题会用新数据覆盖 */ })
     } else {
-      localStorage.removeItem('aiffd_body_progress')
-      localStorage.removeItem('aiffd_body_result')
-      localStorage.removeItem('aiffd_qixue_result')
+      localStorage.removeItem(userScopedKey('aiffd_body_progress', user))
+      localStorage.removeItem(userScopedKey('aiffd_body_result', user))
+      localStorage.removeItem(userScopedKey('aiffd_qixue_result', user))
     }
     setResumeChoice('none')
   }
@@ -526,10 +527,10 @@ export default function BodyTestPage() {
       if (remoteSnapshot) {
         setResult(buildResultFromSnapshot(remoteSnapshot)); setPhase('report')
       } else {
-        const bodyRaw = localStorage.getItem('aiffd_body_result')
+        const bodyRaw = localStorage.getItem(userScopedKey('aiffd_body_result', user))
         if (bodyRaw) {
           const b = JSON.parse(bodyRaw)
-          const qixueRaw = localStorage.getItem('aiffd_qixue_result')
+          const qixueRaw = localStorage.getItem(userScopedKey('aiffd_qixue_result', user))
           const q = qixueRaw ? JSON.parse(qixueRaw) : null
           const qiXueState = q?.qiXueState ?? '阴阳和谐'
           const qiXueInfo = FAMILY_INFO[qiXueState] || FAMILY_INFO['阴阳和谐']
