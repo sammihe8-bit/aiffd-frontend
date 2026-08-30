@@ -113,7 +113,7 @@ function ArchivePage() {
     <div style={{ minHeight: '100vh', background: '#faf9f7' }}>
 
       {/* Hero — 浅色风格，左文右图 */}
-      <div style={{ background: '#faf9f7', borderBottom: '0.5px solid #e8e2d8' }}>
+      <div style={{ background: '#f5f0ea', borderBottom: '0.5px solid #e8e2d8' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', minHeight: '480px', alignItems: 'stretch' }}>
           {/* 左侧文字 */}
           <div style={{ padding: '80px 40px 64px 32px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
@@ -154,10 +154,10 @@ function ArchivePage() {
             <img
               src="/hero-profile.jpg"
               alt="AIFFD 风格档案"
-              style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'center', display: 'block' }}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top', display: 'block' }}
             />
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, #faf9f7 0%, transparent 25%)' }} />
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to left, #faf9f7 0%, transparent 25%)' }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, #f5f0ea 0%, transparent 25%)' }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to left, #f5f0ea 0%, transparent 25%)' }} />
           </div>
         </div>
       </div>
