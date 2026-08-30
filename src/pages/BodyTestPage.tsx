@@ -831,9 +831,9 @@ export default function BodyTestPage() {
           }
 
           const boneScaleOptions = [
-            { id: 'S', img: '/bone-small-3.png' },
-            { id: 'M', img: '/bone-medium-3.png' },
-            { id: 'L', img: '/bone-large-3.png' },
+            { id: 'S', img: '/bone-small.png' },
+            { id: 'M', img: '/bone-medium.png' },
+            { id: 'L', img: '/bone-large.png' },
           ]
 
           const shoulderSlopeOptions = [
