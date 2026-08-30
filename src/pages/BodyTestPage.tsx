@@ -831,15 +831,15 @@ export default function BodyTestPage() {
           }
 
           const boneScaleOptions = [
-            { id: 'S', img: '/bone-small.png' },
-            { id: 'M', img: '/bone-medium.png' },
-            { id: 'L', img: '/bone-large.png' },
+            { id: 'S', img: '/bone_small.png' },
+            { id: 'M', img: '/bone_medium.png' },
+            { id: 'L', img: '/bone_large.png' },
           ]
 
           const shoulderSlopeOptions = [
-            { id: '溜', img: '/Shoulder-luo.png' },
-            { id: '匀', img: '/Shoulder-ziran.png' },
-            { id: '直', img: '/shoulder-pingzhi.png' },
+            { id: '溜', img: '/Shoulder_luo.png' },
+            { id: '匀', img: '/Shoulder_ziran.png' },
+            { id: '直', img: '/shoulder_pingzhi.png' },
           ]
 
           const comboTitle = isShoulderQ ? '你的肩形接近哪些描述？（可多选）'
