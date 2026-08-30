@@ -1,7 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../hooks/useAuth'
-import { testProgressAPI } from '../utils/api'
 
 const C = {
   h1: '#111111', h2: '#222222', sub: '#444444',
@@ -9,73 +7,43 @@ const C = {
 }
 
 // ── 流程
-// AI 路径:    method → data(AI拍照) → skeleton(AI预填) → flesh → qixue → report
-// 手动路径:   method → data(三围输入) → skeleton → flesh → qixue → report
-type Phase = 'method' | 'data' | 'skeleton' | 'flesh' | 'qixue' | 'report'
+// AI 路径:    method → data(AI拍照) → sheldon(AI预填) → bone → fat → qi → report
+// 手动路径:   method → data(三围输入) → sheldon → bone → fat → qi → report
+type Phase = 'method' | 'data' | 'sheldon' | 'boneScale' | 'bone' | 'shoulder' | 'fat' | 'qi' | 'report'
 
-// ── 13型家族数据库（气血态 5 态 → 13 型家族 → 细分型）
-// 参考：AIFFD 架构文档 2026-08-25 第二章
-const FAMILY_INFO: Record<string, {
-  element: string        // 对应五行
-  familyName: string     // 家族中文名
-  familyEn: string       // 家族英文名
-  variants: { soft?: string; base: string; intense: string } // 细分型（部分家族无 soft 档）
-}> = {
-  '阴': { element: '水', familyName: '浪漫型', familyEn: 'Romantic', variants: { base: '浪漫型', intense: '戏剧浪漫型' } },
-  '阴多阳少': { element: '金', familyName: '少年型', familyEn: 'Gamine', variants: { soft: '柔软少年型', base: '少年型', intense: '戏剧少年型' } },
-  '阴阳和谐': { element: '土', familyName: '经典型', familyEn: 'Classic', variants: { soft: '柔软经典型', base: '经典型', intense: '戏剧经典型' } },
-  '阴少阳多': { element: '木', familyName: '自然型', familyEn: 'Natural', variants: { soft: '浪漫自然型', base: '自然型', intense: '戏剧自然型' } },
-  '阳': { element: '火', familyName: '戏剧型', familyEn: 'Dramatic', variants: { base: '浪漫戏剧型', intense: '戏剧型' } },
+// ── 体型数据库
+const YIN_YANG_DESC: Record<string, { label: string; desc: string; style: string }> = {
+  '少阳': { label: '轻盈活力型', desc: '气血流动活跃，皮肤较薄，体型偏线条感，代谢较快。', style: '适合轻盈、流动、有活力的穿搭风格，避免过于厚重的廓形。' },
+  '太阳': { label: '饱满热情型', desc: '气血充盈，皮肤饱满，体型圆润有弧度，存在感强。', style: '适合结构感强、有支撑力的廓形，能承托饱满气场。' },
+  '少阴': { label: '细腻内敛型', desc: '气血偏内收，皮肤细腻，体型偏瘦削，气质内敛。', style: '适合柔软、贴身、有质感的面料，强调精致细节。' },
+  '太阴': { label: '沉稳厚重型', desc: '气血偏沉，皮肤较厚，体型偏实，稳重有分量感。', style: '适合有结构的廓形和沉稳色调，避免过于飘逸的面料。' },
 }
 
 const BODY_IMAGES: Record<string, string> = {
-  'H': '/BodyH.png', 'X': '/BodyX.png', 'A': '/BodyA.png', 'V': '/BodyV.png',
+  'H': '/BodyH.png', 'X': '/BodX.png', 'A': '/BodyA.png', 'V': '/BodyV.png',
+  'H-O': '/BodyO.png', 'X-O': '/BodyO.png', 'A-O': '/BodyO.png', 'V-O': '/BodyO.png',
+  'H-S': '/BodS.png', 'X-S': '/BodS.png',
 }
 
 // ── 计算函数
-//
-// 2026-08-26 架构调整：13 型判定不再由本页计算。
-// 骨架/皮肉 10 个维度的原始答案会连同风格测试新增的面部 6 个维度，
-// 一起交给 `src/utils/styleScoring.ts` 的两层匹配引擎统一打分（详见架构文档第 2.3 节）。
-// 本页只负责采集原始答案并存入 localStorage，calcBoneQuality / calcBodyLine / calcStyleVariant
-// 三个旧函数（基于已废弃的"气血 4 态投票直接决定家族"架构）已删除。
-
-// 气血态：5 态直选计票，取最高票；打平判定为"阴阳和谐"（居中态）
-// 注意：此结果不再用于风格测试的 13 型判定，只作为色彩测试计算五行的输入（见架构文档第四章）
-function calcQiXue(q1: string, q2: string, q3: string, q4: string): string {
-  const scores: Record<string, number> = { '阴': 0, '阴多阳少': 0, '阴阳和谐': 0, '阴少阳多': 0, '阳': 0 }
-  ;[q1, q2, q3, q4].forEach(v => { if (v && scores[v] !== undefined) scores[v]++ })
-  const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1])
-  const top = sorted[0][1]
-  const tied = sorted.filter(([, v]) => v === top)
-  if (tied.length > 1) return '阴阳和谐'
-  return sorted[0][0]
+function calcFatCode(whr: number, bustWaistDiff: number, visual: string, boneCode: string): string {
+  if (visual === 'O' || whr > 0.85) return 'O'
+  if (visual === 'S' || (bustWaistDiff > 25 && (boneCode === 'H' || boneCode === 'A'))) return 'S'
+  return '无'
 }
 
-// 进度快照的形状（存进 localStorage 或后端 test_progress 表的 data_json，两边格式统一）
-interface BodySnapshot {
-  phase: Phase; method: string; bust: string; waist: string; hip: string
-  heightRange: string; boneScale: string; boneRoundness: string; boneWidth: string
-  shoulderShape: string[]; waistType: string[]; waistLength: string; limbLength: string; handFootSize: string
-  bodyShape: string[]; hipProtrude: string[]; chestProtrude: string[]; fleshTexture: string[]
-  q1: string; q2: string; q3: string; q4: string
-  skeletonIdx: number; fleshIdx: number; qixueIdx: number
-  waist_ui_label?: string[]; body_shape_hint?: string[] // 2026-08-28 新增，见 WAIST_BODYSHAPE_HINT 注释
-}
-
-// 不依赖当前组件 state，直接从一份存档快照算出报告页需要的 result 对象
-// 供"继续测试后直接看已完成结果"和"查看历史完成结果"两种场景共用
-function buildResultFromSnapshot(s: BodySnapshot) {
-  const qiXueState = calcQiXue(s.q1, s.q2, s.q3, s.q4)
-  const qiXueInfo = FAMILY_INFO[qiXueState] || FAMILY_INFO['阴阳和谐']
-  return {
-    heightRange: s.heightRange, boneScale: s.boneScale,
-    boneShape: [s.boneRoundness, s.boneWidth].filter(Boolean),
-    shoulderShape: s.shoulderShape, waistType: s.waistType,
-    limbLength: s.limbLength, handFootSize: s.handFootSize, bodyShape: s.bodyShape,
-    hipProtrude: s.hipProtrude, chestProtrude: s.chestProtrude, fleshTexture: s.fleshTexture,
-    qiXueState, qiXueFamily: qiXueInfo.familyName, qiXueElement: qiXueInfo.element,
+function calcYinYang(q1: string, q2: string, q3: string, q4: string): string {
+  const scores: Record<string, number> = { '少阳': 0, '太阳': 0, '少阴': 0, '太阴': 0 }
+  const map: Record<string, Record<string, string>> = {
+    q1: { A: '少阳', B: '太阳', C: '少阴', D: '太阴' },
+    q2: { A: '少阳', B: '太阳', C: '少阴', D: '太阴' },
+    q3: { A: '少阴', B: '少阳', C: '太阴', D: '太阳' },
+    q4: { A: '太阳', B: '少阳', C: '少阴', D: '太阴' },
   }
+  ;[['q1', q1], ['q2', q2], ['q3', q3], ['q4', q4]].forEach(([k, v]) => {
+    const t = map[k]?.[v]; if (t) scores[t]++
+  })
+  return Object.entries(scores).sort((a, b) => b[1] - a[1])[0][0]
 }
 
 // ── 公共样式
@@ -90,17 +58,6 @@ const btnOutline: React.CSSProperties = {
   fontSize: '12px', cursor: 'pointer',
 }
 
-// 选项字母标注：A/B/C/D...，帮助用户明确区分选项（2026-08-27 新增）
-function letterOf(i: number): string {
-  return String.fromCharCode(65 + i)
-}
-
-// 腰型选项 → 体格倾向提示码（2026-08-28 新增，2026-08-28 再调整：短已挪到 Q7 纵向比例，这里只留 Q6 的 4 个词）
-// 用户界面只显示"细/匀/直/宽"，这套 X/V/H/O 编码完全不对用户展示，
-// 只在后台数据里额外附加一份 body_shape_hint，作为体格(H/X/A/V)判定的辅助信号，
-// 和用户在 Q9 体格题里的直接选择一起合并进打分引擎的 bodyShape 维度
-const WAIST_BODYSHAPE_HINT: Record<string, string> = { 细: 'X', 匀: 'V', 直: 'H', 宽: 'O' }
-
 function OptionCard({ label, sub, active, onClick }: {
   label: string; sub?: string; active: boolean; onClick: () => void
 }) {
@@ -113,34 +70,6 @@ function OptionCard({ label, sub, active, onClick }: {
     }}>
       <p style={{ fontFamily: 'Georgia, serif', fontSize: '15px', color: active ? C.gold : C.h2, marginBottom: sub ? '4px' : 0 }}>{label}</p>
       {sub && <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, margin: 0 }}>{sub}</p>}
-    </button>
-  )
-}
-
-// 多选卡片（用于肩型/腰型/体格等会出现组合词的维度）：勾选态用左侧圆点+描边区分，样式与 OptionCard 保持一致
-function MultiOptionCard({ label, sub, active, onClick }: {
-  label: string; sub?: string; active: boolean; onClick: () => void
-}) {
-  return (
-    <button onClick={onClick} style={{
-      border: `1px solid ${active ? C.gold : C.border}`,
-      background: active ? '#fdf8ee' : '#fff',
-      padding: '16px 20px', textAlign: 'left', cursor: 'pointer',
-      transition: 'all 0.2s', width: '100%', borderRadius: '6px',
-      display: 'flex', alignItems: 'center', gap: '14px',
-    }}>
-      <span style={{
-        width: '18px', height: '18px', borderRadius: '4px', flexShrink: 0,
-        border: `1.5px solid ${active ? C.gold : C.border}`,
-        background: active ? C.gold : 'transparent',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-      }}>
-        {active && <span style={{ color: '#fff', fontSize: '12px', lineHeight: 1 }}>✓</span>}
-      </span>
-      <span>
-        <p style={{ fontFamily: 'Georgia, serif', fontSize: '15px', color: active ? C.gold : C.h2, margin: 0 }}>{label}</p>
-        {sub && <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, margin: '4px 0 0' }}>{sub}</p>}
-      </span>
     </button>
   )
 }
@@ -161,88 +90,85 @@ function ProgressBar({ current, total, label }: { current: number; total: number
 
 // ── 报告组件
 function ReportView({ result, onReset, onReturnToStyle }: {
-  result: {
-    heightRange: string; boneScale: string; boneShape: string[]; shoulderShape: string[]; waistType: string[]
-    limbLength: string; handFootSize: string; bodyShape: string[]
-    hipProtrude: string[]; chestProtrude: string[]; fleshTexture: string[]
-    qiXueState: string; qiXueFamily: string; qiXueElement: string
-  }
+  result: { boneCode: string; fatCode: string; compositeCode: string; compositeName: string; sheldonMap: string; yinYang: string }
   onReset: () => void
   onReturnToStyle?: () => void
 }) {
-  const primaryBodyShape = result.bodyShape[0]?.replace('型', '') ?? ''
-  const imgSrc = BODY_IMAGES[primaryBodyShape]
-  const boneScaleLabel: Record<string, string> = { S: '小骨架', M: '中等骨架', L: '大骨架' }
-  const heightLabel: Record<string, string> = {
-    '<155': '155cm 以下', '155-160': '155-160cm', '160-165': '160-165cm', '165-170': '165-170cm', '>170': '170cm 以上',
-  }
-
+  const imgSrc = BODY_IMAGES[result.compositeCode] || BODY_IMAGES[result.boneCode]
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      {/* 标题：体型档案已采集，尚未给出最终风格结论 */}
+      {/* 标题 */}
       <div style={{ textAlign: 'center', paddingBottom: '24px', borderBottom: `1px solid ${C.border}` }}>
         <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.gold, marginBottom: '8px' }}>体型档案</p>
-        <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '30px', color: C.h1, fontWeight: 400, margin: '0 0 4px' }}>骨架 + 皮肉数据已采集</h1>
-        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, margin: 0 }}>
-          完成风格测试中的面部测试后，系统将结合本次数据给出最终 13 型结论
-        </p>
+        <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '36px', color: C.h1, fontWeight: 400, margin: '0 0 4px' }}>{result.compositeName}</h1>
+        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, margin: 0 }}>{result.compositeCode} · {result.sheldonMap}</p>
       </div>
 
       {/* 左图右档案 */}
       <div style={{ display: 'grid', gridTemplateColumns: imgSrc ? '180px 1fr' : '1fr', gap: '24px', alignItems: 'start' }}>
-        {imgSrc && <img src={imgSrc} alt={primaryBodyShape} style={{ width: '100%', objectFit: 'contain' }} />}
+        {imgSrc && (
+          <img src={imgSrc} alt={result.compositeName} style={{ width: '100%', objectFit: 'contain' }} />
+        )}
         <div style={{ border: `1px solid ${C.border}`, borderRadius: '8px', overflow: 'hidden' }}>
-          {/* 骨架档案 */}
           <div style={{ padding: '20px 24px', borderBottom: `1px solid ${C.border}` }}>
-            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.gold, marginBottom: '14px' }}>骨架档案</p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '12px 16px' }}>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.gold, marginBottom: '16px' }}>三层档案</p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '16px' }}>
               {[
-                ['身高', heightLabel[result.heightRange] ?? result.heightRange], ['骨架大小', `${boneScaleLabel[result.boneScale]}${result.boneShape.length ? ' · ' + result.boneShape.join('+') : ''}`], ['肩形', result.shoulderShape.join(' + ') || '—'],
-                ['腰型', result.waistType.join(' + ') || '—'], ['四肢长度', result.limbLength], ['手脚大小', result.handFootSize],
-                ['体型', result.bodyShape.join(' + ') || '—'],
-              ].map(([k, v]) => (
-                <div key={k}>
-                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', color: C.muted, margin: '0 0 2px' }}>{k}</p>
-                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.h2, margin: 0, fontWeight: 500 }}>{v}</p>
+                { label: '骨骼代码', value: result.boneCode, sub: '骨架结构' },
+                { label: '脂肪代码', value: result.fatCode, sub: '脂肪分布' },
+                { label: '气血态', value: result.yinYang, sub: YIN_YANG_DESC[result.yinYang]?.label },
+              ].map(item => (
+                <div key={item.label}>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '2px', color: C.muted, marginBottom: '4px' }}>{item.label}</p>
+                  <p style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.gold, margin: '0 0 2px' }}>{item.value}</p>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted, margin: 0 }}>{item.sub}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* 皮肉档案 */}
-          <div style={{ padding: '20px 24px', background: '#fafaf8' }}>
-            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.gold, marginBottom: '14px' }}>皮肉档案</p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '12px 16px' }}>
-              {[['臀', result.hipProtrude.join(' + ') || '—'], ['胸', result.chestProtrude.join(' + ') || '—'], ['皮肉质', result.fleshTexture.join(' + ') || '—']].map(([k, v]) => (
-                <div key={k}>
-                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', color: C.muted, margin: '0 0 2px' }}>{k}</p>
-                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.h2, margin: 0, fontWeight: 500 }}>{v}</p>
-                </div>
-              ))}
-            </div>
+          {/* 气血态解读 */}
+          <div style={{ padding: '20px 24px', borderBottom: `1px solid ${C.border}`, background: '#fafaf8' }}>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.gold, marginBottom: '10px' }}>气血态解读</p>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: C.body, lineHeight: 1.8, marginBottom: '6px' }}>
+              {YIN_YANG_DESC[result.yinYang]?.desc}
+            </p>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.sub, lineHeight: 1.8, margin: 0 }}>
+              {YIN_YANG_DESC[result.yinYang]?.style}
+            </p>
+          </div>
+
+          {/* 穿搭策略 */}
+          <div style={{ padding: '20px 24px' }}>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.gold, marginBottom: '16px' }}>穿搭策略</p>
+            {[
+              { label: '骨骼策略', text: `针对 ${result.boneCode} 型骨架的廓形选择、肩线处理和腰节强调方式。` },
+              { label: '脂肪策略', text: `针对 ${result.fatCode} 型脂肪分布的面料选择、图案偏好和视觉修饰方向。` },
+              { label: '气质策略', text: `基于 ${result.yinYang} 气血态的色彩能量、配饰风格和整体气场营造。` },
+            ].map((s, i, arr) => (
+              <div key={s.label} style={{
+                marginBottom: i < arr.length - 1 ? '14px' : 0,
+                paddingBottom: i < arr.length - 1 ? '14px' : 0,
+                borderBottom: i < arr.length - 1 ? `0.5px solid ${C.border}` : 'none',
+              }}>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '2px', color: C.muted, marginBottom: '4px' }}>{s.label}</p>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.body, lineHeight: 1.8, margin: 0 }}>{s.text}</p>
+              </div>
+            ))}
           </div>
         </div>
-      </div>
-
-      {/* 气血态：不再直接决定风格家族，只作为色彩测试的输入展示 */}
-      <div style={{ border: `1px solid ${C.border}`, borderRadius: '8px', padding: '20px 24px' }}>
-        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.gold, marginBottom: '10px' }}>气血态（用于色彩测试计算五行，不影响风格测试结果）</p>
-        <p style={{ fontFamily: 'Georgia, serif', fontSize: '28px', color: C.h1, margin: '0 0 4px' }}>{result.qiXueState}</p>
-        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.body, margin: 0 }}>
-          对应五行属{result.qiXueElement}（{result.qiXueFamily} 方向）
-        </p>
       </div>
 
       {/* 推荐下一步 */}
       <div style={{ background: '#f7f4ef', padding: '24px', borderRadius: '8px' }}>
         <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.gold, marginBottom: '12px' }}>推荐下一步</p>
         <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.body, lineHeight: 1.8, marginBottom: '16px' }}>
-          体型档案已建立。前往风格测试完成面部测试，系统将结合骨架、皮肉与面部特征，给出最终 13 型结论。
+          体型档案已建立。加入色彩测试后，系统将为你生成「体型 × 色彩」组合分析，结论更精准。
         </p>
-        <Link to="/test/style" style={{
+        <Link to="/test/color" style={{
           display: 'inline-block', background: C.gold, color: '#fff', padding: '12px 24px',
           fontFamily: 'Inter, sans-serif', fontSize: '12px', textDecoration: 'none', borderRadius: '4px',
-        }}>前往风格测试 →</Link>
+        }}>开始色彩测试 →</Link>
       </div>
 
       {/* 操作按钮 */}
@@ -263,98 +189,41 @@ function ReportView({ result, onReset, onReturnToStyle }: {
 // ── 主页面
 export default function BodyTestPage() {
   const navigate = useNavigate()
-  const { token } = useAuth() // 登录用户走数据库存档；token 为空则是访客，走 localStorage
   const [phase, setPhase] = useState<Phase>('method')
+
+  // 检查是否需要完成后跳回风格测试
   const fromStyle = typeof window !== 'undefined' && localStorage.getItem('aiffd_return_to') === 'style_body'
   const [method, setMethod] = useState<'manual' | 'ai' | ''>('')
 
-  // 2026-08-27 新增：进度存档与续测提醒。
-  // 已登录用户：初始不弹窗，等下面的 useEffect 真正查到数据库结果后再决定弹不弹（避免被本机残留的旧 localStorage 记录误导）
-  // 访客（没有 token）：直接用 localStorage 判断，本来就没有"查数据库"这一步可等
-  const [resumeChoice, setResumeChoice] = useState<'none' | 'completed' | 'inprogress'>(() => {
-    if (typeof window === 'undefined') return 'none'
-    if (token) return 'none'
-    if (localStorage.getItem('aiffd_body_progress')) return 'inprogress'
-    if (localStorage.getItem('aiffd_body_result')) return 'completed'
-    return 'none'
-  })
-  // 已登录用户的存档内容从数据库读回来后放这里；restoreProgress / loadCompletedResult 会优先用这个，而不是 localStorage
-  const [remoteSnapshot, setRemoteSnapshot] = useState<BodySnapshot | null>(null)
-
-  // 本机 localStorage 里是否有残留记录（可能是登录前、以访客身份测过一半留下的），供数据库查询失败时兜底用
-  const checkLocalFallback = () => {
-    if (typeof window === 'undefined') return
-    if (localStorage.getItem('aiffd_body_progress')) setResumeChoice('inprogress')
-    else if (localStorage.getItem('aiffd_body_result')) setResumeChoice('completed')
-    else setResumeChoice('none')
-  }
-
-  useEffect(() => {
-    if (!token) return // 访客：沿用上面 localStorage 算出的初始值，不用查数据库
-    let cancelled = false
-    testProgressAPI.get('body')
-      .then(res => {
-        if (cancelled) return
-        const progress = res.data?.progress
-        if (progress && progress.data) {
-          setRemoteSnapshot(progress.data as BodySnapshot)
-          setResumeChoice(progress.status === 'completed' ? 'completed' : 'inprogress')
-        } else {
-          checkLocalFallback() // 数据库里没有这个用户的存档，退回看看本机有没有登录前留下的记录
-        }
-      })
-      .catch(() => { if (!cancelled) checkLocalFallback() /* 查询失败就退回本机记录，而不是什么都不做 */ })
-    return () => { cancelled = true }
-  }, [token])
-
-  // 测量数据（AI / 手动 共用，用于辅助预填）
+  // 测量数据
   const [bust, setBust] = useState('')
   const [waist, setWaist] = useState('')
   const [hip, setHip] = useState('')
+  const [shoulder, setShoulder] = useState('')
+  const [hipBone, setHipBone] = useState('')
   const [conflict, setConflict] = useState('')
   const [aiStatus, setAiStatus] = useState<'idle' | 'analyzing' | 'done'>('idle')
   const [previewUrl, setPreviewUrl] = useState('')
+  const [aiResult, setAiResult] = useState<{ sheldon: string; bone: string; fat: string } | null>(null)
 
-  // 骨架测试 7 维度
-  // 肩型 / 腰型 / 体格 三项在表格里会出现组合词（如"圆+溜"），改为多选，存成数组
-  const [heightRange, setHeightRange] = useState('')
-  const [boneScale, setBoneScale] = useState('')
-  // 骨架形状原本是一道多选题（圆/角/匀/宽/窄），2026-08-27 改为两道单选子题：
-  // 骨点明显程度（圆润↔有棱角）+ 肩部横向展开感（偏窄↔偏宽），两个答案合并成 boneShape 数组
-  const [boneRoundness, setBoneRoundness] = useState('') // 骨点较弱→圆 / 骨点适中→匀 / 骨点明显→角
-  const [boneWidth, setBoneWidth] = useState('') // 偏窄→窄 / 适中→匀 / 偏宽→宽
-  const boneShape = [boneRoundness, boneWidth].filter(Boolean)
-  const [shoulderShape, setShoulderShape] = useState<string[]>([])
-  // 2026-08-28 腰型拆成两道题：Q6 横向轮廓(细/匀/直/宽，多选) + Q7 纵向比例(短/适中/长，单选)
-  // 两边答案最后合并成一个数组喂给打分引擎的 waist 维度，跟原表格"细+匀+长"这类组合完全对应
-  const [waistType, setWaistType] = useState<string[]>([])
-  const [waistLength, setWaistLength] = useState('') // 短 / 适中(不贡献任何词) / 长
-  const [limbLength, setLimbLength] = useState('')
-  const [handFootSize, setHandFootSize] = useState('')
-  const [bodyShape, setBodyShape] = useState<string[]>([]) // 多选：H型/X型/A型/V型（与打分矩阵词汇一致，带"型"字）
+  // 确认层
+  const [sheldon, setSheldon] = useState('')
+  const [boneShape, setBoneShape] = useState('')
+  const [boneScaleVal, setBoneScaleVal] = useState('')
+  const [shoulderType, setShoulderType] = useState('')
   const [showXTrap, setShowXTrap] = useState(false)
+  const [visual, setVisual] = useState('')
 
-  // 皮肉测试 3 维度
-  const [hipProtrude, setHipProtrude] = useState<string[]>([])
-  const [chestProtrude, setChestProtrude] = useState<string[]>([])
-  const [fleshTexture, setFleshTexture] = useState<string[]>([])
-
-  // 气血态 4 题
+  // 气血态
   const [q1, setQ1] = useState('')
   const [q2, setQ2] = useState('')
   const [q3, setQ3] = useState('')
   const [q4, setQ4] = useState('')
 
-  // 一屏一题：各环节当前题目索引（骨架 0-6 / 皮肉 0-2 / 气血态 0-3）
-  const [skeletonIdx, setSkeletonIdx] = useState(0)
-  const [fleshIdx, setFleshIdx] = useState(0)
-  const [qixueIdx, setQixueIdx] = useState(0)
-
+  // 报告
   const [result, setResult] = useState<{
-    heightRange: string; boneScale: string; boneShape: string[]; shoulderShape: string[]; waistType: string[]
-    limbLength: string; handFootSize: string; bodyShape: string[]
-    hipProtrude: string[]; chestProtrude: string[]; fleshTexture: string[]
-    qiXueState: string; qiXueFamily: string; qiXueElement: string
+    boneCode: string; fatCode: string; compositeCode: string;
+    compositeName: string; sheldonMap: string; yinYang: string;
   } | null>(null)
 
   const checkConflict = (b: string, w: string, h: string) => {
@@ -365,232 +234,57 @@ export default function BodyTestPage() {
     else setConflict('')
   }
 
-  // 2026-08-26 架构调整：本页不再计算最终 13 型结果（需要面部测试的数据才能算完整）。
-  // 这里只做两件事：① 把气血 4 题的结果单独存起来，供色彩测试计算五行用；
-  // ② 把体型测试 11 个原始维度存入 aiffd_body_result，供 StyleTestPage 的两层匹配引擎读取。
   const computeResult = () => {
-    const qiXueState = calcQiXue(q1, q2, q3, q4)
-    const qiXueInfo = FAMILY_INFO[qiXueState] || FAMILY_INFO['阴阳和谐']
-    // 腰型答案派生出的体格倾向提示（X/V/H/O），只在后台数据里出现，界面从不展示
-    const bodyShapeHint = waistType.map(w => WAIST_BODYSHAPE_HINT[w]).filter(Boolean)
-    // Q6(横向轮廓) + Q7(纵向比例) 合并成最终喂给引擎的腰型组合词，"适中"不贡献任何词
-    const waistCombined = waistLength === '适中' ? waistType : [...waistType, ...(waistLength ? [waistLength] : [])]
-
+    const bustN = parseFloat(bust) || 88
+    const waistN = parseFloat(waist) || 68
+    const hipN = parseFloat(hip) || 94
+    const whr = waistN / hipN
+    const bustWaistDiff = bustN - waistN
+    const boneCode = boneShape
+    const fatCode = calcFatCode(whr, bustWaistDiff, visual, boneCode)
+    const compositeCode = fatCode === '无' ? boneCode : `${boneCode}-${fatCode}`
+    const NAMES: Record<string, string> = {
+      'H': 'H型', 'X': 'X型', 'A': 'A型', 'V': 'V型',
+      'H-O': '苹果H型', 'X-O': '苹果X型', 'A-O': '梨形A型', 'V-O': '苹果V型',
+      'H-S': '沙漏H型', 'X-S': '沙漏X型',
+    }
+    const SHELDON_MAP: Record<string, string> = {
+      '外胚层': 'Ectomorph · 线条感强', '中胚层': 'Mesomorph · 骨骼立体', '内胚层': 'Endomorph · 圆润饱满',
+    }
+    const yinYang = calcYinYang(q1, q2, q3, q4)
     const resultData = {
-      heightRange, boneScale, boneShape, shoulderShape, waistType, limbLength, handFootSize, bodyShape,
-      hipProtrude, chestProtrude, fleshTexture,
-      qiXueState, qiXueFamily: qiXueInfo.familyName, qiXueElement: qiXueInfo.element,
+      boneCode, fatCode: fatCode === '无' ? '—' : fatCode,
+      compositeCode, compositeName: NAMES[compositeCode] || compositeCode,
+      sheldonMap: SHELDON_MAP[sheldon] || sheldon, yinYang,
     }
     setResult(resultData)
-
-    // 供打分引擎使用的原始维度（键名对应 src/data/styleMatrix.ts 里的 DIMENSIONS[].id）
-    // 骨架大小是 combo 类型，把"尺寸(S/M/L)"和"形状(圆/角/匀/宽/窄)"两屏答案合并成一个数组
-    // waist 数组是 Q6+Q7 的合并结果；bodyShape 数组额外合并了腰型派生出的体格提示码
-    // 这两个 key 是给 StyleTestPage 用的引擎输入，不管有没有登录都固定存本机 localStorage
+    // 保存体型结果到 localStorage
     localStorage.setItem('aiffd_body_result', JSON.stringify({
-      boneScale: [boneScale, ...boneShape], height: heightRange, shoulder: shoulderShape,
-      waist: waistCombined,
-      limb: limbLength, handFoot: handFootSize, bodyShape: [...bodyShape, ...bodyShapeHint.map(h => `${h}型`)],
-      fleshTexture, hip: hipProtrude, chest: chestProtrude,
-      waist_ui_label: waistCombined, body_shape_hint: bodyShapeHint, // 额外保留两层数据，供后台/分析使用
+      bodyShape: boneCode,
+      bodyLine: fatCode === '—' ? 'straight' : 'curve',
+      boneScale: sheldon === '外胚层' ? 'small' : sheldon === '内胚层' ? 'large' : 'medium',
     }))
-    // 气血 4 题结果单独存放，供色彩测试计算五行主辅百分比使用，不参与风格测试打分
-    localStorage.setItem('aiffd_qixue_result', JSON.stringify({ qiXueState, q1, q2, q3, q4 }))
-
-    // 续测存档：标记为已完成
-    const snapshot: BodySnapshot = {
-      phase: 'report', method, bust, waist, hip,
-      heightRange, boneScale, boneRoundness, boneWidth, shoulderShape, waistType, waistLength,
-      limbLength, handFootSize, bodyShape, hipProtrude, chestProtrude, fleshTexture,
-      q1, q2, q3, q4, skeletonIdx, fleshIdx, qixueIdx,
-      waist_ui_label: waistType, body_shape_hint: bodyShapeHint,
-    }
-    if (token) {
-      testProgressAPI.save('body', 'completed', snapshot).catch(() => {})
-    } else {
-      localStorage.removeItem('aiffd_body_progress') // 测试已完整做完，清掉中途存档
-    }
     setPhase('report')
   }
 
   const reset = () => {
     setPhase('method'); setMethod(''); setResult(null)
-    setBust(''); setWaist(''); setHip(''); setConflict('')
-    setAiStatus('idle'); setPreviewUrl('')
-    setHeightRange(''); setBoneScale(''); setBoneRoundness(''); setBoneWidth(''); setShoulderShape([]); setWaistType([])
-    setWaistLength(''); setLimbLength(''); setHandFootSize(''); setBodyShape([]); setShowXTrap(false)
-    setHipProtrude([]); setChestProtrude([]); setFleshTexture([])
+    setBust(''); setWaist(''); setHip(''); setShoulder(''); setHipBone('')
+    setConflict(''); setAiStatus('idle'); setPreviewUrl(''); setAiResult(null)
+    setSheldon(''); setBoneShape(''); setShowXTrap(false); setVisual('')
     setQ1(''); setQ2(''); setQ3(''); setQ4('')
-    setSkeletonIdx(0); setFleshIdx(0); setQixueIdx(0)
   }
 
-  // 骨架(10) + 皮肉(3) + 气血态(4) = 17 题，跨环节统一计数，方便一屏一题的进度展示
-  const TOTAL_QUESTIONS = 17
-  const currentQuestionNumber =
-    phase === 'skeleton' ? skeletonIdx + 1 :
-    phase === 'flesh' ? 10 + fleshIdx + 1 :
-    phase === 'qixue' ? 10 + 3 + qixueIdx + 1 : 0
-
-  // 选完一题后延迟自动跳下一题，让用户先看到选中态再切换
-  const AUTO_ADVANCE_DELAY = 260
-  const goNextSkeleton = () => {
-    if (skeletonIdx < 9) setSkeletonIdx(skeletonIdx + 1)
-    else { setPhase('flesh'); setFleshIdx(0) }
-  }
-  const goBackSkeleton = () => {
-    if (skeletonIdx > 0) setSkeletonIdx(skeletonIdx - 1)
-    else setPhase('data')
-  }
-  const goNextFlesh = () => {
-    if (fleshIdx < 2) setFleshIdx(fleshIdx + 1)
-    else { setPhase('qixue'); setQixueIdx(0) }
-  }
-  const goBackFlesh = () => {
-    if (fleshIdx > 0) setFleshIdx(fleshIdx - 1)
-    else { setPhase('skeleton'); setSkeletonIdx(9) }
-  }
-  const goNextQixue = () => {
-    if (qixueIdx < 3) setQixueIdx(qixueIdx + 1)
-    else computeResult()
-  }
-  const goBackQixue = () => {
-    if (qixueIdx > 0) setQixueIdx(qixueIdx - 1)
-    else { setPhase('flesh'); setFleshIdx(2) }
-  }
-
-  // ── 进度自动存档：只要用户已经开始答题（不在 method / report），且已经处理完续测提示，
-  // 每次答案或页面位置变化就把完整快照写进去，方便中途退出后能真正"继续测试"
-  // 已登录 → 存进数据库（跨设备都能续）；访客 → 存 localStorage（仅本机本浏览器有效）
-  useEffect(() => {
-    if (resumeChoice !== 'none') return
-    if (phase === 'method' || phase === 'report') return
-    const snapshot: BodySnapshot = {
-      phase, method, bust, waist, hip,
-      heightRange, boneScale, boneRoundness, boneWidth, shoulderShape, waistType, waistLength,
-      limbLength, handFootSize, bodyShape, hipProtrude, chestProtrude, fleshTexture,
-      q1, q2, q3, q4, skeletonIdx, fleshIdx, qixueIdx,
-    }
-    if (token) {
-      testProgressAPI.save('body', 'in_progress', snapshot).catch(() => { /* 网络失败就先不管，下次答题会再存一次 */ })
-    } else {
-      localStorage.setItem('aiffd_body_progress', JSON.stringify(snapshot))
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, skeletonIdx, fleshIdx, qixueIdx, method, bust, waist, hip, heightRange, boneScale,
-      boneRoundness, boneWidth, shoulderShape, waistType, waistLength, limbLength, handFootSize, bodyShape,
-      hipProtrude, chestProtrude, fleshTexture, q1, q2, q3, q4, resumeChoice, token])
-
-  // 把存档快照里的所有字段恢复回各自的 state
-  const applySnapshot = (s: BodySnapshot) => {
-    setMethod((s.method as 'manual' | 'ai' | '') ?? ''); setBust(s.bust ?? ''); setWaist(s.waist ?? ''); setHip(s.hip ?? '')
-    setHeightRange(s.heightRange ?? ''); setBoneScale(s.boneScale ?? '')
-    setBoneRoundness(s.boneRoundness ?? ''); setBoneWidth(s.boneWidth ?? '')
-    setShoulderShape(s.shoulderShape ?? []); setWaistType(s.waistType ?? []); setWaistLength(s.waistLength ?? '')
-    setLimbLength(s.limbLength ?? ''); setHandFootSize(s.handFootSize ?? '')
-    setBodyShape(s.bodyShape ?? [])
-    setHipProtrude(s.hipProtrude ?? []); setChestProtrude(s.chestProtrude ?? []); setFleshTexture(s.fleshTexture ?? [])
-    setQ1(s.q1 ?? ''); setQ2(s.q2 ?? ''); setQ3(s.q3 ?? ''); setQ4(s.q4 ?? '')
-    setSkeletonIdx(s.skeletonIdx ?? 0); setFleshIdx(s.fleshIdx ?? 0); setQixueIdx(s.qixueIdx ?? 0)
-  }
-
-  // "继续测试"：从存档里把所有答案和当前所在题目位置恢复回来
-  const restoreProgress = () => {
-    try {
-      // 优先用数据库存档；只有查不到（remoteSnapshot 为空，包括查询失败退回本机的情况）才读本机 localStorage
-      if (remoteSnapshot) {
-        applySnapshot(remoteSnapshot); setPhase(remoteSnapshot.phase ?? 'skeleton')
-      } else {
-        const raw = localStorage.getItem('aiffd_body_progress')
-        if (raw) { const s = JSON.parse(raw); applySnapshot(s); setPhase(s.phase ?? 'skeleton') }
-      }
-    } catch { /* 存档损坏就当没有，走重新测试 */ }
-    setResumeChoice('none')
-  }
-
-  // "重新测试"：清空存档和已完成结果，从头开始
-  const discardAndRestart = () => {
-    if (token) {
-      testProgressAPI.clear('body').catch(() => { /* 清不掉也不阻塞，反正下次答题会用新数据覆盖 */ })
-    } else {
-      localStorage.removeItem('aiffd_body_progress')
-      localStorage.removeItem('aiffd_body_result')
-      localStorage.removeItem('aiffd_qixue_result')
-    }
-    setResumeChoice('none')
-  }
-
-  // "查看结果"（已完成过测试时）：把存好的答案重新组装成报告页需要的形状，直接跳到报告页
-  const loadCompletedResult = () => {
-    try {
-      // 同样优先用数据库存档，查不到再退回本机 localStorage
-      if (remoteSnapshot) {
-        setResult(buildResultFromSnapshot(remoteSnapshot)); setPhase('report')
-      } else {
-        const bodyRaw = localStorage.getItem('aiffd_body_result')
-        if (bodyRaw) {
-          const b = JSON.parse(bodyRaw)
-          const qixueRaw = localStorage.getItem('aiffd_qixue_result')
-          const q = qixueRaw ? JSON.parse(qixueRaw) : null
-          const qiXueState = q?.qiXueState ?? '阴阳和谐'
-          const qiXueInfo = FAMILY_INFO[qiXueState] || FAMILY_INFO['阴阳和谐']
-          const boneArr: string[] = Array.isArray(b.boneScale) ? b.boneScale : []
-          setResult({
-            heightRange: b.height ?? '', boneScale: boneArr[0] ?? '', boneShape: boneArr.slice(1),
-            shoulderShape: b.shoulder ?? [], waistType: b.waist ?? [],
-            limbLength: b.limb ?? '', handFootSize: b.handFoot ?? '', bodyShape: b.bodyShape ?? [],
-            hipProtrude: b.hip ?? [], chestProtrude: b.chest ?? [], fleshTexture: b.fleshTexture ?? [],
-            qiXueState, qiXueFamily: qiXueInfo.familyName, qiXueElement: qiXueInfo.element,
-          })
-          setPhase('report')
-        }
-      }
-    } catch { /* 存档损坏就当没有 */ }
-    setResumeChoice('none')
-  }
-
-  // "跳过"：不处理这份存档/结果，直接离开去测试中心选别的测试
-  const skipToOtherTests = () => {
-    navigate('/onboarding')
+  const phaseStep: Record<Phase, number> = {
+    method: 0, data: 1, sheldon: 2, boneScale: 3, bone: 4, shoulder: 5, fat: 6, qi: 7, report: 8,
   }
 
   return (
     <div style={{ minHeight: '100vh', background: '#faf9f7' }}>
-      {/* 续测提醒弹窗：检测到本机存过体型测试的存档时显示 */}
-      {resumeChoice !== 'none' && (
-        <div style={{
-          position: 'fixed', inset: 0, background: 'rgba(15,15,13,0.5)', zIndex: 100,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px',
-        }}>
-          <div style={{ background: '#faf9f7', borderRadius: '10px', padding: '32px', maxWidth: '420px', width: '100%' }}>
-            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.gold, marginBottom: '10px' }}>
-              {resumeChoice === 'inprogress' ? '发现未完成的体型测试' : '你已经完成过体型测试'}
-            </p>
-            <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h1, fontWeight: 400, margin: '0 0 12px' }}>
-              {resumeChoice === 'inprogress' ? '要继续上次的进度吗？' : '要重新测一次吗？'}
-            </h2>
-            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.body, lineHeight: 1.8, marginBottom: '24px' }}>
-              {resumeChoice === 'inprogress'
-                ? '本设备上保存了一份还没做完的记录，可以选择继续、重新开始，或者先去做别的测试。'
-                : '本设备上已经保存了一份完整的体型测试结果，可以直接查看，也可以重新测一次覆盖它。'}
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {resumeChoice === 'inprogress' ? (
-                <button onClick={restoreProgress} style={btnGold}>继续测试</button>
-              ) : (
-                <button onClick={loadCompletedResult} style={btnGold}>查看上次结果</button>
-              )}
-              <button onClick={discardAndRestart} style={btnOutline}>重新测试</button>
-              <button onClick={skipToOtherTests} style={{ ...btnOutline, border: 'none', color: C.muted }}>跳过，去做别的测试 →</button>
-            </div>
-          </div>
-        </div>
-      )}
-
       <div style={{ maxWidth: '680px', margin: '0 auto', padding: '48px 32px 80px' }}>
 
-        {phase === 'data' && <ProgressBar current={1} total={4} label="BODY TEST" />}
-        {(phase === 'skeleton' || phase === 'flesh' || phase === 'qixue') && (
-          <ProgressBar current={currentQuestionNumber} total={TOTAL_QUESTIONS} label="BODY TEST" />
+        {phase !== 'method' && phase !== 'report' && (
+          <ProgressBar current={phaseStep[phase]} total={5} label="BODY TEST" />
         )}
 
         {/* ── Step 0: 选择测量方式 ── */}
@@ -602,29 +296,46 @@ export default function BodyTestPage() {
                 了解你的<br />体型底色
               </h1>
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: C.muted, lineHeight: 1.8, margin: 0 }}>
-                通过骨架、皮肉和气血态三个维度，建立专属体型档案。
+                通过骨骼轮廓、脂肪分布和气血态三个维度，建立专属体型档案。
               </p>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <OptionCard label="AI 拍照识别" sub="上传正面照片，AI 自动预填骨架与皮肉判断，可手动修正" active={method === 'ai'} onClick={() => setMethod('ai')} />
-              <OptionCard label="手动填写数据" sub="输入胸围、腰围、臀围，辅助后续骨架与皮肉判断" active={method === 'manual'} onClick={() => setMethod('manual')} />
+              <OptionCard
+                label="AI 拍照识别"
+                sub="上传正面照片，AI 自动判断体型并给出建议，可手动修正"
+                active={method === 'ai'}
+                onClick={() => setMethod('ai')}
+              />
+              <OptionCard
+                label="手动填写数据"
+                sub="输入胸围、腰围、臀围等数据，精准计算体型代码"
+                active={method === 'manual'}
+                onClick={() => setMethod('manual')}
+              />
             </div>
-            <button onClick={() => setPhase('data')} disabled={!method}
-              style={method ? btnGold : { ...btnGold, background: '#e0e0e0', cursor: 'not-allowed' }}>
+            <button
+              onClick={() => setPhase('data')}
+              disabled={!method}
+              style={method ? btnGold : { ...btnGold, background: '#e0e0e0', cursor: 'not-allowed' }}
+            >
               开始测试
             </button>
           </div>
         )}
 
-        {/* ── Step 1: 数据收集（AI）── */}
+        {/* ── Step 1: 数据收集 ── */}
         {phase === 'data' && method === 'ai' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
             <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '26px', color: C.h2, fontWeight: 400, margin: 0 }}>上传正面照片</h2>
             <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, lineHeight: 1.8, margin: 0 }}>
               穿贴身衣物或紧身裤，正面站立，双臂自然垂下。光线均匀效果最佳。
             </p>
-            <div style={{ border: `2px dashed ${C.border}`, borderRadius: '8px', padding: '40px', textAlign: 'center', cursor: 'pointer', background: '#fff' }}
-              onClick={() => document.getElementById('photo-input')?.click()}>
+            <div style={{
+              border: `2px dashed ${C.border}`, borderRadius: '8px', padding: '40px',
+              textAlign: 'center', cursor: 'pointer', background: '#fff',
+            }}
+              onClick={() => document.getElementById('photo-input')?.click()}
+            >
               {previewUrl ? (
                 <img src={previewUrl} alt="预览" style={{ maxHeight: '300px', maxWidth: '100%', objectFit: 'contain' }} />
               ) : (
@@ -634,42 +345,71 @@ export default function BodyTestPage() {
                 </>
               )}
               <input id="photo-input" type="file" accept="image/*" style={{ display: 'none' }}
-                onChange={e => { const file = e.target.files?.[0]; if (file) setPreviewUrl(URL.createObjectURL(file)) }} />
+                onChange={e => {
+                  const file = e.target.files?.[0]
+                  if (file) setPreviewUrl(URL.createObjectURL(file))
+                }}
+              />
             </div>
             {previewUrl && aiStatus === 'idle' && (
               <button onClick={() => {
                 setAiStatus('analyzing')
                 setTimeout(() => {
+                  setAiResult({ sheldon: '中胚层', bone: 'H', fat: '无' })
                   setAiStatus('done')
-                  setHeightRange('165-170'); setBoneScale('M'); setBoneRoundness('匀'); setBoneWidth('匀'); setShoulderShape(['圆', '溜'])
-                  setWaistType(['匀']); setLimbLength('适中'); setHandFootSize('适中'); setBodyShape(['H型'])
-                  setHipProtrude(['适中']); setChestProtrude(['适中']); setFleshTexture(['适中'])
+                  setSheldon('中胚层'); setBoneShape('H'); setVisual('无')
                 }, 2000)
               }} style={btnGold}>AI 识别体型</button>
             )}
             {aiStatus === 'analyzing' && (
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.gold, textAlign: 'center' }}>正在分析中…</p>
             )}
-            {aiStatus === 'done' && (
+            {aiStatus === 'done' && aiResult && (
               <div style={{ background: '#fdf8ee', border: `1px solid ${C.gold}`, borderRadius: '8px', padding: '20px' }}>
-                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', marginBottom: '8px' }}>AI 已预填骨架与皮肉判断</p>
-                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, margin: 0 }}>接下来的骨架测试、皮肉测试步骤中，你可以确认或手动修正每一项</p>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', marginBottom: '12px' }}>AI 识别结果</p>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: C.h2, margin: 0 }}>
+                  体质类型：{aiResult.sheldon}　骨骼轮廓：{aiResult.bone} 型　脂肪分布：{aiResult.fat === '无' ? '均匀' : aiResult.fat}
+                </p>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, marginTop: '8px', marginBottom: 0 }}>
+                  以下步骤中你可以确认或手动修正
+                </p>
               </div>
             )}
             <div style={{ display: 'flex', gap: '12px' }}>
               <button onClick={() => setPhase('method')} style={btnOutline}>← 返回</button>
-              <button onClick={() => setPhase('skeleton')} disabled={aiStatus !== 'done'}
-                style={aiStatus === 'done' ? { ...btnGold, flex: 1 } : { ...btnGold, flex: 1, background: '#e0e0e0', cursor: 'not-allowed' }}>继续</button>
+              <button
+                onClick={() => setPhase('sheldon')}
+                disabled={aiStatus !== 'done'}
+                style={aiStatus === 'done' ? { ...btnGold, flex: 1 } : { ...btnGold, flex: 1, background: '#e0e0e0', cursor: 'not-allowed' }}
+              >继续</button>
             </div>
           </div>
         )}
 
-        {/* ── Step 1: 数据收集（手动）── */}
         {phase === 'data' && method === 'manual' && (() => {
+          // 实时计算体型
           const bustN = parseFloat(bust) || 0
           const waistN = parseFloat(waist) || 0
           const hipN = parseFloat(hip) || 0
           const hasBasic = bustN > 0 && waistN > 0 && hipN > 0
+
+          // 实时推算体型代码
+          let liveShape = ''
+          if (hasBasic) {
+            const bustHipDiff = bustN - hipN
+            const waistHipRatio = waistN / hipN
+            if (waistHipRatio > 0.88) liveShape = 'H'
+            else if (bustHipDiff > 3) liveShape = 'V'
+            else if (hipN - bustN > 5) liveShape = 'A'
+            else liveShape = 'X'
+          }
+
+          const shapeDesc: Record<string, string> = {
+            H: 'H型 · 肩臀等宽，腰线不明显，整体方正感',
+            X: 'X型 · 肩臀相近，腰部明显收细，沙漏轮廓',
+            A: 'A型 · 臀宽大于肩宽，重心偏下，梨形',
+            V: 'V型 · 肩宽大于臀宽，倒三角轮廓',
+          }
 
           return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -677,20 +417,67 @@ export default function BodyTestPage() {
                 <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', marginBottom: '8px' }}>体型计算器</p>
                 <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '26px', color: C.h2, fontWeight: 400, margin: 0 }}>输入你的围度数据</h2>
                 <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '8px' }}>
-                  用软尺紧贴皮肤测量，站立自然呼吸状态，单位：cm。这组数据将用于辅助后续骨架与皮肉判断的默认建议。
+                  用软尺紧贴皮肤测量，站立自然呼吸状态，单位：cm
                 </p>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px' }}>
+              {/* 实时结果显示 */}
+              <div style={{
+                background: hasBasic ? '#fdf8ee' : '#f5f5f3',
+                border: `1px solid ${hasBasic ? C.gold : C.border}`,
+                borderRadius: '10px', padding: '20px',
+                transition: 'all 0.3s',
+              }}>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', marginBottom: '10px' }}>
+                  实时计算结果
+                </p>
+                {hasBasic ? (
+                  <div>
+                    <p style={{ fontFamily: 'Georgia, serif', fontSize: '42px', color: C.gold, margin: '0 0 8px', letterSpacing: '4px' }}>
+                      {liveShape}
+                    </p>
+                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.body, margin: 0 }}>
+                      {shapeDesc[liveShape]}
+                    </p>
+                    <div style={{ display: 'flex', gap: '20px', marginTop: '12px', flexWrap: 'wrap' }}>
+                      {[
+                        { label: '腰臀比', value: hipN > 0 ? (waistN / hipN).toFixed(2) : '—' },
+                        { label: '胸腰差', value: bustN > 0 ? `${(bustN - waistN).toFixed(1)} cm` : '—' },
+                        { label: '胸臀差', value: hipN > 0 ? `${(bustN - hipN).toFixed(1)} cm` : '—' },
+                      ].map(s => (
+                        <div key={s.label}>
+                          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', color: C.muted, marginBottom: '2px' }}>{s.label}</p>
+                          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '15px', color: C.h2, margin: 0, fontWeight: 500 }}>{s.value}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, margin: 0 }}>
+                    输入胸围、腰围、臀围后自动计算
+                  </p>
+                )}
+              </div>
+
+              {/* 输入字段 */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                 {[
-                  { label: '胸围 *', value: bust, set: setBust, key: '胸围' },
-                  { label: '腰围 *', value: waist, set: setWaist, key: '腰围' },
-                  { label: '臀围 *', value: hip, set: setHip, key: '臀围' },
+                  { label: '胸围 *', hint: '胸部最丰满处', value: bust, set: setBust, key: '胸围' },
+                  { label: '腰围 *', hint: '腰部最细处', value: waist, set: setWaist, key: '腰围' },
+                  { label: '臀围 *', hint: '臀部最丰满处', value: hip, set: setHip, key: '臀围' },
+                  { label: '肩宽', hint: '两肩峰距离（选填）', value: shoulder, set: setShoulder, key: '肩宽' },
+                  { label: '髋骨宽', hint: '两髋骨最宽处（选填）', value: hipBone, set: setHipBone, key: '髋骨宽' },
                 ].map(f => (
                   <div key={f.label} style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: f.value ? C.gold : C.h2, fontWeight: f.value ? 500 : 400 }}>{f.label}</label>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                      <label style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: f.value ? C.gold : C.h2, fontWeight: f.value ? 500 : 400 }}>
+                        {f.label}
+                      </label>
+                      <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', color: C.muted }}>{f.hint}</span>
+                    </div>
                     <div style={{ position: 'relative' }}>
-                      <input type="number" value={f.value} placeholder="0"
+                      <input
+                        type="number" value={f.value} placeholder="0"
                         onChange={e => {
                           f.set(e.target.value)
                           if (f.key === '胸围') checkConflict(e.target.value, waist, hip)
@@ -701,10 +488,17 @@ export default function BodyTestPage() {
                           width: '100%', padding: '12px 36px 12px 14px',
                           border: `1px solid ${f.value ? C.gold : C.border}`,
                           borderRadius: '6px', fontFamily: 'Inter, sans-serif', fontSize: '16px',
-                          fontWeight: 500, color: C.h2, background: f.value ? '#fdfbf5' : '#fff',
-                          boxSizing: 'border-box' as const, outline: 'none',
-                        }} />
-                      <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted }}>cm</span>
+                          fontWeight: 500, color: C.h2,
+                          background: f.value ? '#fdfbf5' : '#fff',
+                          boxSizing: 'border-box' as const,
+                          transition: 'all 0.2s',
+                          outline: 'none',
+                        }}
+                      />
+                      <span style={{
+                        position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
+                        fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted,
+                      }}>cm</span>
                     </div>
                   </div>
                 ))}
@@ -721,411 +515,301 @@ export default function BodyTestPage() {
                 <summary style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.gold, listStyle: 'none' }}>
                   不知道怎么测量？点击查看说明
                 </summary>
-                <div style={{ marginTop: '14px' }}>
-                  <img
-                    src="/measure-guide.png"
-                    alt="身体尺寸测量方法：胸围、腰围、臀围、肩宽测量示意图"
-                    style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block', borderRadius: '8px', border: `1px solid ${C.border}` }}
-                  />
+                <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {[
+                    ['胸围', '穿无衬垫内衣，软尺经过胸部最高点水平绕一圈'],
+                    ['腰围', '自然站立，软尺在肋骨最下端和髋骨最上端中间绕一圈'],
+                    ['臀围', '软尺经过臀部最丰满处水平绕一圈'],
+                    ['肩宽', '从左肩峰到右肩峰的直线距离'],
+                  ].map(([k, v]) => (
+                    <p key={k} style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.body, margin: 0, lineHeight: 1.7 }}>
+                      <strong style={{ color: C.gold }}>{k}：</strong>{v}
+                    </p>
+                  ))}
                 </div>
               </details>
 
               <div style={{ display: 'flex', gap: '12px' }}>
                 <button onClick={() => setPhase('method')} style={btnOutline}>← 返回</button>
-                <button onClick={() => {
-                  // 用三围数据给骨架/皮肉步骤一个合理的默认建议，用户在下一步仍可修改
-                  if (hasBasic) {
-                    const whr = waistN / hipN
-                    const bustWaistDiff = bustN - waistN
-                    if (bodyShape.length === 0) setBodyShape([whr > 0.88 ? 'H型' : bustN - hipN > 3 ? 'V型' : hipN - bustN > 5 ? 'A型' : 'X型'])
-                    if (hipProtrude.length === 0) setHipProtrude([hipN - bustN > 5 ? '凸' : '扁平'])
-                    if (chestProtrude.length === 0) setChestProtrude([bustN - hipN > 3 ? '凸' : '扁平'])
-                    if (fleshTexture.length === 0) setFleshTexture([bustWaistDiff > 20 ? '软肉' : '紧实'])
-                  }
-                  setPhase('skeleton')
-                }}
-                  disabled={!bust || !waist || !hip}
-                  style={bust && waist && hip ? { ...btnGold, flex: 1 } : { ...btnGold, flex: 1, background: '#e0e0e0', cursor: 'not-allowed' }}>
-                  继续
-                </button>
-              </div>
-            </div>
-          )
-        })()}
-
-        {/* ── Step 2: 骨架测试（9题）── */}
-        {phase === 'skeleton' && (() => {
-          // 索引映射：0身高 1骨架大小(图片) 2骨点明显程度 3肩部横向展开感 4肩形(多选) 5腰型(多选) 6四肢长度 7手脚大小 8体型(多选，特殊)
-          // 2026-08-27：原"骨架形状多选(圆/角/匀/宽/窄)"拆成 2 和 3 这两道单选子题，分别对应圆润↔有棱角、偏窄↔偏宽两条轴
-          const textQuestions: Record<number, { title: string; value: string; set: (v: string) => void; options: { id: string; label: string; sub?: string }[] }> = {
-            0: { title: '你的身高区间？', value: heightRange, set: setHeightRange, options: [
-              { id: '<155', label: '155cm 以下' },
-              { id: '155-160', label: '155cm - 160cm' },
-              { id: '160-165', label: '160cm - 165cm' },
-              { id: '165-170', label: '165cm - 170cm' },
-              { id: '>170', label: '170cm 以上' },
-            ]},
-            2: { title: '你的手腕和关节骨感更接近哪一种？', value: boneRoundness, set: setBoneRoundness, options: [
-              { id: '圆', label: '骨点较弱', sub: '手腕和关节轮廓柔和，骨点不明显' },
-              { id: '匀', label: '骨点适中', sub: '能看到一定骨骼轮廓，但不会特别突出' },
-              { id: '角', label: '骨点明显', sub: '手腕、脚踝或关节骨点清楚，结构感较强' },
-            ]},
-            3: { title: '你的肩线走向更接近哪一种？', value: boneWidth, set: setBoneWidth, options: [
-              { id: '溜', label: '溜肩', sub: '从颈部向肩端下降明显' },
-              { id: '匀', label: '自然肩', sub: '下降程度适中' },
-              { id: '直', label: '平直肩', sub: '肩线较水平' },
-            ]},
-            6: { title: '你的腰部纵向比例更接近哪一种？', value: waistLength, set: setWaistLength, options: [
-              { id: '短', label: '短', sub: '腰段偏短，下半身量感更明显' },
-              { id: '适中', label: '适中', sub: '腰段长度适中，比例均衡' },
-              { id: '长', label: '长', sub: '腰段偏长，上半身占比更明显' },
-            ]},
-            7: { title: '你的四肢长度？', value: limbLength, set: setLimbLength, options: [
-              { id: '偏短', label: '偏短' }, { id: '适中', label: '适中' }, { id: '偏长', label: '偏长' },
-            ]},
-            8: { title: '你的手脚大小？', value: handFootSize, set: setHandFootSize, options: [
-              { id: '娇小', label: '娇小' }, { id: '适中', label: '适中' }, { id: '偏大', label: '偏大' },
-            ]},
-          }
-
-          // 肩型 / 腰型 表格里会出现组合词（如"圆+溜"），做成多选：可以勾多个描述词
-          const shoulderOptions = [
-            { id: '圆', label: '圆', sub: '肩线圆润' },
-            { id: '直', label: '直', sub: '肩线平直' },
-            { id: '宽', label: '宽', sub: '肩宽度较宽' },
-            { id: '匀', label: '匀', sub: '肩线匀称对称' },
-            { id: '溜', label: '溜', sub: '肩部略向下斜（溜肩）' },
-            { id: '方', label: '方', sub: '肩型方正，棱角分明' },
-            { id: '尖', label: '尖', sub: '肩峰尖锐突出' },
-          ]
-          const waistOptions = [
-            { id: '细', img: '/waist-slim.png' },
-            { id: '匀', img: '/waist-evenly.png' },
-            { id: '直', img: '/waist-straight.png' },
-            { id: '宽', img: '/waist-wide.png' },
-          ]
-          const bodyShapeOptions = [
-            { id: 'H型', label: 'H 型', sub: '肩宽≈髋宽，腰部不明显，整体较方正' },
-            { id: 'X型', label: 'X 型', sub: '肩宽≈髋宽，腰部明显收细，沙漏型轮廓' },
-            { id: 'A型', label: 'A 型', sub: '肩窄髋宽，重心偏下，梨形轮廓' },
-            { id: 'V型', label: 'V 型', sub: '肩宽髋窄，倒三角轮廓，上半身较壮' },
-          ]
-
-          const isBoneScaleQ = skeletonIdx === 1
-          const isBoneRoundnessQ = skeletonIdx === 2
-          const isBoneWidthQ = skeletonIdx === 3
-          const isShoulderQ = skeletonIdx === 4
-          const isWaistQ = skeletonIdx === 5
-          const isBodyShapeQ = skeletonIdx === 9
-          const isComboQ = isShoulderQ || isWaistQ || isBodyShapeQ
-          const isTextQ = skeletonIdx in textQuestions
-
-          const selectAndAdvance = (set: (v: string) => void, val: string) => {
-            set(val)
-            setTimeout(goNextSkeleton, AUTO_ADVANCE_DELAY)
-          }
-
-          // 多选题的勾选切换（肩型/腰型/体格通用）
-          const toggle = (arr: string[], set: (v: string[]) => void, val: string) => {
-            set(arr.includes(val) ? arr.filter(v => v !== val) : [...arr, val])
-          }
-
-          const boneScaleOptions = [
-            { id: 'S', img: '/bone-small-3.png' },
-            { id: 'M', img: '/bone-medium-3.png' },
-            { id: 'L', img: '/bone-large-3.png' },
-          ]
-
-          const shoulderSlopeOptions = [
-            { id: '溜', img: '/Shoulder-luo.png' },
-            { id: '匀', img: '/Shoulder-ziran.png' },
-            { id: '直', img: '/shoulder-pingzhi.png' },
-          ]
-
-          const comboTitle = isShoulderQ ? '你的肩形接近哪些描述？（可多选）'
-            : isWaistQ ? '你的腰型接近哪些描述？（可多选）'
-            : '你的体型（骨骼轮廓）接近哪些？（可多选）'
-
-          // 当前多选题对应的选项列表 + 已选值 + 更新函数（现在只有肩型走这条通用文字checkbox路径，
-          // 腰型改成了下面独立的图片多选区块，体格 X 型陷阱逻辑也是独立区块，见下方）
-          const comboConfig = { options: shoulderOptions, value: shoulderShape, set: setShoulderShape }
-
-          return (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-              <div>
-                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', marginBottom: '8px' }}>
-                  STEP 01 · 骨架测试 · {skeletonIdx + 1} / 10
-                </p>
-                <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '26px', color: C.h2, fontWeight: 400, margin: 0 }}>
-                  Q{currentQuestionNumber} · {isComboQ ? comboTitle : isBoneScaleQ ? '你的骨架大小更接近哪种？' : textQuestions[skeletonIdx].title}
-                </h2>
-                {isBoneRoundnessQ && (
-                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '10px', lineHeight: 1.7 }}>
-                    观察手腕、脚踝、肩峰、膝盖等位置的骨点是否明显
-                  </p>
-                )}
-              </div>
-
-              {isBoneRoundnessQ && (
-                <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
-                  <img
-                    src="/joint-prominence.png"
-                    alt="骨点观察示意图：肩峰、手腕、膝盖、脚踝"
-                    style={{ height: '400px', width: 'auto', maxWidth: '320px', flexShrink: 0, objectFit: 'contain', display: 'block', borderRadius: '8px', border: `1px solid ${C.border}` }}
-                  />
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1 }}>
-                    {textQuestions[skeletonIdx].options.map((o, i) => (
-                      <OptionCard key={o.id} label={`${letterOf(i)} · ${o.label}`} sub={o.sub}
-                        active={textQuestions[skeletonIdx].value === o.id}
-                        onClick={() => selectAndAdvance(textQuestions[skeletonIdx].set, o.id)} />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {isBoneScaleQ && (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
-                  {boneScaleOptions.map((o) => (
-                    <button key={o.id} onClick={() => selectAndAdvance(setBoneScale, o.id)} style={{
-                      border: 'none', boxShadow: boneScale === o.id ? `0 0 0 2px ${C.gold}` : 'none',
-                      borderRadius: '8px', padding: 0, cursor: 'pointer', overflow: 'hidden',
-                      background: boneScale === o.id ? '#fdf8ee' : '#fff', transition: 'all 0.2s',
-                    }}>
-                      <img src={o.img} alt={o.id} style={{ width: '100%', height: '480px', objectFit: 'cover', display: 'block' }} />
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {isBoneWidthQ && (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
-                  {shoulderSlopeOptions.map(o => (
-                    <button key={o.id} onClick={() => selectAndAdvance(setBoneWidth, o.id)} style={{
-                      border: 'none', boxShadow: boneWidth === o.id ? `0 0 0 2px ${C.gold}` : 'none',
-                      borderRadius: '8px', padding: 0, cursor: 'pointer', overflow: 'hidden',
-                      background: boneWidth === o.id ? '#fdf8ee' : '#fff', transition: 'all 0.2s',
-                    }}>
-                      <img src={o.img} alt={o.id} style={{ width: '100%', height: '480px', objectFit: 'cover', display: 'block' }} />
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {!isBoneScaleQ && !isBoneRoundnessQ && !isBoneWidthQ && isTextQ && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {textQuestions[skeletonIdx].options.map((o, i) => (
-                    <OptionCard key={o.id} label={`${letterOf(i)} · ${o.label}`} sub={o.sub}
-                      active={textQuestions[skeletonIdx].value === o.id}
-                      onClick={() => selectAndAdvance(textQuestions[skeletonIdx].set, o.id)} />
-                  ))}
-                </div>
-              )}
-
-              {isShoulderQ && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {comboConfig.options.map((o, i) => (
-                    <MultiOptionCard key={o.id} label={`${letterOf(i)} · ${o.label}`} sub={o.sub}
-                      active={comboConfig.value.includes(o.id)}
-                      onClick={() => toggle(comboConfig.value, comboConfig.set, o.id)} />
-                  ))}
-                </div>
-              )}
-
-              {isWaistQ && (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '10px' }}>
-                  {waistOptions.map(o => {
-                    const active = waistType.includes(o.id)
-                    return (
-                      <button key={o.id} onClick={() => toggle(waistType, setWaistType, o.id)} style={{
-                        border: 'none', boxShadow: active ? `0 0 0 2px ${C.gold}` : 'none',
-                        borderRadius: '8px', padding: 0, cursor: 'pointer', overflow: 'hidden', position: 'relative',
-                        background: active ? '#fdf8ee' : '#fff', transition: 'all 0.2s',
-                      }}>
-                        <img src={o.img} alt={o.id} style={{ width: '100%', height: '280px', objectFit: 'cover', display: 'block' }} />
-                        <span style={{
-                          position: 'absolute', top: '8px', right: '8px', width: '20px', height: '20px', borderRadius: '5px',
-                          border: `1.5px solid ${active ? C.gold : 'rgba(255,255,255,0.9)'}`,
-                          background: active ? C.gold : 'rgba(255,255,255,0.5)',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        }}>
-                          {active && <span style={{ color: '#fff', fontSize: '12px', lineHeight: 1 }}>✓</span>}
-                        </span>
-                      </button>
-                    )
-                  })}
-                </div>
-              )}
-
-              {isBodyShapeQ && (
-                <div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    {bodyShapeOptions.map((o, i) => (
-                      <MultiOptionCard key={o.id} label={`${letterOf(i)} · ${o.label}`} sub={o.sub}
-                        active={bodyShape.includes(o.id)}
-                        onClick={() => {
-                          toggle(bodyShape, setBodyShape, o.id)
-                          setShowXTrap(!bodyShape.includes(o.id) && o.id === 'X型' ? true : bodyShape.filter(v => v !== o.id).includes('X型'))
-                        }} />
-                    ))}
-                  </div>
-                  {showXTrap && (
-                    <div style={{ background: '#fdf8ee', border: `1px solid ${C.gold}`, borderRadius: '8px', padding: '16px 20px', marginTop: '16px' }}>
-                      <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.gold, letterSpacing: '1px', marginBottom: '8px' }}>X 型陷阱检测</p>
-                      <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.body, lineHeight: 1.8, margin: 0 }}>
-                        很多「X型」其实是H型骨骼+内衣塑型/脂肪转移的假象。<br />
-                        <strong>验证方法：</strong>用手摸肋骨最下端角度——<br />
-                        · 角度 &gt; 90°（向外张开）→ H型骨架<br />
-                        · 角度 &lt; 90°（向内收）→ 真X型
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <button onClick={goBackSkeleton} style={btnOutline}>← 返回</button>
-                {isComboQ && (() => {
-                  const currentValue = isShoulderQ ? shoulderShape : isWaistQ ? waistType : bodyShape
-                  return (
-                    <button
-                      onClick={goNextSkeleton}
-                      disabled={currentValue.length === 0}
-                      style={currentValue.length > 0
-                        ? { ...btnGold, flex: 1 } : { ...btnGold, flex: 1, background: '#e0e0e0', cursor: 'not-allowed' }}>
-                      继续
-                    </button>
-                  )
-                })()}
-              </div>
-            </div>
-          )
-        })()}
-
-        {/* ── Step 3: 皮肉测试（3题，均为多选组合词）── */}
-        {phase === 'flesh' && (() => {
-          const questions = [
-            { title: '你的臀部接近哪些描述？（可多选）', value: hipProtrude, set: setHipProtrude, options: [
-              { id: '凸', label: '凸', sub: '臀部突出，有明显弧度' },
-              { id: '扁平', label: '扁平', sub: '臀部平坦，弧度不明显' },
-              { id: '适中', label: '适中', sub: '不凸不平，适中' },
-              { id: '有肉', label: '有肉', sub: '带肉感' },
-            ]},
-            { title: '你的胸部接近哪些描述？（可多选）', value: chestProtrude, set: setChestProtrude, options: [
-              { id: '凸', label: '凸', sub: '胸部突出，有明显弧度' },
-              { id: '扁平', label: '扁平', sub: '胸部平坦，弧度不明显' },
-              { id: '适中', label: '适中', sub: '不凸不平，适中' },
-              { id: '大胸', label: '大胸', sub: '胸围偏大' },
-              { id: '小胸', label: '小胸', sub: '胸围偏小' },
-            ]},
-            { title: '你的皮肉质地接近哪些描述？（可多选）', value: fleshTexture, set: setFleshTexture, options: [
-              { id: '软肉', label: '软肉', sub: '触感柔软，有肉感' },
-              { id: '紧实', label: '紧实', sub: '触感紧致，线条清楚' },
-              { id: '健壮', label: '健壮', sub: '骨肉结实，力量感强' },
-              { id: '松肉', label: '松肉', sub: '皮肉松弛' },
-              { id: '适中', label: '适中', sub: '不紧不松' },
-              { id: '肌肉', label: '肌肉', sub: '肌肉线条明显' },
-            ]},
-          ]
-          const current = questions[fleshIdx]
-
-          const toggle = (arr: string[], set: (v: string[]) => void, val: string) => {
-            set(arr.includes(val) ? arr.filter(v => v !== val) : [...arr, val])
-          }
-
-          return (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-              <div>
-                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', marginBottom: '8px' }}>
-                  STEP 02 · 皮肉测试 · {fleshIdx + 1} / 3
-                </p>
-                <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '26px', color: C.h2, fontWeight: 400, margin: 0 }}>
-                  Q{currentQuestionNumber} · {current.title}
-                </h2>
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {current.options.map((o, i) => (
-                  <MultiOptionCard key={o.id} label={`${letterOf(i)} · ${o.label}`} sub={o.sub} active={current.value.includes(o.id)}
-                    onClick={() => toggle(current.value, current.set, o.id)} />
-                ))}
-              </div>
-
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <button onClick={goBackFlesh} style={btnOutline}>← 返回</button>
                 <button
-                  onClick={goNextFlesh}
-                  disabled={current.value.length === 0}
-                  style={current.value.length > 0
-                    ? { ...btnGold, flex: 1 } : { ...btnGold, flex: 1, background: '#e0e0e0', cursor: 'not-allowed' }}>
-                  继续
+                  onClick={() => setPhase('sheldon')}
+                  disabled={!bust || !waist || !hip}
+                  style={bust && waist && hip ? { ...btnGold, flex: 1 } : { ...btnGold, flex: 1, background: '#e0e0e0', cursor: 'not-allowed' }}
+                >
+                  {hasBasic ? `确认 ${liveShape} 型，继续` : '继续'}
                 </button>
               </div>
             </div>
           )
         })()}
 
-        {/* ── Step 4: 气血态（4题，5态直选）── */}
-        {phase === 'qixue' && (() => {
-          const titles = [
-            '你的气质第一印象更接近？',
-            '你的皮肉 / 身形给人的感觉更接近？',
-            '你的面部线条更接近？',
-            '别人对你整体气场的评价更接近？',
-          ]
-          const values = [q1, q2, q3, q4]
-          const setters = [setQ1, setQ2, setQ3, setQ4]
-          const idx = qixueIdx
-          const options = [
-            { id: '阴', text: idx === 0 ? '温婉柔美，让人想亲近' : idx === 1 ? '柔软丰盈，曲线感强' : idx === 2 ? '圆润饱满，五官柔和' : '性感、有女人味' },
-            { id: '阴多阳少', text: idx === 0 ? '清新灵动，元气感强' : idx === 1 ? '紧致小巧，灵巧轻盈' : idx === 2 ? '小巧精致，略带俏皮' : '可爱、少女感' },
-            { id: '阴阳和谐', text: idx === 0 ? '优雅得体，落落大方' : idx === 1 ? '匀称适中，不软不硬' : idx === 2 ? '端正对称，比例均衡' : '优雅、精致' },
-            { id: '阴少阳多', text: idx === 0 ? '自然松弛，随性洒脱' : idx === 1 ? '自然松弛，不刻意雕琢' : idx === 2 ? '舒展自然，不做作' : '随性、休闲' },
-            { id: '阳', text: idx === 0 ? '干练飒爽，气场强烈' : idx === 1 ? '紧实健硕，线条分明' : idx === 2 ? '棱角分明，五官立体锐利' : '帅气、有力量感' },
-          ]
-
-          const selectAndAdvance = (val: string) => {
-            setters[idx](val)
-            setTimeout(goNextQixue, AUTO_ADVANCE_DELAY)
-          }
-
-          return (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-              <div>
-                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', marginBottom: '8px' }}>
-                  STEP 03 · 气血态 · {idx + 1} / 4
+        {/* ── Step 2: 谢尔顿三型 ── */}
+        {phase === 'sheldon' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+            <div>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', marginBottom: '8px' }}>STEP 01 · 体质类型</p>
+              <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '26px', color: C.h2, fontWeight: 400, margin: 0 }}>
+                你的体质类型更接近哪种？
+              </h2>
+              {method === 'ai' && aiResult && (
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.gold, marginTop: '8px' }}>
+                  AI 建议：{aiResult.sheldon}（可手动修改）
                 </p>
-                <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '26px', color: C.h2, fontWeight: 400, margin: 0 }}>
-                  Q{currentQuestionNumber} · {titles[idx]}
-                </h2>
-                {idx === 0 && (
-                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, marginTop: '8px' }}>
-                    气血态决定你的 13 型所属大类家族（浪漫 / 少年 / 经典 / 自然 / 戏剧）
-                  </p>
-                )}
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {options.map((o, i) => (
-                  <button key={o.id} onClick={() => selectAndAdvance(o.id)} style={{
-                    border: `1px solid ${values[idx] === o.id ? C.gold : C.border}`,
-                    background: values[idx] === o.id ? '#fdf8ee' : '#fff',
-                    padding: '14px 18px', textAlign: 'left', cursor: 'pointer', borderRadius: '6px',
-                  }}>
-                    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: values[idx] === o.id ? C.h2 : C.body }}>{letterOf(i)} · {o.text}</span>
-                  </button>
-                ))}
-              </div>
-
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <button onClick={goBackQixue} style={btnOutline}>← 返回</button>
-              </div>
+              )}
             </div>
-          )
-        })()}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <OptionCard label="外胚层 Ectomorph" sub="骨架纤细，四肢偏长，肌肉不易堆积，天生线条感强" active={sheldon === '外胚层'} onClick={() => setSheldon('外胚层')} />
+              <OptionCard label="中胚层 Mesomorph" sub="骨架适中，肌肉线条明显，体型匀称，容易塑形" active={sheldon === '中胚层'} onClick={() => setSheldon('中胚层')} />
+              <OptionCard label="内胚层 Endomorph" sub="骨架较宽，脂肪容易堆积，体型圆润，曲线丰满" active={sheldon === '内胚层'} onClick={() => setSheldon('内胚层')} />
+            </div>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button onClick={() => setPhase('data')} style={btnOutline}>← 返回</button>
+              <button onClick={() => setPhase('boneScale')} disabled={!sheldon}
+                style={sheldon ? { ...btnGold, flex: 1 } : { ...btnGold, flex: 1, background: '#e0e0e0', cursor: 'not-allowed' }}>
+                继续
+              </button>
+            </div>
+          </div>
+        )}
+
+
+        {/* ── Q2: 骨架大小 ── */}
+        {phase === 'boneScale' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+            <div>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', marginBottom: '8px' }}>STEP 02 · 骨架大小</p>
+              <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '26px', color: C.h2, fontWeight: 400, margin: 0 }}>你的骨架大小更接近哪种？</h2>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '8px' }}>观察手腕、脚踝及关节骨量</p>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+              {[
+                { id: 'small', img: '/bone_small.png', label: '小骨架', desc: '手腕、脚踝及关节骨量较小，整体骨架精巧。' },
+                { id: 'medium', img: '/bone_medium.png', label: '中等骨架', desc: '手腕、脚踝及关节骨量适中，整体骨架均衡。' },
+                { id: 'large', img: '/bone_large.png', label: '大骨架', desc: '手腕、脚踝及关节骨量较明显，整体骨架存在感较强。' },
+              ].map((o, i) => {
+                const active = boneScaleVal === o.id
+                return (
+                  <button key={o.id} onClick={() => setBoneScaleVal(o.id)} style={{
+                    border: `1.5px solid ${active ? C.gold : C.border}`,
+                    borderRadius: '10px', background: active ? '#fdf8ee' : '#fff',
+                    padding: 0, cursor: 'pointer', overflow: 'hidden',
+                    transition: 'all 0.2s', textAlign: 'left' as const,
+                  }}>
+                    {/* ABC 标签 + 大标题 */}
+                    <div style={{ padding: '16px 16px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <div style={{
+                        width: '28px', height: '28px', borderRadius: '50%',
+                        background: active ? C.gold : '#e8e8e4',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                      }}>
+                        <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: '#fff', fontWeight: 600 }}>
+                          {['A','B','C'][i]}
+                        </span>
+                      </div>
+                      <p style={{ fontFamily: 'Georgia, serif', fontSize: '18px', color: active ? C.gold : C.h2, fontWeight: 400, margin: 0 }}>{o.label}</p>
+                    </div>
+                    {/* 描述文字 */}
+                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, lineHeight: 1.7, padding: '8px 16px 12px', margin: 0 }}>{o.desc}</p>
+                    {/* 插图 */}
+                    <img src={o.img} alt={o.label} style={{ width: '100%', display: 'block', objectFit: 'contain', background: '#f7f4ef' }} />
+                  </button>
+                )
+              })}
+            </div>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button onClick={() => setPhase('sheldon')} style={btnOutline}>← 返回</button>
+              <button onClick={() => setPhase('bone')} disabled={!boneScaleVal}
+                style={boneScaleVal ? { ...btnGold, flex: 1 } : { ...btnGold, flex: 1, background: '#e0e0e0', cursor: 'not-allowed' }}>
+                继续
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── Step 3: 骨骼轮廓 ── */}
+        {phase === 'bone' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+            <div>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', marginBottom: '8px' }}>STEP 02 · 骨骼轮廓</p>
+              <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '26px', color: C.h2, fontWeight: 400, margin: 0 }}>你的骨骼轮廓更接近哪种？</h2>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <OptionCard label="H 型" sub="肩宽≈髋宽，腰部不明显，整体较方正" active={boneShape === 'H'} onClick={() => { setBoneShape('H'); setShowXTrap(false) }} />
+              <OptionCard label="X 型" sub="肩宽≈髋宽，腰部明显收细，沙漏型轮廓" active={boneShape === 'X'} onClick={() => { setBoneShape('X'); setShowXTrap(true) }} />
+              <OptionCard label="A 型" sub="肩窄髋宽，重心偏下，梨形轮廓" active={boneShape === 'A'} onClick={() => { setBoneShape('A'); setShowXTrap(false) }} />
+              <OptionCard label="V 型" sub="肩宽髋窄，倒三角轮廓，上半身较壮" active={boneShape === 'V'} onClick={() => { setBoneShape('V'); setShowXTrap(false) }} />
+            </div>
+            {showXTrap && (
+              <div style={{ background: '#fdf8ee', border: `1px solid ${C.gold}`, borderRadius: '8px', padding: '16px 20px' }}>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.gold, letterSpacing: '1px', marginBottom: '8px' }}>X 型陷阱检测</p>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.body, lineHeight: 1.8, margin: 0 }}>
+                  很多「X型」其实是H型骨骼+内衣塑型/脂肪转移的假象。<br />
+                  <strong>验证方法：</strong>用手摸肋骨最下端角度——<br />
+                  · 角度 &gt; 90°（向外张开）→ H型骨架<br />
+                  · 角度 &lt; 90°（向内收）→ 真X型
+                </p>
+              </div>
+            )}
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button onClick={() => setPhase('sheldon')} style={btnOutline}>← 返回</button>
+              <button onClick={() => setPhase('shoulder')} disabled={!boneShape}
+                style={boneShape ? { ...btnGold, flex: 1 } : { ...btnGold, flex: 1, background: '#e0e0e0', cursor: 'not-allowed' }}>
+                继续
+              </button>
+            </div>
+          </div>
+        )}
+
+
+        {/* ── Q4: 肩线走向 ── */}
+        {phase === 'shoulder' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+            <div>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', marginBottom: '8px' }}>STEP 04 · 肩线走向</p>
+              <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '26px', color: C.h2, fontWeight: 400, margin: 0 }}>你的肩线走向更接近哪一种？</h2>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '8px' }}>观察颈肩连接到肩端的倾斜角度</p>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+              {[
+                { id: 'sloped', img: '/shoulder_sloped.png', label: '溜肩', desc: '从颈部向肩端下降明显。' },
+                { id: 'natural', img: '/shoulder_natural.png', label: '自然肩', desc: '下降程度适中。' },
+                { id: 'straight', img: '/shoulder_straight.png', label: '平直肩', desc: '肩线较水平。' },
+              ].map((o, i) => {
+                const active = shoulderType === o.id
+                return (
+                  <button key={o.id} onClick={() => setShoulderType(o.id)} style={{
+                    border: `1.5px solid ${active ? C.gold : C.border}`,
+                    borderRadius: '10px', background: active ? '#fdf8ee' : '#fff',
+                    padding: 0, cursor: 'pointer', overflow: 'hidden',
+                    transition: 'all 0.2s', textAlign: 'left' as const,
+                  }}>
+                    {/* ABC 标签 + 大标题 */}
+                    <div style={{ padding: '16px 16px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <div style={{
+                        width: '28px', height: '28px', borderRadius: '50%',
+                        background: active ? C.gold : '#e8e8e4',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                      }}>
+                        <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: '#fff', fontWeight: 600 }}>
+                          {['A','B','C'][i]}
+                        </span>
+                      </div>
+                      <p style={{ fontFamily: 'Georgia, serif', fontSize: '18px', color: active ? C.gold : C.h2, fontWeight: 400, margin: 0 }}>{o.label}</p>
+                    </div>
+                    {/* 描述文字 */}
+                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, lineHeight: 1.7, padding: '8px 16px 12px', margin: 0 }}>{o.desc}</p>
+                    {/* 插图 */}
+                    <img src={o.img} alt={o.label} style={{ width: '100%', display: 'block', objectFit: 'contain', background: '#f7f4ef' }} />
+                  </button>
+                )
+              })}
+            </div>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button onClick={() => setPhase('bone')} style={btnOutline}>← 返回</button>
+              <button onClick={() => setPhase('fat')} disabled={!shoulderType}
+                style={shoulderType ? { ...btnGold, flex: 1 } : { ...btnGold, flex: 1, background: '#e0e0e0', cursor: 'not-allowed' }}>
+                继续
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── Step 4: 脂肪视觉自评 ── */}
+        {phase === 'fat' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+            <div>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', marginBottom: '8px' }}>STEP 03 · 脂肪分布</p>
+              <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '26px', color: C.h2, fontWeight: 400, margin: 0 }}>你的脂肪分布更接近哪种？</h2>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <OptionCard label="均匀分布" sub="脂肪均匀分布，没有特别突出的部位" active={visual === '无'} onClick={() => setVisual('无')} />
+              <OptionCard label="O 型堆积" sub="腹部、腰部脂肪明显，中心肥胖倾向" active={visual === 'O'} onClick={() => setVisual('O')} />
+              <OptionCard label="S 型堆积" sub="胸部和臀部脂肪丰满，腰部相对细，曲线感强" active={visual === 'S'} onClick={() => setVisual('S')} />
+            </div>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button onClick={() => setPhase('shoulder')} style={btnOutline}>← 返回</button>
+              <button onClick={() => setPhase('qi')} disabled={!visual}
+                style={visual ? { ...btnGold, flex: 1 } : { ...btnGold, flex: 1, background: '#e0e0e0', cursor: 'not-allowed' }}>
+                继续
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── Step 5: 气血态 ── */}
+        {phase === 'qi' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+            <div>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', marginBottom: '8px' }}>STEP 04 · 气血态</p>
+              <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '26px', color: C.h2, fontWeight: 400, margin: 0 }}>4道题判断你的气血态</h2>
+            </div>
+            {[
+              {
+                q: q1, set: setQ1, title: '你的皮肤状态通常是？',
+                opts: [
+                  { id: 'A', text: '偏薄、透、毛孔细' }, { id: 'B', text: '饱满、有弹性、较厚' },
+                  { id: 'C', text: '偏干、细腻但缺乏光泽' }, { id: 'D', text: '偏油或混合，皮肤厚' },
+                ],
+              },
+              {
+                q: q2, set: setQ2, title: '你的骨骼感和线条感如何？',
+                opts: [
+                  { id: 'A', text: '骨感明显，线条清晰' }, { id: 'B', text: '肌肉有力，骨骼感强' },
+                  { id: 'C', text: '线条柔和，骨骼感弱' }, { id: 'D', text: '整体较厚实，线条不清晰' },
+                ],
+              },
+              {
+                q: q3, set: setQ3, title: '你的体重变化规律是？',
+                opts: [
+                  { id: 'A', text: '不容易胖，吃很多也不长肉' }, { id: 'B', text: '容易塑形，增肌减脂都较快' },
+                  { id: 'C', text: '容易胖但主要在特定部位' }, { id: 'D', text: '全身容易长肉，很难瘦下来' },
+                ],
+              },
+              {
+                q: q4, set: setQ4, title: '素颜时你的气色通常是？',
+                opts: [
+                  { id: 'A', text: '红润有光泽，很有气色' }, { id: 'B', text: '健康自然，不苍白不暗沉' },
+                  { id: 'C', text: '偏白或偏粉，有时显苍白' }, { id: 'D', text: '偏黄或偏暗，气色较差' },
+                ],
+              },
+            ].map((item, idx) => (
+              <div key={idx} style={{ borderBottom: `1px solid ${C.border}`, paddingBottom: '20px' }}>
+                <p style={{ fontFamily: 'Georgia, serif', fontSize: '16px', color: C.h2, marginBottom: '12px' }}>{idx + 1}. {item.title}</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {item.opts.map(o => (
+                    <button key={o.id} onClick={() => item.set(o.id)} style={{
+                      border: `1px solid ${item.q === o.id ? C.gold : C.border}`,
+                      background: item.q === o.id ? '#fdf8ee' : '#fff',
+                      padding: '12px 16px', textAlign: 'left', cursor: 'pointer',
+                      borderRadius: '6px', display: 'flex', gap: '12px', alignItems: 'center',
+                    }}>
+                      <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: item.q === o.id ? C.gold : C.muted }}>{o.id}</span>
+                      <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: item.q === o.id ? C.h2 : C.body }}>{o.text}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button onClick={() => setPhase('fat')} style={btnOutline}>← 返回</button>
+              <button
+                onClick={computeResult}
+                disabled={!q1 || !q2 || !q3 || !q4}
+                style={q1 && q2 && q3 && q4 ? { ...btnGold, flex: 1 } : { ...btnGold, flex: 1, background: '#e0e0e0', cursor: 'not-allowed' }}
+              >
+                生成体型档案
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* ── 报告页 ── */}
         {phase === 'report' && result && (
-          <ReportView result={result} onReset={reset} onReturnToStyle={fromStyle ? () => navigate('/test/style') : undefined} />
+          <ReportView
+            result={result}
+            onReset={reset}
+            onReturnToStyle={fromStyle ? () => navigate('/test/style') : undefined}
+          />
         )}
 
       </div>
