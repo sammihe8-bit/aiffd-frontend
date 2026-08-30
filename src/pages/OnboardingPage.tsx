@@ -148,7 +148,8 @@ function ArchivePage() {
               alt="AIFFD 风格档案"
               style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top', display: 'block' }}
             />
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, #0f0f0d 0%, transparent 35%)' }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, #0f0f0d 0%, transparent 30%, transparent 60%, #0f0f0d 100%)' }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, #0f0f0d 0%, transparent 10%, transparent 85%, #0f0f0d 100%)' }} />
           </div>
         </div>
       </div>
