@@ -154,7 +154,7 @@ function ArchivePage() {
             <img
               src="/hero-profile.jpg"
               alt="AIFFD 风格档案"
-              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: '70% top', display: 'block', maxWidth: '100%' }}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: '30% top', display: 'block', maxWidth: '100%' }}
             />
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, #faf9f7 0%, transparent 25%)' }} />
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to left, #faf9f7 0%, transparent 20%)' }} />
