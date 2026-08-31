@@ -124,6 +124,11 @@ const FACE_QUESTIONS = [
 
 type Phase = 'intro' | 'face' | 'report'
 
+// 面部6个维度的中文标签，存档时一起写进去，Profile 页展示时不用再重复维护这份映射
+const FACE_DIMENSION_LABELS: Record<string, string> = {
+  lip: '嘴唇', cheek: '两颊', cheekbone: '颧骨', chin: '下巴', eyes: '眼睛', nose: '鼻子',
+}
+
 export default function StyleTestPage() {
   const { user } = useAuth() // 用来给读取的 key 加用户前缀，避免读到别的账号存的体型数据
   const [phase, setPhase] = useState<Phase>('intro')
@@ -174,6 +179,16 @@ export default function StyleTestPage() {
         variant: scoreResult.winningVariant,
         styleInfo: scoreResult.winningStyleInfo,
       }))
+      // 面部测试原始答案单独存档，供 ProfilePage 展示"五官详细信息"用
+      // 数组类型的组合答案（比如颧骨的"大小+形状"）用" + "拼成一句话，跟体型详情表格的展示方式保持一致
+      const faceDetail: Record<string, { label: string; value: string }> = {}
+      Object.entries(faceAnswers).forEach(([id, val]) => {
+        faceDetail[id] = {
+          label: FACE_DIMENSION_LABELS[id] || id,
+          value: Array.isArray(val) ? val.join(' + ') : val,
+        }
+      })
+      localStorage.setItem(userScopedKey('aiffd_face_result', user), JSON.stringify(faceDetail))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase])
