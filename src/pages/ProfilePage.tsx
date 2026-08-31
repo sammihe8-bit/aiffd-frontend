@@ -171,6 +171,12 @@ export default function ProfilePage() {
   const styleResult: StyleResultData | null = styleRaw
     ? (() => { try { return JSON.parse(styleRaw) as StyleResultData } catch { return null } })()
     : null
+
+  // 五官详情（StyleTestPage 存的 { [维度id]: { label, value } } 结构）
+  const faceRaw = localStorage.getItem(userScopedKey('aiffd_face_result', user))
+  const faceResult: Record<string, { label: string; value: string }> | null = faceRaw
+    ? (() => { try { return JSON.parse(faceRaw) } catch { return null } })()
+    : null
   const styleDisplayName = styleResult?.styleInfo?.cn || styleResult?.variant || ''
   const portraitSlug = styleDisplayName ? VARIANT_IMAGE_SLUG[styleDisplayName] : undefined
   const portraitSrc = portraitSlug ? `/style-portraits/${portraitSlug}.png` : undefined
@@ -326,10 +332,21 @@ export default function ProfilePage() {
 
               {styleResult && (
                 <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: '20px' }}>
-                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '2px', color: C.gold, marginBottom: '10px' }}>五官详细信息</p>
-                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, margin: 0, lineHeight: 1.8 }}>
-                    面部测试的嘴唇/两颊/颧骨/下巴/眼睛/鼻子详细答案暂未单独存档，下一轮可以补充展示。
-                  </p>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '2px', color: C.gold, marginBottom: '14px' }}>五官详细信息</p>
+                  {faceResult ? (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1px', background: C.border }}>
+                      {Object.values(faceResult).map((item, i) => (
+                        <div key={i} style={{ background: '#fff', padding: '16px' }}>
+                          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', color: C.muted, margin: '0 0 4px' }}>{item.label}</p>
+                          <p style={{ fontFamily: 'Georgia, serif', fontSize: '15px', color: C.h1, margin: 0 }}>{item.value}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, margin: 0, lineHeight: 1.8 }}>
+                      这份风格结论是改版前测出来的，当时还没存五官原始答案，重新做一次面部测试即可补上这部分详情。
+                    </p>
+                  )}
                 </div>
               )}
             </div>
