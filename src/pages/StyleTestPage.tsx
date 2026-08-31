@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { computeStyleScore, type StyleAnswers } from '../utils/styleScoring'
+import { useAuth } from '../hooks/useAuth'
+import { userScopedKey } from '../utils/userStorage'
 
 // ─── 设计系统（与 BodyTestPage 保持一致）─────────────────────
 const C = {
@@ -123,6 +125,7 @@ const FACE_QUESTIONS = [
 type Phase = 'intro' | 'face' | 'report'
 
 export default function StyleTestPage() {
+  const { user } = useAuth() // 用来给读取的 key 加用户前缀，避免读到别的账号存的体型数据
   const [phase, setPhase] = useState<Phase>('intro')
   const [bodyResult, setBodyResult] = useState<Record<string, unknown> | null>(null)
   const [faceIdx, setFaceIdx] = useState(0)
@@ -130,11 +133,14 @@ export default function StyleTestPage() {
   const AUTO_ADVANCE_DELAY = 260
 
   useEffect(() => {
-    const raw = localStorage.getItem('aiffd_body_result')
+    const raw = localStorage.getItem(userScopedKey('aiffd_body_result', user))
     if (raw) {
       try { setBodyResult(JSON.parse(raw)) } catch { setBodyResult(null) }
+    } else {
+      setBodyResult(null) // 显式清空：避免切换账号后仍然沿用上一个账号读到的 bodyResult 残留在 state 里
     }
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id])
 
   const goNextFace = () => {
     if (faceIdx < FACE_QUESTIONS.length - 1) setFaceIdx(faceIdx + 1)
@@ -163,7 +169,7 @@ export default function StyleTestPage() {
 
   useEffect(() => {
     if (scoreResult) {
-      localStorage.setItem('aiffd_style_result', JSON.stringify({
+      localStorage.setItem(userScopedKey('aiffd_style_result', user), JSON.stringify({
         family: scoreResult.winningFamily,
         variant: scoreResult.winningVariant,
         styleInfo: scoreResult.winningStyleInfo,
