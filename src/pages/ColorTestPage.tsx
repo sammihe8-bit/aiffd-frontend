@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../hooks/useAuth'
+import { userScopedKey } from '../utils/userStorage'
 
 const C = {
   h1: '#111111', h2: '#222222', sub: '#444444',
@@ -191,6 +193,7 @@ function OptionBtn({ id, label, sub, active, onClick }: {
 function ColorReport({ result, onReset }: { result: WarmCoolResult; onReset: () => void }) {
   const profile = RESULT_PROFILES[result]
   const navigate = useNavigate()
+  const { user } = useAuth() // 存档时给 key 加用户前缀，避免不同账号互相覆盖/看到彼此的色彩测试结果
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
       <div style={{ textAlign: 'center', padding: '28px 0 20px', borderBottom: `1px solid ${C.border}` }}>
@@ -237,8 +240,8 @@ function ColorReport({ result, onReset }: { result: WarmCoolResult; onReset: () 
           冷暖方向已确认。第二层将进一步判断你适合浅色还是深色、清亮色还是柔和色，锁定你的五季类型。
         </p>
         <button onClick={() => {
-          localStorage.setItem('aiffd_warmcool', result)
-          localStorage.setItem('aiffd_color_result', JSON.stringify({ experience: ['done'], colorGroup: result }))
+          localStorage.setItem(userScopedKey('aiffd_warmcool', user), result)
+          localStorage.setItem(userScopedKey('aiffd_color_result', user), JSON.stringify({ experience: ['done'], colorGroup: result }))
           navigate('/test/color/season')
         }} style={{ background: C.gold, color: '#fff', border: 'none', borderRadius: '6px', padding: '13px 28px', fontFamily: 'Inter, sans-serif', fontSize: '13px', letterSpacing: '1px', cursor: 'pointer' }}>
           {profile.next} →
@@ -432,6 +435,7 @@ function BookingPage({ onBack }: { onBack: () => void }) {
 // ── 主页面 ────────────────────────────────────────────────────
 export default function ColorTestPage() {
   const navigate = useNavigate()
+  const { user } = useAuth() // 存 AI 结果页 warmCool 时也要用同一个用户前缀
   const [step, setStep] = useState<StepKey>('intro')
   const [photoUploaded, setPhotoUploaded] = useState(false)
   const [analyzing, setAnalyzing] = useState(false)
@@ -620,7 +624,7 @@ export default function ColorTestPage() {
                 继续完成五季测试，进一步锁定你的精准色彩类型。
               </p>
               <button onClick={() => {
-                localStorage.setItem('aiffd_warmcool', AI_MOCK_RESULT.warmCool)
+                localStorage.setItem(userScopedKey('aiffd_warmcool', user), AI_MOCK_RESULT.warmCool)
                 navigate('/test/color/season')
               }} style={{ background: C.gold, color: '#fff', border: 'none', borderRadius: '6px', padding: '13px 28px', fontFamily: 'Inter, sans-serif', fontSize: '14px', letterSpacing: '1px', cursor: 'pointer', width: '100%' }}>
                 继续五季测试 →
