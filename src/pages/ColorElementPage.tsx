@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { useAuth } from '../hooks/useAuth'
+import { userScopedKey } from '../utils/userStorage'
 
 const C = {
   h1: '#111111', h2: '#222222', sub: '#444444',
@@ -165,9 +167,10 @@ function FinalReport({ season, seasonName, element }: {
 
 export default function ColorElementPage() {
   const location = useLocation()
+  const { user } = useAuth() // 读取五季兜底值、以及确认副气结果存档时，都要用同一个用户前缀
 
-  const season: SeasonResult = (location.state?.season || localStorage.getItem('aiffd_season_result') || 'changxia') as SeasonResult
-  const seasonName: string = (location.state?.seasonName || localStorage.getItem('aiffd_season_name') || '长夏')
+  const season: SeasonResult = (location.state?.season || localStorage.getItem(userScopedKey('aiffd_season_result', user)) || 'changxia') as SeasonResult
+  const seasonName: string = (location.state?.seasonName || localStorage.getItem(userScopedKey('aiffd_season_name', user)) || '长夏')
 
   type Step = 'intro' | 'wood' | 'fire' | 'earth' | 'metal' | 'water' | 'confirm' | 'report'
   const STEPS: Step[] = ['intro', 'wood', 'fire', 'earth', 'metal', 'water', 'confirm', 'report']
@@ -197,9 +200,9 @@ export default function ColorElementPage() {
       const el = computeElement(); setFinalElement(el); setStep('confirm')
     } else if (step === 'confirm') {
       if (finalElement) {
-        localStorage.setItem('aiffd_element_result', finalElement)
-        localStorage.setItem('aiffd_element_name', ELEMENT_META[finalElement].name)
-        localStorage.setItem('aiffd_25season', resolveProfile(season, finalElement).finalType)
+        localStorage.setItem(userScopedKey('aiffd_element_result', user), finalElement)
+        localStorage.setItem(userScopedKey('aiffd_element_name', user), ELEMENT_META[finalElement].name)
+        localStorage.setItem(userScopedKey('aiffd_25season', user), resolveProfile(season, finalElement).finalType)
       }
       setStep('report')
     } else {
