@@ -33,6 +33,25 @@ const WARMCOOL_LABELS: Record<string, string> = {
   neutral_warm: '中性偏暖', neutral_cool: '中性偏冷', olive: '橄榄灰黄',
 }
 
+// 13 型风格 → 模特图文件名 slug 的映射。
+// 图片放在 public/style-portraits/{slug}.png，命名规则：家族英文-档位（soft/base/dramatic）
+// 等 13 张手绘模特图传上来，文件名按下面这个表放就行，代码不用再改。
+const VARIANT_IMAGE_SLUG: Record<string, string> = {
+  '浪漫型': 'romantic-base',
+  '戏剧浪漫型': 'romantic-dramatic',
+  '柔软少年型': 'gamine-soft',
+  '少年型': 'gamine-base',
+  '戏剧少年型': 'gamine-dramatic',
+  '柔软经典型': 'classic-soft',
+  '经典型': 'classic-base',
+  '戏剧经典型': 'classic-dramatic',
+  '浪漫自然型': 'natural-soft',
+  '自然型': 'natural-base',
+  '戏剧自然型': 'natural-dramatic',
+  '浪漫戏剧型': 'dramatic-soft',
+  '戏剧型': 'dramatic-base',
+}
+
 function SectionTitle({ label }: { label: string }) {
   return (
     <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '3px', color: C.gold, textTransform: 'uppercase' as const, marginBottom: '16px' }}>
@@ -54,45 +73,48 @@ function EmptyBadge({ label, to }: { label: string; to: string }) {
   )
 }
 
+// 邮箱首字母头像（占位方案，后续可换成真实上传）
+function AvatarInitial({ text }: { text: string }) {
+  const letter = (text || '?').trim().charAt(0).toUpperCase()
+  return (
+    <div style={{
+      width: '64px', height: '64px', borderRadius: '50%', background: C.gold,
+      display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+    }}>
+      <span style={{ fontFamily: 'Georgia, serif', fontSize: '26px', color: '#fff' }}>{letter}</span>
+    </div>
+  )
+}
+
 export default function ProfilePage() {
   const { user } = useAuth()
   const u = user as Record<string, unknown> | null
   const username = (u?.username ?? u?.email ?? '用户') as string
+  const email = (u?.email ?? '') as string
 
   // ── 档案数据读取 ──────────────────────────────────
-  // 以下所有 key 都加上了用户前缀（userScopedKey），避免同一浏览器不同账号互相看到对方的测试数据。
-  // 注意：这只解决了"读"的这一半——aiffd_profile / aiffd_warmcool / aiffd_season_name /
-  // aiffd_season_element / aiffd_element_name / aiffd_25season 这几个 key 具体是在哪个测试页写入的
-  // （目测是 OnboardingPage 的基础信息表单 + ColorTestPage / ColorSeasonPage / ColorElementPage），
-  // 那几个"写"的地方如果还没同步改成 userScopedKey，这里读到的仍然可能是旧的、不分账号的数据。
   const raw = localStorage.getItem(userScopedKey('aiffd_profile', user))
   const profile: StyleProfile | null = raw ? JSON.parse(raw) : null
 
-  // 色彩相关
   const warmCool = localStorage.getItem(userScopedKey('aiffd_warmcool', user)) || ''
   const seasonName = localStorage.getItem(userScopedKey('aiffd_season_name', user)) || ''
   const seasonElement = localStorage.getItem(userScopedKey('aiffd_season_element', user)) || ''
   const elementName = localStorage.getItem(userScopedKey('aiffd_element_name', user)) || ''
   const finalSeason25 = localStorage.getItem(userScopedKey('aiffd_25season', user)) || ''
 
-  // 体型相关
   const bodyRaw = localStorage.getItem(userScopedKey('aiffd_body_result', user))
   const bodyResult = bodyRaw ? (() => { try { return JSON.parse(bodyRaw) } catch { return null } })() : null
 
-  // 风格相关：之前这里直接把 JSON 字符串当成显示文本，现在解析出具体字段
   const styleRaw = localStorage.getItem(userScopedKey('aiffd_style_result', user))
   const styleResult: StyleResultData | null = styleRaw
     ? (() => { try { return JSON.parse(styleRaw) as StyleResultData } catch { return null } })()
     : null
   const styleDisplayName = styleResult?.styleInfo?.cn || styleResult?.variant || ''
+  const portraitSlug = styleDisplayName ? VARIANT_IMAGE_SLUG[styleDisplayName] : undefined
+  const portraitSrc = portraitSlug ? `/style-portraits/${portraitSlug}.png` : undefined
 
-  // 完整度计算
   const completedItems = [
-    profile?.bodyType,
-    warmCool,
-    seasonName,
-    elementName || finalSeason25,
-    styleResult,
+    bodyResult, styleResult, warmCool, seasonName, elementName || finalSeason25,
   ].filter(Boolean).length
   const totalItems = 5
   const completionPct = Math.round((completedItems / totalItems) * 100)
@@ -101,17 +123,11 @@ export default function ProfilePage() {
     <div style={{ minHeight: '100vh', background: C.bg }}>
       <div style={{ maxWidth: '900px', margin: '0 auto', padding: '64px 24px' }}>
 
-        {/* ── Header ── */}
-        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', borderBottom: `1px solid ${C.border}`, paddingBottom: '32px', marginBottom: '48px', flexWrap: 'wrap', gap: '16px' }}>
-          <div>
-            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '3px', color: C.gold, marginBottom: '10px' }}>个人风格档案</p>
-            <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '32px', fontWeight: 400, color: C.h1, margin: 0 }}>{username}</h1>
-          </div>
+        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end', marginBottom: '24px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
             <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', border: `1px solid ${C.gold}`, color: C.gold, padding: '4px 12px', letterSpacing: '2px' }}>
               STYLE PROFILE {completionPct >= 80 ? '2.0' : completionPct >= 40 ? '1.5' : '1.0'}
             </span>
-            {/* 完整度进度条 */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div style={{ width: '120px', height: '3px', background: C.border, borderRadius: '2px', overflow: 'hidden' }}>
                 <div style={{ height: '100%', width: `${completionPct}%`, background: C.gold, transition: 'width .4s ease' }} />
@@ -121,31 +137,98 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* ── 色彩档案 ── */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', borderBottom: `1px solid ${C.border}`, paddingBottom: '32px', marginBottom: '40px' }}>
+          <AvatarInitial text={email} />
+          <div style={{ flex: 1 }}>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '3px', color: C.gold, marginBottom: '8px' }}>个人风格档案</p>
+            <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '28px', fontWeight: 400, color: C.h1, margin: 0 }}>{username}</h1>
+          </div>
+          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted, border: `1px dashed ${C.border}`, padding: '6px 14px', borderRadius: '4px' }}>
+            编辑资料（即将上线）
+          </span>
+        </div>
+
+        <div style={{ background: '#fff', border: `1px solid ${C.border}`, borderRadius: '8px', padding: '28px', marginBottom: '24px' }}>
+          <SectionTitle label="我的风格" />
+
+          {styleResult || bodyResult ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+
+              {styleResult ? (
+                <div style={{ display: 'grid', gridTemplateColumns: portraitSrc ? '140px 1fr' : '1fr', gap: '20px', alignItems: 'center' }}>
+                  {portraitSrc && (
+                    <img src={portraitSrc} alt={styleDisplayName} style={{ width: '100%', borderRadius: '8px', border: `1px solid ${C.border}`, objectFit: 'cover' }} />
+                  )}
+                  <div>
+                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '2px', color: C.muted, marginBottom: '6px' }}>风格定位</p>
+                    <p style={{ fontFamily: 'Georgia, serif', fontSize: '26px', color: C.gold, margin: '0 0 6px' }}>{styleDisplayName}</p>
+                    {styleResult.styleInfo?.family && (
+                      <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, margin: 0 }}>
+                        {styleResult.styleInfo.family}（{styleResult.styleInfo.familyEn}）家族 · 五行属{styleResult.styleInfo.element}
+                      </p>
+                    )}
+                    {!portraitSrc && (
+                      <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted, marginTop: '8px' }}>模特图片素材准备中</p>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginBottom: '12px' }}>体型测试已完成，继续完成面部测试即可得出完整风格结论</p>
+                  <Link to="/test/style" style={{ display: 'inline-block', background: C.gold, color: '#fff', padding: '10px 24px', fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '2px', textDecoration: 'none', borderRadius: '4px' }}>
+                    继续面部测试
+                  </Link>
+                </div>
+              )}
+
+              {bodyResult && (
+                <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: '20px' }}>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '2px', color: C.gold, marginBottom: '14px' }}>体型详细信息</p>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1px', background: C.border }}>
+                    {[
+                      { label: '身高区间', value: bodyResult.height },
+                      { label: '骨架', value: Array.isArray(bodyResult.boneScale) ? bodyResult.boneScale.join(' · ') : bodyResult.boneScale },
+                      { label: '肩形', value: Array.isArray(bodyResult.shoulder) ? bodyResult.shoulder.join(' + ') : null },
+                      { label: '腰型', value: Array.isArray(bodyResult.waist) ? bodyResult.waist.join(' + ') : null },
+                      { label: '体型', value: Array.isArray(bodyResult.bodyShape) ? bodyResult.bodyShape.join(' + ') : null },
+                      { label: '皮肉质', value: Array.isArray(bodyResult.fleshTexture) ? bodyResult.fleshTexture.join(' + ') : null },
+                    ].filter(item => item.value).map((item, i) => (
+                      <div key={i} style={{ background: '#fff', padding: '16px' }}>
+                        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', color: C.muted, margin: '0 0 4px' }}>{item.label}</p>
+                        <p style={{ fontFamily: 'Georgia, serif', fontSize: '15px', color: C.h1, margin: 0 }}>{item.value}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {styleResult && (
+                <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: '20px' }}>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '2px', color: C.gold, marginBottom: '10px' }}>五官详细信息</p>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, margin: 0, lineHeight: 1.8 }}>
+                    面部测试的嘴唇/两颊/颧骨/下巴/眼睛/鼻子详细答案暂未单独存档，下一轮可以补充展示。
+                  </p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center', padding: '24px 0' }}>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginBottom: '16px' }}>还没有开始风格测试</p>
+              <Link to="/test/body" style={{ display: 'inline-block', background: C.gold, color: '#fff', padding: '10px 24px', fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '2px', textDecoration: 'none', borderRadius: '4px' }}>
+                开始体型测试
+              </Link>
+            </div>
+          )}
+        </div>
+
         <div style={{ background: '#fff', border: `1px solid ${C.border}`, borderRadius: '8px', padding: '28px', marginBottom: '24px' }}>
           <SectionTitle label="色彩档案" />
 
-          {/* 第一层：冷暖 */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1px', background: C.border, marginBottom: '16px' }}>
             {[
-              {
-                label: '冷暖底调',
-                value: WARMCOOL_LABELS[warmCool] || null,
-                to: '/test/color',
-                tag: '第一层',
-              },
-              {
-                label: '五季主型',
-                value: seasonName ? `${seasonName}（${seasonElement}）` : null,
-                to: '/test/color/season',
-                tag: '第二层',
-              },
-              {
-                label: '东方 25 季',
-                value: finalSeason25 || null,
-                to: '/test/color/element',
-                tag: '第三层',
-              },
+              { label: '冷暖底调', value: WARMCOOL_LABELS[warmCool] || null, to: '/test/color', tag: '第一层' },
+              { label: '五季主型', value: seasonName ? `${seasonName}（${seasonElement}）` : null, to: '/test/color/season', tag: '第二层' },
+              { label: '东方 25 季', value: finalSeason25 || null, to: '/test/color/element', tag: '第三层' },
             ].map((item, i) => (
               <div key={i} style={{ background: '#fff', padding: '20px' }}>
                 <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '2px', color: C.muted, marginBottom: '8px' }}>{item.tag} · {item.label}</p>
@@ -158,7 +241,6 @@ export default function ProfilePage() {
             ))}
           </div>
 
-          {/* 五行副气 + 色板 */}
           {(elementName || seasonName) && (
             <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
               {elementName && (
@@ -192,87 +274,16 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* ── 体型档案 ── */}
         <div style={{ background: '#fff', border: `1px solid ${C.border}`, borderRadius: '8px', padding: '28px', marginBottom: '24px' }}>
-          <SectionTitle label="体型档案" />
-          {(profile?.bodyType || bodyResult?.bodyShape) ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1px', background: C.border }}>
-              {[
-                { label: '体型', value: bodyResult?.bodyShape ? `${bodyResult.bodyShape}型` : (profile?.bodyType || null) },
-                { label: '身体线条', value: bodyResult?.bodyLine === 'curve' ? '曲线感' : bodyResult?.bodyLine === 'straight' ? '直线感' : bodyResult?.bodyLine === 'soft' ? '柔和线条' : bodyResult?.bodyLine === 'mixed' ? '混合线条' : null },
-                { label: '骨架', value: bodyResult?.boneScale === 'small' ? '小巧纤细' : bodyResult?.boneScale === 'medium' ? '中等骨架' : bodyResult?.boneScale === 'large' ? '宽大骨架' : null },
-              ].map((item, i) => (
-                <div key={i} style={{ background: '#fff', padding: '20px' }}>
-                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '2px', color: C.muted, marginBottom: '8px' }}>{item.label}</p>
-                  {item.value ? (
-                    <p style={{ fontFamily: 'Georgia, serif', fontSize: '18px', color: C.h1, margin: 0 }}>{item.value}</p>
-                  ) : (
-                    <EmptyBadge label="完善体型数据" to="/test/body" />
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div style={{ textAlign: 'center', padding: '24px 0' }}>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginBottom: '16px' }}>体型档案尚未建立</p>
-              <Link to="/test/body" style={{ display: 'inline-block', background: C.gold, color: '#fff', padding: '10px 24px', fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '2px', textDecoration: 'none', borderRadius: '4px' }}>
-                开始体型测试
-              </Link>
-            </div>
-          )}
+          <SectionTitle label="个人爱好" />
+          <div style={{ textAlign: 'center', padding: '24px 0' }}>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, margin: 0 }}>个人爱好测试即将上线</p>
+          </div>
         </div>
 
-        {/* ── 风格档案 ── */}
-        <div style={{ background: '#fff', border: `1px solid ${C.border}`, borderRadius: '8px', padding: '28px', marginBottom: '24px' }}>
-          <SectionTitle label="风格档案" />
-          {((profile?.styleDirections?.length ?? 0) > 0 || styleResult) ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              {styleResult && (
-                <div>
-                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '2px', color: C.muted, marginBottom: '8px' }}>风格主型</p>
-                  <p style={{ fontFamily: 'Georgia, serif', fontSize: '20px', color: C.gold, margin: 0 }}>{styleDisplayName}</p>
-                  {styleResult.styleInfo?.family && (
-                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, margin: '6px 0 0' }}>
-                      {styleResult.styleInfo.family}（{styleResult.styleInfo.familyEn}）家族 · 五行属{styleResult.styleInfo.element}
-                    </p>
-                  )}
-                </div>
-              )}
-              {(profile?.styleDirections?.length ?? 0) > 0 && (
-                <div>
-                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '2px', color: C.muted, marginBottom: '12px' }}>风格关键词</p>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                    {profile?.styleDirections.map(s => (
-                      <span key={s} style={{ border: `1px solid ${C.gold}`, color: C.gold, padding: '4px 14px', fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '1px' }}>{s}</span>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {(profile?.concerns?.length ?? 0) > 0 && (
-                <div>
-                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '2px', color: C.muted, marginBottom: '12px' }}>主要穿衣困扰</p>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                    {profile?.concerns.map(c => (
-                      <span key={c} style={{ background: '#f5f5f3', color: C.body, padding: '4px 14px', fontFamily: 'Inter, sans-serif', fontSize: '11px' }}>{c}</span>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div style={{ textAlign: 'center', padding: '24px 0' }}>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginBottom: '16px' }}>风格档案尚未建立</p>
-              <Link to="/test/style" style={{ display: 'inline-block', background: C.gold, color: '#fff', padding: '10px 24px', fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '2px', textDecoration: 'none', borderRadius: '4px' }}>
-                开始风格测试
-              </Link>
-            </div>
-          )}
-        </div>
-
-        {/* ── 基础信息 ── */}
         {profile && (
           <div style={{ background: '#fff', border: `1px solid ${C.border}`, borderRadius: '8px', padding: '28px', marginBottom: '24px' }}>
-            <SectionTitle label="基础信息" />
+            <SectionTitle label="补充信息" />
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1px', background: C.border }}>
               {[
                 { label: '年龄段', value: profile?.ageRange },
@@ -288,13 +299,12 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {/* ── 快捷入口 ── */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
           {[
-            { to: '/test/color', label: '色彩测试', desc: '冷暖 → 五季 → 25季', done: !!warmCool },
-            { to: '/test/body', label: '体型测试', desc: '骨架 · 线条 · 廓形', done: !!(profile?.bodyType || bodyResult) },
-            { to: '/test/style', label: '风格测试', desc: '13风格 · 气韵判断', done: !!styleResult },
-            { to: '/virtual-fit', label: '虚拟试衣', desc: '上身预览 · 360°', done: false },
+            { to: '/test/body', label: '风格测试', desc: '体型 + 五官 · 13型判定', done: !!styleResult },
+            { to: '/test/color', label: '色彩测试', desc: '冷暖 → 五季 → 25季', done: !!finalSeason25 },
+            { to: '/test/fashion', label: '个人爱好测试', desc: '即将上线', done: false },
+            { to: '/profile', label: '风格档案图谱', desc: '完整档案总览（本页）', done: false },
           ].map(item => (
             <Link key={item.label} to={item.to} style={{
               display: 'block', padding: '20px',
