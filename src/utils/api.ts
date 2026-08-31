@@ -1,15 +1,11 @@
 import axios from 'axios'
-
 const API_BASE_URL = 'https://eloquent-enthusiasm-production.up.railway.app/api'
-
 export const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
 })
-
-// 请求拦截器 - 添加token
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('aiffd_token')
@@ -22,8 +18,6 @@ api.interceptors.request.use(
     return Promise.reject(error)
   }
 )
-
-// 响应拦截器 - 处理错误
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -37,8 +31,6 @@ if (error.response?.status === 401 && hasToken && !isAuthRoute) {
     return Promise.reject(error)
   }
 )
-
-// 认证相关API — 后端字段确认：email + password（无 phone）
 export const authAPI = {
   register: (data: { name?: string; email: string; password: string }) =>
     api.post('/auth/register', data),
@@ -50,17 +42,18 @@ export const authAPI = {
     api.get('/user/me'),
 }
 
-// 测试进度存档 API（2026-08-27 新增）——只对已登录用户生效，未登录访客仍用 localStorage 兜底
-// testType: 'body' | 'style' | 'color' | 'fashion'
+// 用户资料相关 API（2026-08-31 新增）—— 目前只支持改用户名，头像走前端本地预设方案不经过后端
+export const userAPI = {
+  updateMe: (data: { name: string }) =>
+    api.patch('/user/me', data),
+}
+
 export const testProgressAPI = {
   save: (testType: string, status: 'in_progress' | 'completed', data: object) =>
     api.post('/test-progress', { testType, status, data }),
-
   get: (testType: string) =>
     api.get(`/test-progress/${testType}`),
-
   clear: (testType: string) =>
     api.delete(`/test-progress/${testType}`),
 }
-
 export default api
