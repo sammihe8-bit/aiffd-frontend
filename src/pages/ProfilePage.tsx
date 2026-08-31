@@ -36,7 +36,8 @@ const WARMCOOL_LABELS: Record<string, string> = {
 }
 
 // 13 型风格 → 模特图文件名 slug 的映射。
-// 图片放在 public/style-portraits/{slug}.png，命名规则：家族英文-档位（soft/base/dramatic）
+// 图片放在 public/ 根目录下（不是 public/style-portraits/ 子文件夹），文件名按下面这个表命名。
+// 命名规则：家族英文-档位（soft/base/dramatic）
 // 等 13 张手绘模特图传上来，文件名按下面这个表放就行，代码不用再改。
 const VARIANT_IMAGE_SLUG: Record<string, string> = {
   '浪漫型': 'romantic-base',
@@ -179,7 +180,7 @@ export default function ProfilePage() {
     : null
   const styleDisplayName = styleResult?.styleInfo?.cn || styleResult?.variant || ''
   const portraitSlug = styleDisplayName ? VARIANT_IMAGE_SLUG[styleDisplayName] : undefined
-  const portraitSrc = portraitSlug ? `/style-portraits/${portraitSlug}.png` : undefined
+  const portraitSrc = portraitSlug ? `/${portraitSlug}.png` : undefined
 
   const completedItems = [
     bodyResult, styleResult, warmCool, seasonName, elementName || finalSeason25,
