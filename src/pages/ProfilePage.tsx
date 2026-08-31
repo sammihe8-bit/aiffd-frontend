@@ -1,5 +1,7 @@
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { userAPI } from '../utils/api'
 import { userScopedKey } from '../utils/userStorage'
 
 const C = {
@@ -73,7 +75,7 @@ function EmptyBadge({ label, to }: { label: string; to: string }) {
   )
 }
 
-// 邮箱首字母头像（占位方案，后续可换成真实上传）
+// 邮箱首字母头像（没选预设头像时的兜底显示）
 function AvatarInitial({ text }: { text: string }) {
   const letter = (text || '?').trim().charAt(0).toUpperCase()
   return (
@@ -86,11 +88,71 @@ function AvatarInitial({ text }: { text: string }) {
   )
 }
 
+// 预设头像方案：颜色 + 符号组合，不需要真实上传图片文件
+const AVATAR_PRESETS: { id: string; color: string; symbol: string }[] = [
+  { id: 'gold-star', color: '#B8973A', symbol: '✦' },
+  { id: 'rose', color: '#B85C6E', symbol: '◈' },
+  { id: 'sage', color: '#6B8A6A', symbol: '◇' },
+  { id: 'plum', color: '#7A5C8A', symbol: '●' },
+  { id: 'ink', color: '#3A3A3A', symbol: '▲' },
+  { id: 'teal', color: '#4A7A7A', symbol: '◆' },
+]
+
+function AvatarDisplay({ presetId, fallbackText, size = 64 }: { presetId: string | null; fallbackText: string; size?: number }) {
+  const preset = presetId ? AVATAR_PRESETS.find(p => p.id === presetId) : null
+  if (preset) {
+    return (
+      <div style={{
+        width: `${size}px`, height: `${size}px`, borderRadius: '50%', background: preset.color,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+      }}>
+        <span style={{ fontSize: `${Math.round(size * 0.4)}px`, color: '#fff' }}>{preset.symbol}</span>
+      </div>
+    )
+  }
+  return <AvatarInitial text={fallbackText} />
+}
+
 export default function ProfilePage() {
-  const { user } = useAuth()
+  const { user, updateUser } = useAuth()
   const u = user as Record<string, unknown> | null
-  const username = (u?.username ?? u?.email ?? '用户') as string
+  // 后端返回的字段是 name，不是 username——这里统一用 name，没有的话退回邮箱前缀
+  const displayName = (u?.name as string) || (u?.email as string)?.split('@')[0] || '用户'
   const email = (u?.email ?? '') as string
+
+  // ── 头像：预设图案方案，选择结果存本地（带用户前缀），不经过后端 ──
+  const avatarKey = userScopedKey('aiffd_avatar_choice', user)
+  const [avatarId, setAvatarId] = useState<string | null>(() => localStorage.getItem(avatarKey))
+  const [avatarPickerOpen, setAvatarPickerOpen] = useState(false)
+  const pickAvatar = (id: string) => {
+    localStorage.setItem(avatarKey, id)
+    setAvatarId(id)
+    setAvatarPickerOpen(false)
+  }
+
+  // ── 用户名编辑：真实调用后端 PATCH /user/me ──
+  const [editingName, setEditingName] = useState(false)
+  const [nameInput, setNameInput] = useState(displayName)
+  const [savingName, setSavingName] = useState(false)
+  const [nameError, setNameError] = useState('')
+
+  useEffect(() => { setNameInput(displayName) }, [displayName])
+
+  const saveName = async () => {
+    const trimmed = nameInput.trim()
+    if (!trimmed) { setNameError('用户名不能为空'); return }
+    setSavingName(true)
+    setNameError('')
+    try {
+      await userAPI.updateMe({ name: trimmed })
+      updateUser({ name: trimmed })
+      setEditingName(false)
+    } catch (err: any) {
+      setNameError(err?.response?.data?.error || '保存失败，请重试')
+    } finally {
+      setSavingName(false)
+    }
+  }
 
   // ── 档案数据读取 ──────────────────────────────────
   const raw = localStorage.getItem(userScopedKey('aiffd_profile', user))
@@ -137,15 +199,75 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', borderBottom: `1px solid ${C.border}`, paddingBottom: '32px', marginBottom: '40px' }}>
-          <AvatarInitial text={email} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', borderBottom: `1px solid ${C.border}`, paddingBottom: '32px', marginBottom: '40px', position: 'relative' }}>
+          {/* 头像：点击打开预设图案选择器 */}
+          <div style={{ position: 'relative' }}>
+            <button
+              onClick={() => setAvatarPickerOpen(o => !o)}
+              style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer', borderRadius: '50%' }}
+              aria-label="更换头像"
+            >
+              <AvatarDisplay presetId={avatarId} fallbackText={email} />
+            </button>
+            {avatarPickerOpen && (
+              <div style={{
+                position: 'absolute', top: '72px', left: 0, zIndex: 10,
+                background: '#fff', border: `1px solid ${C.border}`, borderRadius: '10px',
+                padding: '14px', boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', width: '180px',
+              }}>
+                {AVATAR_PRESETS.map(p => (
+                  <button key={p.id} onClick={() => pickAvatar(p.id)} style={{
+                    border: avatarId === p.id ? `2px solid ${C.gold}` : '2px solid transparent',
+                    background: 'none', padding: '2px', cursor: 'pointer', borderRadius: '50%',
+                  }}>
+                    <div style={{
+                      width: '40px', height: '40px', borderRadius: '50%', background: p.color,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <span style={{ fontSize: '16px', color: '#fff' }}>{p.symbol}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div style={{ flex: 1 }}>
             <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '3px', color: C.gold, marginBottom: '8px' }}>个人风格档案</p>
-            <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '28px', fontWeight: 400, color: C.h1, margin: 0 }}>{username}</h1>
+            {editingName ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' as const }}>
+                <input
+                  value={nameInput}
+                  onChange={e => { setNameInput(e.target.value); setNameError('') }}
+                  onKeyDown={e => { if (e.key === 'Enter') saveName() }}
+                  style={{
+                    fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h1,
+                    border: `1px solid ${nameError ? '#dc2626' : C.gold}`, borderRadius: '4px',
+                    padding: '4px 10px', outline: 'none', maxWidth: '240px',
+                  }}
+                  autoFocus
+                />
+                <button onClick={saveName} disabled={savingName} style={{
+                  background: C.gold, color: '#fff', border: 'none', borderRadius: '4px',
+                  padding: '8px 16px', fontFamily: 'Inter, sans-serif', fontSize: '12px', cursor: savingName ? 'not-allowed' : 'pointer',
+                }}>{savingName ? '保存中…' : '保存'}</button>
+                <button onClick={() => { setEditingName(false); setNameInput(displayName); setNameError('') }} style={{
+                  background: 'none', border: `1px solid ${C.border}`, borderRadius: '4px',
+                  padding: '8px 16px', fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, cursor: 'pointer',
+                }}>取消</button>
+                {nameError && <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: '#dc2626', width: '100%' }}>{nameError}</span>}
+              </div>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '28px', fontWeight: 400, color: C.h1, margin: 0 }}>{displayName}</h1>
+                <button onClick={() => setEditingName(true)} style={{
+                  background: 'none', border: `1px dashed ${C.border}`, borderRadius: '4px',
+                  padding: '4px 10px', fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted, cursor: 'pointer',
+                }}>编辑用户名</button>
+              </div>
+            )}
           </div>
-          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted, border: `1px dashed ${C.border}`, padding: '6px 14px', borderRadius: '4px' }}>
-            编辑资料（即将上线）
-          </span>
         </div>
 
         <div style={{ background: '#fff', border: `1px solid ${C.border}`, borderRadius: '8px', padding: '28px', marginBottom: '24px' }}>
