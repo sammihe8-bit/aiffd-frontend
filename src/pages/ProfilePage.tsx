@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { userScopedKey } from '../utils/userStorage'
 
 const C = {
   gold: '#B8973A', border: '#e8e8e4', muted: '#999999',
@@ -14,6 +15,13 @@ interface StyleProfile {
   concerns: string[]
   skinTone: string
   scenes: string[]
+}
+
+// aiffd_style_result 存的形状（StyleTestPage.tsx 里 JSON.stringify 的对象）
+interface StyleResultData {
+  family: string
+  variant: string
+  styleInfo: { cn: string; en: string; family: string; familyEn: string; element: string }
 }
 
 const ELEMENT_COLORS: Record<string, string> = {
@@ -52,23 +60,31 @@ export default function ProfilePage() {
   const username = (u?.username ?? u?.email ?? '用户') as string
 
   // ── 档案数据读取 ──────────────────────────────────
-  const raw = localStorage.getItem('aiffd_profile')
+  // 以下所有 key 都加上了用户前缀（userScopedKey），避免同一浏览器不同账号互相看到对方的测试数据。
+  // 注意：这只解决了"读"的这一半——aiffd_profile / aiffd_warmcool / aiffd_season_name /
+  // aiffd_season_element / aiffd_element_name / aiffd_25season 这几个 key 具体是在哪个测试页写入的
+  // （目测是 OnboardingPage 的基础信息表单 + ColorTestPage / ColorSeasonPage / ColorElementPage），
+  // 那几个"写"的地方如果还没同步改成 userScopedKey，这里读到的仍然可能是旧的、不分账号的数据。
+  const raw = localStorage.getItem(userScopedKey('aiffd_profile', user))
   const profile: StyleProfile | null = raw ? JSON.parse(raw) : null
 
   // 色彩相关
-  const warmCool = localStorage.getItem('aiffd_warmcool') || ''
-  const seasonName = localStorage.getItem('aiffd_season_name') || ''
-  const seasonElement = localStorage.getItem('aiffd_season_element') || ''
-  const elementName = localStorage.getItem('aiffd_element_name') || ''
-  const finalSeason25 = localStorage.getItem('aiffd_25season') || ''
+  const warmCool = localStorage.getItem(userScopedKey('aiffd_warmcool', user)) || ''
+  const seasonName = localStorage.getItem(userScopedKey('aiffd_season_name', user)) || ''
+  const seasonElement = localStorage.getItem(userScopedKey('aiffd_season_element', user)) || ''
+  const elementName = localStorage.getItem(userScopedKey('aiffd_element_name', user)) || ''
+  const finalSeason25 = localStorage.getItem(userScopedKey('aiffd_25season', user)) || ''
 
   // 体型相关
-  const bodyRaw = localStorage.getItem('aiffd_body_result')
+  const bodyRaw = localStorage.getItem(userScopedKey('aiffd_body_result', user))
   const bodyResult = bodyRaw ? (() => { try { return JSON.parse(bodyRaw) } catch { return null } })() : null
 
-  // 风格相关
-  const styleRaw = localStorage.getItem('aiffd_style_result')
-  const styleResult = styleRaw || ''
+  // 风格相关：之前这里直接把 JSON 字符串当成显示文本，现在解析出具体字段
+  const styleRaw = localStorage.getItem(userScopedKey('aiffd_style_result', user))
+  const styleResult: StyleResultData | null = styleRaw
+    ? (() => { try { return JSON.parse(styleRaw) as StyleResultData } catch { return null } })()
+    : null
+  const styleDisplayName = styleResult?.styleInfo?.cn || styleResult?.variant || ''
 
   // 完整度计算
   const completedItems = [
@@ -214,7 +230,12 @@ export default function ProfilePage() {
               {styleResult && (
                 <div>
                   <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '2px', color: C.muted, marginBottom: '8px' }}>风格主型</p>
-                  <p style={{ fontFamily: 'Georgia, serif', fontSize: '20px', color: C.gold, margin: 0 }}>{styleResult}</p>
+                  <p style={{ fontFamily: 'Georgia, serif', fontSize: '20px', color: C.gold, margin: 0 }}>{styleDisplayName}</p>
+                  {styleResult.styleInfo?.family && (
+                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, margin: '6px 0 0' }}>
+                      {styleResult.styleInfo.family}（{styleResult.styleInfo.familyEn}）家族 · 五行属{styleResult.styleInfo.element}
+                    </p>
+                  )}
                 </div>
               )}
               {(profile?.styleDirections?.length ?? 0) > 0 && (
