@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useAuth } from '../hooks/useAuth'
+import { userScopedKey } from '../utils/userStorage'
 
 const C = {
   h1: '#111111', h2: '#222222', sub: '#444444',
@@ -325,6 +327,7 @@ function ColorSwatches({ colors }: { colors: [string, string][] }) {
 // ─── 报告组件 ─────────────────────────────────────────────────
 function SeasonReport({ result, onReset }: { result: SeasonResult; onReset: () => void }) {
   const navigate = useNavigate()
+  const { user } = useAuth() // 存档时加用户前缀，避免不同账号互相覆盖/看到彼此的五季结果
   const profile = SEASON_PROFILES[result]
   const meta = SEASON_META[result]
 
@@ -335,9 +338,9 @@ function SeasonReport({ result, onReset }: { result: SeasonResult; onReset: () =
 
   // 保存到 localStorage
   const saveAndNext = () => {
-    localStorage.setItem('aiffd_season_result', result)
-    localStorage.setItem('aiffd_season_name', meta.name)
-    localStorage.setItem('aiffd_season_element', meta.element)
+    localStorage.setItem(userScopedKey('aiffd_season_result', user), result)
+    localStorage.setItem(userScopedKey('aiffd_season_name', user), meta.name)
+    localStorage.setItem(userScopedKey('aiffd_season_element', user), meta.element)
     // 如果是从风格测试跳来的，返回风格测试
     if (localStorage.getItem('aiffd_return_to') === 'style_color') {
       localStorage.removeItem('aiffd_return_to')
@@ -458,9 +461,9 @@ function SeasonReport({ result, onReset }: { result: SeasonResult; onReset: () =
       {/* 从风格测试跳来的返回按钮 */}
       {typeof window !== 'undefined' && localStorage.getItem('aiffd_return_to') === 'style_color' && (
         <button onClick={() => {
-          localStorage.setItem('aiffd_season_result', result)
-          localStorage.setItem('aiffd_season_name', meta.name)
-          localStorage.setItem('aiffd_season_element', meta.element)
+          localStorage.setItem(userScopedKey('aiffd_season_result', user), result)
+          localStorage.setItem(userScopedKey('aiffd_season_name', user), meta.name)
+          localStorage.setItem(userScopedKey('aiffd_season_element', user), meta.element)
           localStorage.removeItem('aiffd_return_to')
           window.location.href = '/test/style'
         }} style={{
@@ -477,9 +480,10 @@ function SeasonReport({ result, onReset }: { result: SeasonResult; onReset: () =
 // ─── 主页面 ───────────────────────────────────────────────────
 export default function ColorSeasonPage() {
   const location = useLocation()
+  const { user } = useAuth() // 读取 warmCool 兜底值、以及答完题后立即存档时，都要用同一个用户前缀
   const warmCool: WarmCoolInput = (
     (location.state?.warmCool as WarmCoolInput) ||
-    (localStorage.getItem('aiffd_warmcool') as WarmCoolInput) ||
+    (localStorage.getItem(userScopedKey('aiffd_warmcool', user)) as WarmCoolInput) ||
     'warm'
   )
   const path = getPath(warmCool)
@@ -527,9 +531,9 @@ export default function ColorSeasonPage() {
       setResult(r)
       // 立即存入 localStorage
       const meta = SEASON_META[r]
-      localStorage.setItem('aiffd_season_result', r)
-      localStorage.setItem('aiffd_season_name', meta.name)
-      localStorage.setItem('aiffd_season_element', meta.element)
+      localStorage.setItem(userScopedKey('aiffd_season_result', user), r)
+      localStorage.setItem(userScopedKey('aiffd_season_name', user), meta.name)
+      localStorage.setItem(userScopedKey('aiffd_season_element', user), meta.element)
     }
     setStep(nextStep)
   }
