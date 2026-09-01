@@ -124,6 +124,21 @@ const CHIN_TIP_OPTIONS = [
   { id: 'pointed', label: '尖窄型', sub: '向下逐渐收窄，形成较尖的轮廓', img: '/chin-tip-pointed.png' },
   { id: 'square', label: '方阔型', sub: '底部较平，左右转角比较清楚', img: '/chin-tip-square.png' },
 ]
+const EYE_SIZE_OPTIONS = [
+  { id: 'small', label: '偏小', sub: '眼睛在面部中的视觉占比较小', img: '/eye-size-small.png' },
+  { id: 'medium', label: '适中', sub: '眼睛大小与整体五官比例均衡', img: '/eye-size-medium.png' },
+  { id: 'large', label: '偏大', sub: '眼睛在面部中的视觉占比较大', img: '/eye-size-large.png' },
+]
+const EYE_SHAPE_OPTIONS = [
+  { id: 'round', label: '圆润型', sub: '上下展开明显，眼睛纵向高度较大', img: '/eye-shape-round.png' },
+  { id: 'almond', label: '杏仁型', sub: '中部较宽，内外眼角自然收窄', img: '/eye-shape-almond.png' },
+  { id: 'long', label: '细长型', sub: '横向延伸明显，纵向高度较小', img: '/eye-shape-long.png' },
+]
+const EYE_SPACING_OPTIONS = [
+  { id: 'close', label: '偏近', sub: '小于一只眼睛的宽度', img: '/eye-spacing-close.png' },
+  { id: 'medium', label: '适中', sub: '约等于一只眼睛的宽度', img: '/eye-spacing-medium.png' },
+  { id: 'far', label: '偏远', sub: '大于一只眼睛的宽度', img: '/eye-spacing-far.png' },
+]
 
 const FACE_QUESTIONS = [
   {
@@ -168,10 +183,16 @@ const FACE_QUESTIONS = [
     ],
   },
   {
-    id: 'eyes', title: '你的眼睛大小和形状更接近？', type: 'combo' as const,
-    groups: [
-      { label: '大小', options: ['细小', '小', '中', '大', '超大'] },
-      { label: '形状', options: ['圆', '直', '眼距近', '眼距远'] },
+    id: 'eyes', title: '你的眼睛大小、轮廓形状和两眼间距更接近哪一种？', type: 'imageCombo' as const,
+    hints: [
+      '眼睛相对大小：与整张脸相比，你的眼睛大小更接近哪一种。',
+      '眼睛轮廓形状：不考虑眼睛大小，你的眼裂轮廓更接近哪一种。',
+      '两眼间距：两只眼睛内眼角之间的距离更接近哪一种。',
+    ],
+    imageGroups: [
+      { key: 'size', label: '眼睛相对大小', imgHeight: 260, imgFit: 'contain' as const, options: EYE_SIZE_OPTIONS },
+      { key: 'shape', label: '眼睛轮廓形状', imgHeight: 260, imgFit: 'contain' as const, options: EYE_SHAPE_OPTIONS },
+      { key: 'spacing', label: '两眼间距', imgHeight: 260, imgFit: 'contain' as const, options: EYE_SPACING_OPTIONS },
     ],
   },
   {
