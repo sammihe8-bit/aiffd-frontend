@@ -139,6 +139,21 @@ const EYE_SPACING_OPTIONS = [
   { id: 'medium', label: '适中', sub: '约等于一只眼睛的宽度', img: '/eye-spacing-medium.png' },
   { id: 'far', label: '偏远', sub: '大于一只眼睛的宽度', img: '/eye-spacing-far.png' },
 ]
+const NOSE_SIZE_OPTIONS = [
+  { id: 'small', label: '偏小', sub: '鼻子长度和鼻翼宽度在面部中的视觉占比较小', img: '/nose-size-small.png' },
+  { id: 'medium', label: '适中', sub: '鼻子大小与其他五官比例较均衡', img: '/nose-size-medium.png' },
+  { id: 'large', label: '偏大', sub: '鼻子长度、宽度或整体存在感较强', img: '/nose-size-large.png' },
+]
+const NOSE_TIP_OPTIONS = [
+  { id: 'round', label: '圆润型', sub: '鼻尖偏圆，鼻翼线条柔和', img: '/nose-tip-round.png' },
+  { id: 'balanced', label: '均衡型', sub: '鼻尖有一定轮廓，但不过分圆钝或锐利', img: '/nose-tip-balanced.png' },
+  { id: 'angular', label: '棱角型', sub: '鼻尖较清晰，鼻翼或鼻孔边缘转折明显', img: '/nose-tip-angular.png' },
+]
+const NOSE_PROJECTION_OPTIONS = [
+  { id: 'flat', label: '偏平', sub: '鼻梁起伏较小，鼻尖突出度较弱', img: '/nose-projection-flat.png' },
+  { id: 'medium', label: '适中', sub: '鼻梁和鼻尖具有自然的立体起伏', img: '/nose-projection-medium.png' },
+  { id: 'prominent', label: '突出', sub: '鼻梁较高或鼻尖向前突出明显', img: '/nose-projection-prominent.png' },
+]
 
 const FACE_QUESTIONS = [
   {
@@ -196,10 +211,16 @@ const FACE_QUESTIONS = [
     ],
   },
   {
-    id: 'nose', title: '你的鼻子大小和形状更接近？', type: 'combo' as const,
-    groups: [
-      { label: '大小', options: ['大', '中', '小'] },
-      { label: '形状', options: ['圆', '棱', '凸', '匀'] },
+    id: 'nose', title: '你的鼻子相对量感、鼻尖轮廓和立体度更接近哪一种？', type: 'imageCombo' as const,
+    hints: [
+      '鼻子相对量感：与整张脸相比，你的鼻子整体大小更接近哪一种。',
+      '鼻尖轮廓：从正面观察，你的鼻尖和鼻翼轮廓更接近哪一种。',
+      '鼻部立体度：从斜侧面观察，你的鼻梁和鼻尖突出程度更接近哪一种。',
+    ],
+    imageGroups: [
+      { key: 'size', label: '鼻子相对量感', imgHeight: 260, imgFit: 'contain' as const, options: NOSE_SIZE_OPTIONS },
+      { key: 'tip', label: '鼻尖轮廓', imgHeight: 260, imgFit: 'contain' as const, options: NOSE_TIP_OPTIONS },
+      { key: 'projection', label: '鼻部立体度', imgHeight: 260, imgFit: 'contain' as const, options: NOSE_PROJECTION_OPTIONS },
     ],
   },
 ]
