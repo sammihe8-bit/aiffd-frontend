@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { userAPI } from '../utils/api'
 import { userScopedKey } from '../utils/userStorage'
@@ -116,10 +116,16 @@ function AvatarDisplay({ presetId, fallbackText, size = 64 }: { presetId: string
 
 export default function ProfilePage() {
   const { user, updateUser } = useAuth()
+  const location = useLocation()
+  const navigate = useNavigate()
   const u = user as Record<string, unknown> | null
   // 后端返回的字段是 name，不是 username——这里统一用 name，没有的话退回邮箱前缀
   const displayName = (u?.name as string) || (u?.email as string)?.split('@')[0] || '用户'
   const email = (u?.email ?? '') as string
+
+  // 从 OnboardingPage 主入口跳过来的：说明用户已经全部测完了，还点了"开始测试"，
+  // 这里弹窗问一下是要调整某一项还是全部重测，而不是默默地什么都不做
+  const [showRetestPrompt, setShowRetestPrompt] = useState(!!(location.state as { showRetestPrompt?: boolean } | null)?.showRetestPrompt)
 
   // ── 头像：预设图案方案，选择结果存本地（带用户前缀），不经过后端 ──
   const avatarKey = userScopedKey('aiffd_avatar_choice', user)
@@ -188,8 +194,54 @@ export default function ProfilePage() {
   const totalItems = 5
   const completionPct = Math.round((completedItems / totalItems) * 100)
 
+  // "全部重新测试"：清空体型/风格/五官/色彩三层的存档，回到体型测试第一步重新开始
+  const restartAllTests = () => {
+    const keysToClear = [
+      'aiffd_body_result', 'aiffd_qixue_result', 'aiffd_style_result', 'aiffd_face_result',
+      'aiffd_warmcool', 'aiffd_color_result', 'aiffd_season_result', 'aiffd_season_name',
+      'aiffd_season_element', 'aiffd_element_result', 'aiffd_element_name', 'aiffd_25season',
+    ]
+    keysToClear.forEach(k => localStorage.removeItem(userScopedKey(k, user)))
+    setShowRetestPrompt(false)
+    navigate('/test/body')
+  }
+
   return (
     <div style={{ minHeight: '100vh', background: C.bg }}>
+
+      {/* 全部测完后重新点"开始测试"跳过来的确认弹窗 */}
+      {showRetestPrompt && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(15,15,13,0.5)', zIndex: 100,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px',
+        }}>
+          <div style={{ background: '#fff', borderRadius: '10px', padding: '32px', maxWidth: '420px', width: '100%' }}>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.gold, marginBottom: '10px' }}>你已经完成过全部测试</p>
+            <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h1, fontWeight: 400, margin: '0 0 12px' }}>要调整哪一项，还是全部重测？</h2>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.body, lineHeight: 1.8, marginBottom: '24px' }}>
+              这是你完整的风格档案。如果某一项测得不准，可以单独重做那一项；也可以全部推倒重来。
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <Link to="/test/body" onClick={() => setShowRetestPrompt(false)} style={{
+                background: C.gold, color: '#fff', border: 'none', borderRadius: '4px', textAlign: 'center' as const,
+                padding: '12px', fontFamily: 'Inter, sans-serif', fontSize: '13px', textDecoration: 'none',
+              }}>重新做体型 / 风格测试</Link>
+              <Link to="/test/color" onClick={() => setShowRetestPrompt(false)} style={{
+                background: '#f5f0e8', color: C.h1, border: 'none', borderRadius: '4px', textAlign: 'center' as const,
+                padding: '12px', fontFamily: 'Inter, sans-serif', fontSize: '13px', textDecoration: 'none',
+              }}>重新做色彩测试</Link>
+              <button onClick={restartAllTests} style={{
+                background: 'transparent', border: `1px solid ${C.border}`, borderRadius: '4px',
+                padding: '12px', fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.body, cursor: 'pointer',
+              }}>全部重新测试</button>
+              <button onClick={() => setShowRetestPrompt(false)} style={{
+                background: 'none', border: 'none', padding: '8px', fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, cursor: 'pointer',
+              }}>不用了，档案就这样挺好</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div style={{ maxWidth: '900px', margin: '0 auto', padding: '64px 24px' }}>
 
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end', marginBottom: '24px' }}>
