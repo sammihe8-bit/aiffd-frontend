@@ -80,8 +80,8 @@ function ProgressBar({ current, total, label }: { current: number; total: number
 
 // ─── 面部测试题目配置 ──────────────────────────────────────────
 // 6 个维度，对应 styleMatrix.ts 里 id 为 lip/cheek/cheekbone/chin/eyes/nose 的定义
-// 嘴唇是 lipCombo（两组各自单选：嘴部宽度 + 嘴唇厚度，图文选项，组合成一个数组存档）；
-// 其余 5 项是 combo（两个子分类可多选，标签合并存成一个数组）
+// 嘴唇、面颊是 imageCombo（两组各自单选，图文选项，组合成一个数组存档）；
+// 其余 3 项暂时还是 combo（两个子分类可多选，文字标签，标签合并存成一个数组）
 const LIP_WIDTH_OPTIONS = [
   { id: 'narrow', label: '偏窄', sub: '嘴角间距相对脸宽较小', img: '/mouth-width-narrow.png' },
   { id: 'balanced', label: '适中', sub: '嘴宽与整体五官比例均衡', img: '/mouth-width-balanced.png' },
@@ -92,21 +92,35 @@ const LIP_FULLNESS_OPTIONS = [
   { id: 'medium', label: '适中', sub: '有自然弧度和适度饱满感', img: '/lip-fullness-medium.png' },
   { id: 'full', label: '丰满', sub: '上下唇高度明显，轮廓圆润', img: '/lip-fullness-full.png' },
 ]
+const CHEEK_CONTOUR_OPTIONS = [
+  { id: 'round', label: '圆弧型', img: '/cheek-contour-round.png' },
+  { id: 'balanced', label: '均衡型', img: '/cheek-contour-balanced.png' },
+  { id: 'angular', label: '棱角型', img: '/cheek-contour-angular.png' },
+]
+const CHEEK_FULLNESS_OPTIONS = [
+  { id: 'full', label: '饱满', img: '/cheek-fullness-full.png' },
+  { id: 'medium', label: '适中', img: '/cheek-fullness-medium.png' },
+  { id: 'thin', label: '偏薄', img: '/cheek-fullness-thin.png' },
+]
 
 const FACE_QUESTIONS = [
   {
-    id: 'lip', title: '你的嘴部宽度和嘴唇厚度更接近哪一种？', type: 'lipCombo' as const,
+    id: 'lip', title: '你的嘴部宽度和嘴唇厚度更接近哪一种？', type: 'imageCombo' as const,
     hint: '请保持嘴唇自然闭合，分别判断横向宽度和上下唇的纵向厚度。',
-    lipGroups: [
-      { key: 'width' as const, label: '嘴部宽度', options: LIP_WIDTH_OPTIONS },
-      { key: 'fullness' as const, label: '嘴唇厚度', options: LIP_FULLNESS_OPTIONS },
+    imageGroups: [
+      { key: 'width', label: '嘴部宽度', options: LIP_WIDTH_OPTIONS },
+      { key: 'fullness', label: '嘴唇厚度', options: LIP_FULLNESS_OPTIONS },
     ],
   },
   {
-    id: 'cheek', title: '你的两颊质地和丰满度更接近？', type: 'combo' as const,
-    groups: [
-      { label: '质地', options: ['肉', '角', '中'] },
-      { label: '丰满度', options: ['丰满', '适中', '紧实'] },
+    id: 'cheek', title: '你的面颊外轮廓和丰满度更接近哪一种？', type: 'imageCombo' as const,
+    hints: [
+      '面颊轮廓：请观察脸部两侧的线条形状。',
+      '面颊丰满度：请观察金色区域是否饱满或略有凹陷。',
+    ],
+    imageGroups: [
+      { key: 'contour', label: '面颊外轮廓', options: CHEEK_CONTOUR_OPTIONS },
+      { key: 'fullness', label: '面颊丰满度', options: CHEEK_FULLNESS_OPTIONS },
     ],
   },
   {
@@ -154,7 +168,7 @@ export default function StyleTestPage() {
   const [faceAnswers, setFaceAnswers] = useState<Record<string, string | string[]>>({})
   // 嘴唇题的两组单选（宽度/厚度）分别记录用户选中的选项 id，供高亮显示；
   // 两组都选完后才把对应的中文标签合并写进 faceAnswers.lip，供后续打分和展示用
-  const [lipSelection, setLipSelection] = useState<{ width: string; fullness: string }>({ width: '', fullness: '' })
+  const [imageComboSelections, setImageComboSelections] = useState<Record<string, Record<string, string>>>({})
 
   useEffect(() => {
     const raw = localStorage.getItem(userScopedKey('aiffd_body_result', user))
@@ -182,16 +196,20 @@ export default function StyleTestPage() {
       return { ...prev, [qId]: next }
     })
   }
-  // 嘴唇题：宽度/厚度两组各自单选，都选完之后把两个中文标签合并存进 faceAnswers.lip
-  const selectLipOption = (groupKey: 'width' | 'fullness', optionId: string) => {
-    setLipSelection(prev => {
-      const next = { ...prev, [groupKey]: optionId }
-      if (next.width && next.fullness) {
-        const widthLabel = LIP_WIDTH_OPTIONS.find(o => o.id === next.width)?.label ?? ''
-        const fullnessLabel = LIP_FULLNESS_OPTIONS.find(o => o.id === next.fullness)?.label ?? ''
-        setFaceAnswers(fa => ({ ...fa, lip: [widthLabel, fullnessLabel] }))
+  // 图文双组单选题（嘴唇、面颊……）：某一组选完就记下来，等这道题的所有组都选完，
+  // 把每组选中的中文标签按顺序合并成数组存进 faceAnswers，跟其他 combo 题的存档格式保持一致
+  const selectImageComboOption = (qId: string, groupKey: string, optionId: string) => {
+    setImageComboSelections(prev => {
+      const currentQ = { ...(prev[qId] ?? {}), [groupKey]: optionId }
+      const q = FACE_QUESTIONS.find(fq => fq.id === qId)
+      if (q && q.type === 'imageCombo') {
+        const allFilled = q.imageGroups!.every(g => !!currentQ[g.key])
+        if (allFilled) {
+          const labels = q.imageGroups!.map(g => g.options.find(o => o.id === currentQ[g.key])?.label ?? '')
+          setFaceAnswers(fa => ({ ...fa, [qId]: labels }))
+        }
       }
-      return next
+      return { ...prev, [qId]: currentQ }
     })
   }
 
@@ -221,7 +239,7 @@ export default function StyleTestPage() {
   }, [phase])
 
   const reset = () => {
-    setPhase('intro'); setFaceIdx(0); setFaceAnswers({}); setLipSelection({ width: '', fullness: '' })
+    setPhase('intro'); setFaceIdx(0); setFaceAnswers({}); setImageComboSelections({})
   }
 
   return (
@@ -261,8 +279,8 @@ export default function StyleTestPage() {
         {phase === 'face' && (() => {
           const q = FACE_QUESTIONS[faceIdx]
           const comboValue = Array.isArray(faceAnswers[q.id]) ? (faceAnswers[q.id] as string[]) : []
-          const hasAnswer = q.type === 'lipCombo'
-            ? (lipSelection.width !== '' && lipSelection.fullness !== '')
+          const hasAnswer = q.type === 'imageCombo'
+            ? q.imageGroups!.every(g => !!imageComboSelections[q.id]?.[g.key])
             : comboValue.length > 0
 
           return (
@@ -277,17 +295,26 @@ export default function StyleTestPage() {
                 </h2>
               </div>
 
-              {q.type === 'lipCombo' && (
+              {q.type === 'imageCombo' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, margin: 0, lineHeight: 1.7 }}>{q.hint}</p>
-                  {q.lipGroups!.map(g => (
+                  {'hint' in q && q.hint && (
+                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, margin: 0, lineHeight: 1.7 }}>{q.hint}</p>
+                  )}
+                  {'hints' in q && q.hints && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      {q.hints.map((line, i) => (
+                        <p key={i} style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, margin: 0, lineHeight: 1.7 }}>{line}</p>
+                      ))}
+                    </div>
+                  )}
+                  {q.imageGroups!.map(g => (
                     <div key={g.key}>
                       <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted, letterSpacing: '1px', marginBottom: '10px' }}>{g.label}</p>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
                         {g.options.map(o => (
-                          <ImageRadioCard key={o.id} img={o.img} label={o.label} sub={o.sub}
-                            active={lipSelection[g.key] === o.id}
-                            onClick={() => selectLipOption(g.key, o.id)} />
+                          <ImageRadioCard key={o.id} img={o.img} label={o.label} sub={'sub' in o ? o.sub : undefined}
+                            active={imageComboSelections[q.id]?.[g.key] === o.id}
+                            onClick={() => selectImageComboOption(q.id, g.key, o.id)} />
                         ))}
                       </div>
                     </div>
@@ -313,7 +340,7 @@ export default function StyleTestPage() {
 
               <div style={{ display: 'flex', gap: '12px' }}>
                 <button onClick={goBackFace} style={btnOutline}>← 返回</button>
-                {(q.type === 'combo' || q.type === 'lipCombo') && (
+                {(q.type === 'combo' || q.type === 'imageCombo') && (
                   <button
                     onClick={goNextFace}
                     disabled={!hasAnswer}
