@@ -1,5 +1,7 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../hooks/useAuth'
+import { isFullProfileComplete } from '../utils/userStorage'
 
 const MODULES = [
   {
@@ -108,6 +110,19 @@ function ConsentScreen({ onAgree }: { onAgree: () => void }) {
 
 function ArchivePage() {
   const [expandedModule, setExpandedModule] = useState<string | null>('style')
+  const navigate = useNavigate()
+  const { user } = useAuth()
+
+  // 统一的"开始测试"入口逻辑：已经把体型+风格+色彩三层全部测完的用户，
+  // 点这个按钮不应该再从头问一遍，而是直接进个人风格结果页，并弹窗询问要不要调整某项/重新测试。
+  // 只针对这个主入口按钮；下面模块卡片里"开始 →"链接到具体某一项测试，保持原样直接跳转，不受这个判断影响。
+  const handleStartClick = () => {
+    if (isFullProfileComplete(user)) {
+      navigate('/profile', { state: { showRetestPrompt: true } })
+    } else {
+      navigate('/test/style')
+    }
+  }
 
   return (
     <div style={{ minHeight: '100vh', background: '#faf9f7' }}>
@@ -166,12 +181,13 @@ function ArchivePage() {
       <div style={{ background: '#fff', borderBottom: '0.5px solid #e8e2d8', padding: '20px 32px' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
           <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '1px', color: '#B8973A' }}>建议从这里开始 →</span>
-          <Link to="/test/style" style={{
+          <button onClick={handleStartClick} style={{
             fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '2px',
             color: '#fff', background: '#1a1a1a', padding: '10px 24px', textDecoration: 'none',
+            border: 'none', cursor: 'pointer',
           }}>
             开始风格测试
-          </Link>
+          </button>
           <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: '#bbb' }}>
             风格测试包含体型 + 面部五官，是整个档案的基础
           </span>
@@ -301,12 +317,13 @@ function ArchivePage() {
         <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: '#999', marginBottom: '36px', lineHeight: 1.8 }}>
           从风格测试开始，约 15 分钟，建立你的初始档案。
         </p>
-        <Link to="/test/style" style={{
+        <button onClick={handleStartClick} style={{
           display: 'inline-block', fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '2px',
           color: '#fff', background: '#1a1a1a', padding: '16px 56px', textDecoration: 'none',
+          border: 'none', cursor: 'pointer',
         }}>
           开始风格测试 →
-        </Link>
+        </button>
         <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: '#bbb', marginTop: '20px' }}>
           也可以直接进入{' '}
           <Link to="/test/body" style={{ color: '#B8973A', textDecoration: 'none' }}>体型测试</Link>
