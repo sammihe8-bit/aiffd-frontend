@@ -155,7 +155,6 @@ export default function StyleTestPage() {
   // 嘴唇题的两组单选（宽度/厚度）分别记录用户选中的选项 id，供高亮显示；
   // 两组都选完后才把对应的中文标签合并写进 faceAnswers.lip，供后续打分和展示用
   const [lipSelection, setLipSelection] = useState<{ width: string; fullness: string }>({ width: '', fullness: '' })
-  const AUTO_ADVANCE_DELAY = 260
 
   useEffect(() => {
     const raw = localStorage.getItem(userScopedKey('aiffd_body_result', user))
