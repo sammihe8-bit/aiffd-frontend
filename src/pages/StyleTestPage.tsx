@@ -46,8 +46,8 @@ function MultiOptionCard({ label, active, onClick }: {
 }
 
 // 图文单选卡片：嘴部宽度/嘴唇厚度这两组用，配图 + 标题 + 说明，单选（同组内选中一个自动取消其他）
-function ImageRadioCard({ img, label, sub, active, onClick }: {
-  img: string; label: string; sub?: string; active: boolean; onClick: () => void
+function ImageRadioCard({ img, label, sub, active, onClick, imgHeight = 140 }: {
+  img: string; label: string; sub?: string; active: boolean; onClick: () => void; imgHeight?: number
 }) {
   return (
     <button onClick={onClick} style={{
@@ -55,7 +55,7 @@ function ImageRadioCard({ img, label, sub, active, onClick }: {
       borderRadius: '8px', padding: 0, cursor: 'pointer', overflow: 'hidden',
       background: active ? '#fdf8ee' : '#fff', transition: 'all 0.2s', textAlign: 'left' as const,
     }}>
-      <img src={img} alt={label} style={{ width: '100%', height: '140px', objectFit: 'cover', display: 'block' }} />
+      <img src={img} alt={label} style={{ width: '100%', height: `${imgHeight}px`, objectFit: 'cover', objectPosition: 'top', display: 'block' }} />
       <div style={{ padding: '10px 12px' }}>
         <p style={{ fontFamily: 'Georgia, serif', fontSize: '14px', color: active ? C.gold : C.h2, margin: sub ? '0 0 3px' : 0 }}>{label}</p>
         {sub && <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted, margin: 0, lineHeight: 1.5 }}>{sub}</p>}
@@ -108,8 +108,8 @@ const FACE_QUESTIONS = [
     id: 'lip', title: '你的嘴部宽度和嘴唇厚度更接近哪一种？', type: 'imageCombo' as const,
     hint: '请保持嘴唇自然闭合，分别判断横向宽度和上下唇的纵向厚度。',
     imageGroups: [
-      { key: 'width', label: '嘴部宽度', options: LIP_WIDTH_OPTIONS },
-      { key: 'fullness', label: '嘴唇厚度', options: LIP_FULLNESS_OPTIONS },
+      { key: 'width', label: '嘴部宽度', imgHeight: 220, options: LIP_WIDTH_OPTIONS },
+      { key: 'fullness', label: '嘴唇厚度', imgHeight: 140, options: LIP_FULLNESS_OPTIONS },
     ],
   },
   {
@@ -119,8 +119,8 @@ const FACE_QUESTIONS = [
       '面颊丰满度：请观察金色区域是否饱满或略有凹陷。',
     ],
     imageGroups: [
-      { key: 'contour', label: '面颊外轮廓', options: CHEEK_CONTOUR_OPTIONS },
-      { key: 'fullness', label: '面颊丰满度', options: CHEEK_FULLNESS_OPTIONS },
+      { key: 'contour', label: '面颊外轮廓', imgHeight: 220, options: CHEEK_CONTOUR_OPTIONS },
+      { key: 'fullness', label: '面颊丰满度', imgHeight: 140, options: CHEEK_FULLNESS_OPTIONS },
     ],
   },
   {
@@ -313,6 +313,7 @@ export default function StyleTestPage() {
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
                         {g.options.map(o => (
                           <ImageRadioCard key={o.id} img={o.img} label={o.label} sub={'sub' in o ? o.sub : undefined}
+                            imgHeight={'imgHeight' in g ? g.imgHeight : undefined}
                             active={imageComboSelections[q.id]?.[g.key] === o.id}
                             onClick={() => selectImageComboOption(q.id, g.key, o.id)} />
                         ))}
