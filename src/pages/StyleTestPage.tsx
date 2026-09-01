@@ -56,7 +56,7 @@ function ImageRadioCard({ img, label, sub, active, onClick, imgHeight = 140, img
       background: active ? '#fdf8ee' : '#fff', transition: 'all 0.2s', textAlign: 'left' as const,
     }}>
       <div style={{ width: '100%', height: `${imgHeight}px`, background: '#f5f3ef', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-        <img src={img} alt={label} style={{ width: '100%', height: '100%', objectFit: imgFit, objectPosition: 'center top', display: 'block' }} />
+        <img src={img} alt={label} style={{ width: '100%', height: '100%', objectFit: imgFit, objectPosition: 'center', display: 'block' }} />
       </div>
       <div style={{ padding: '10px 12px' }}>
         <p style={{ fontFamily: 'Georgia, serif', fontSize: '14px', color: active ? C.gold : C.h2, margin: sub ? '0 0 3px' : 0 }}>{label}</p>
@@ -122,7 +122,7 @@ const FACE_QUESTIONS = [
     ],
     imageGroups: [
       { key: 'contour', label: '面颊外轮廓', imgHeight: 260, imgFit: 'contain' as const, options: CHEEK_CONTOUR_OPTIONS },
-      { key: 'fullness', label: '面颊丰满度', imgHeight: 140, options: CHEEK_FULLNESS_OPTIONS },
+      { key: 'fullness', label: '面颊丰满度', imgHeight: 260, imgFit: 'contain' as const, options: CHEEK_FULLNESS_OPTIONS },
     ],
   },
   {
