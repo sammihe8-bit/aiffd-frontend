@@ -21,22 +21,6 @@ const btnOutline: React.CSSProperties = {
   fontSize: '12px', cursor: 'pointer',
 }
 
-function OptionCard({ label, sub, active, onClick }: {
-  label: string; sub?: string; active: boolean; onClick: () => void
-}) {
-  return (
-    <button onClick={onClick} style={{
-      border: `1px solid ${active ? C.gold : C.border}`,
-      background: active ? '#fdf8ee' : '#fff',
-      padding: '16px 20px', textAlign: 'left', cursor: 'pointer',
-      transition: 'all 0.2s', width: '100%', borderRadius: '6px',
-    }}>
-      <p style={{ fontFamily: 'Georgia, serif', fontSize: '15px', color: active ? C.gold : C.h2, marginBottom: sub ? '4px' : 0 }}>{label}</p>
-      {sub && <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, margin: 0 }}>{sub}</p>}
-    </button>
-  )
-}
-
 function MultiOptionCard({ label, active, onClick }: {
   label: string; active: boolean; onClick: () => void
 }) {
@@ -61,6 +45,25 @@ function MultiOptionCard({ label, active, onClick }: {
   )
 }
 
+// 图文单选卡片：嘴部宽度/嘴唇厚度这两组用，配图 + 标题 + 说明，单选（同组内选中一个自动取消其他）
+function ImageRadioCard({ img, label, sub, active, onClick }: {
+  img: string; label: string; sub?: string; active: boolean; onClick: () => void
+}) {
+  return (
+    <button onClick={onClick} style={{
+      border: 'none', boxShadow: active ? `0 0 0 2px ${C.gold}` : `0 0 0 1px ${C.border}`,
+      borderRadius: '8px', padding: 0, cursor: 'pointer', overflow: 'hidden',
+      background: active ? '#fdf8ee' : '#fff', transition: 'all 0.2s', textAlign: 'left' as const,
+    }}>
+      <img src={img} alt={label} style={{ width: '100%', height: '140px', objectFit: 'cover', display: 'block' }} />
+      <div style={{ padding: '10px 12px' }}>
+        <p style={{ fontFamily: 'Georgia, serif', fontSize: '14px', color: active ? C.gold : C.h2, margin: sub ? '0 0 3px' : 0 }}>{label}</p>
+        {sub && <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted, margin: 0, lineHeight: 1.5 }}>{sub}</p>}
+      </div>
+    </button>
+  )
+}
+
 function ProgressBar({ current, total, label }: { current: number; total: number; label: string }) {
   return (
     <div style={{ marginBottom: '40px' }}>
@@ -77,13 +80,27 @@ function ProgressBar({ current, total, label }: { current: number; total: number
 
 // ─── 面部测试题目配置 ──────────────────────────────────────────
 // 6 个维度，对应 styleMatrix.ts 里 id 为 lip/cheek/cheekbone/chin/eyes/nose 的定义
-// 嘴唇是 orSingle（单选，6 选 1）；其余 5 项是 combo（两个子分类各选一个，标签合并存成一个数组）
-const LIP_OPTIONS = ['大厚', '中厚', '小厚', '大薄', '中薄', '小薄']
+// 嘴唇是 lipCombo（两组各自单选：嘴部宽度 + 嘴唇厚度，图文选项，组合成一个数组存档）；
+// 其余 5 项是 combo（两个子分类可多选，标签合并存成一个数组）
+const LIP_WIDTH_OPTIONS = [
+  { id: 'narrow', label: '偏窄', sub: '嘴角间距相对脸宽较小', img: '/mouth-width-narrow.png' },
+  { id: 'balanced', label: '适中', sub: '嘴宽与整体五官比例均衡', img: '/mouth-width-balanced.png' },
+  { id: 'wide', label: '偏宽', sub: '嘴角横向延伸明显', img: '/mouth-width-wide.png' },
+]
+const LIP_FULLNESS_OPTIONS = [
+  { id: 'thin', label: '偏薄', sub: '上下唇高度较小，轮廓偏平', img: '/lip-fullness-thin.png' },
+  { id: 'medium', label: '适中', sub: '有自然弧度和适度饱满感', img: '/lip-fullness-medium.png' },
+  { id: 'full', label: '丰满', sub: '上下唇高度明显，轮廓圆润', img: '/lip-fullness-full.png' },
+]
 
 const FACE_QUESTIONS = [
   {
-    id: 'lip', title: '你的嘴唇更接近哪种？', type: 'single' as const,
-    options: LIP_OPTIONS,
+    id: 'lip', title: '你的嘴部宽度和嘴唇厚度更接近哪一种？', type: 'lipCombo' as const,
+    hint: '请保持嘴唇自然闭合，分别判断横向宽度和上下唇的纵向厚度。',
+    lipGroups: [
+      { key: 'width' as const, label: '嘴部宽度', options: LIP_WIDTH_OPTIONS },
+      { key: 'fullness' as const, label: '嘴唇厚度', options: LIP_FULLNESS_OPTIONS },
+    ],
   },
   {
     id: 'cheek', title: '你的两颊质地和丰满度更接近？', type: 'combo' as const,
@@ -135,6 +152,9 @@ export default function StyleTestPage() {
   const [bodyResult, setBodyResult] = useState<Record<string, unknown> | null>(null)
   const [faceIdx, setFaceIdx] = useState(0)
   const [faceAnswers, setFaceAnswers] = useState<Record<string, string | string[]>>({})
+  // 嘴唇题的两组单选（宽度/厚度）分别记录用户选中的选项 id，供高亮显示；
+  // 两组都选完后才把对应的中文标签合并写进 faceAnswers.lip，供后续打分和展示用
+  const [lipSelection, setLipSelection] = useState<{ width: string; fullness: string }>({ width: '', fullness: '' })
   const AUTO_ADVANCE_DELAY = 260
 
   useEffect(() => {
@@ -156,15 +176,23 @@ export default function StyleTestPage() {
     else setPhase('intro')
   }
 
-  const selectSingle = (qId: string, val: string) => {
-    setFaceAnswers(prev => ({ ...prev, [qId]: val }))
-    setTimeout(goNextFace, AUTO_ADVANCE_DELAY)
-  }
   const toggleCombo = (qId: string, val: string) => {
     setFaceAnswers(prev => {
       const current = Array.isArray(prev[qId]) ? (prev[qId] as string[]) : []
       const next = current.includes(val) ? current.filter(v => v !== val) : [...current, val]
       return { ...prev, [qId]: next }
+    })
+  }
+  // 嘴唇题：宽度/厚度两组各自单选，都选完之后把两个中文标签合并存进 faceAnswers.lip
+  const selectLipOption = (groupKey: 'width' | 'fullness', optionId: string) => {
+    setLipSelection(prev => {
+      const next = { ...prev, [groupKey]: optionId }
+      if (next.width && next.fullness) {
+        const widthLabel = LIP_WIDTH_OPTIONS.find(o => o.id === next.width)?.label ?? ''
+        const fullnessLabel = LIP_FULLNESS_OPTIONS.find(o => o.id === next.fullness)?.label ?? ''
+        setFaceAnswers(fa => ({ ...fa, lip: [widthLabel, fullnessLabel] }))
+      }
+      return next
     })
   }
 
@@ -194,7 +222,7 @@ export default function StyleTestPage() {
   }, [phase])
 
   const reset = () => {
-    setPhase('intro'); setFaceIdx(0); setFaceAnswers({})
+    setPhase('intro'); setFaceIdx(0); setFaceAnswers({}); setLipSelection({ width: '', fullness: '' })
   }
 
   return (
@@ -234,7 +262,9 @@ export default function StyleTestPage() {
         {phase === 'face' && (() => {
           const q = FACE_QUESTIONS[faceIdx]
           const comboValue = Array.isArray(faceAnswers[q.id]) ? (faceAnswers[q.id] as string[]) : []
-          const hasAnswer = q.type === 'single' ? !!faceAnswers[q.id] : comboValue.length > 0
+          const hasAnswer = q.type === 'lipCombo'
+            ? (lipSelection.width !== '' && lipSelection.fullness !== '')
+            : comboValue.length > 0
 
           return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
@@ -248,11 +278,20 @@ export default function StyleTestPage() {
                 </h2>
               </div>
 
-              {q.type === 'single' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {q.options!.map(o => (
-                    <OptionCard key={o} label={o} active={faceAnswers[q.id] === o}
-                      onClick={() => selectSingle(q.id, o)} />
+              {q.type === 'lipCombo' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, margin: 0, lineHeight: 1.7 }}>{q.hint}</p>
+                  {q.lipGroups!.map(g => (
+                    <div key={g.key}>
+                      <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted, letterSpacing: '1px', marginBottom: '10px' }}>{g.label}</p>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+                        {g.options.map(o => (
+                          <ImageRadioCard key={o.id} img={o.img} label={o.label} sub={o.sub}
+                            active={lipSelection[g.key] === o.id}
+                            onClick={() => selectLipOption(g.key, o.id)} />
+                        ))}
+                      </div>
+                    </div>
                   ))}
                 </div>
               )}
@@ -275,7 +314,7 @@ export default function StyleTestPage() {
 
               <div style={{ display: 'flex', gap: '12px' }}>
                 <button onClick={goBackFace} style={btnOutline}>← 返回</button>
-                {q.type === 'combo' && (
+                {(q.type === 'combo' || q.type === 'lipCombo') && (
                   <button
                     onClick={goNextFace}
                     disabled={!hasAnswer}
