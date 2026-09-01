@@ -104,6 +104,16 @@ const CHEEK_FULLNESS_OPTIONS = [
   { id: 'medium', label: '适中', img: '/cheek-fullness-medium.png' },
   { id: 'thin', label: '偏薄', img: '/cheek-fullness-thin.png' },
 ]
+const CHEEKBONE_PROMINENCE_OPTIONS = [
+  { id: 'low', label: '不明显', sub: '颧骨高点不突出，太阳穴到面颊过渡平缓', img: '/cheekbone-prominence-low.png' },
+  { id: 'medium', label: '适中', sub: '能看到自然高点，但不会特别抢眼', img: '/cheekbone-prominence-medium.png' },
+  { id: 'high', label: '明显', sub: '颧骨高点清楚，向前或向两侧的存在感较强', img: '/cheekbone-prominence-high.png' },
+]
+const CHEEKBONE_CONTOUR_OPTIONS = [
+  { id: 'round', label: '圆润型', sub: '颧骨区域呈柔和圆弧，没有明显折角', img: '/cheekbone-contour-round.png' },
+  { id: 'balanced', label: '均衡型', sub: '有一定轮廓变化，但不过分圆润或锐利', img: '/cheekbone-contour-balanced.png' },
+  { id: 'angular', label: '棱角型', sub: '颧骨转折清楚，局部线条较直、有折角感', img: '/cheekbone-contour-angular.png' },
+]
 
 const FACE_QUESTIONS = [
   {
@@ -126,10 +136,14 @@ const FACE_QUESTIONS = [
     ],
   },
   {
-    id: 'cheekbone', title: '你的颧骨大小和形状更接近？', type: 'combo' as const,
-    groups: [
-      { label: '大小', options: ['大', '适中', '小'] },
-      { label: '形状', options: ['圆', '尖', '凸', '角', '匀'] },
+    id: 'cheekbone', title: '你的颧骨明显程度和轮廓形态更接近哪一种？', type: 'imageCombo' as const,
+    hints: [
+      '颧骨明显程度：从斜前方观察，你的颧骨突出程度更接近哪一种。',
+      '颧骨轮廓形态：从正面观察，你的颧骨轮廓更接近哪一种。',
+    ],
+    imageGroups: [
+      { key: 'prominence', label: '颧骨明显程度', imgHeight: 260, imgFit: 'contain' as const, options: CHEEKBONE_PROMINENCE_OPTIONS },
+      { key: 'contour', label: '颧骨轮廓形态', imgHeight: 260, imgFit: 'contain' as const, options: CHEEKBONE_CONTOUR_OPTIONS },
     ],
   },
   {
