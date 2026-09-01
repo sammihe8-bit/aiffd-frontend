@@ -7,3 +7,10 @@ export function userScopedKey(base: string, user: AuthUser | null): string {
   const uid = user?.id ?? 'guest'
   return `${base}_${uid}`
 }
+
+// 判断"体型+风格+色彩三层"是否已经全部测完（个人爱好测试还没上线，不计入这个判断）。
+// 用在测试中心的主入口：全部做完的用户点"开始测试"应该直接进结果页，而不是从头再问一遍。
+export function isFullProfileComplete(user: AuthUser | null): boolean {
+  const has = (base: string) => !!localStorage.getItem(userScopedKey(base, user))
+  return has('aiffd_body_result') && has('aiffd_style_result') && has('aiffd_25season')
+}
