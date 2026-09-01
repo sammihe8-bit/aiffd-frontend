@@ -114,6 +114,16 @@ const CHEEKBONE_CONTOUR_OPTIONS = [
   { id: 'balanced', label: '均衡型', sub: '有一定轮廓变化，但不过分圆润或锐利', img: '/cheekbone-contour-balanced.png' },
   { id: 'angular', label: '棱角型', sub: '颧骨转折清楚，局部线条较直、有折角感', img: '/cheekbone-contour-angular.png' },
 ]
+const CHIN_LENGTH_OPTIONS = [
+  { id: 'short', label: '偏短', sub: '下唇至下巴底部的距离较短', img: '/chin-length-short.png' },
+  { id: 'medium', label: '适中', sub: '下巴长度与整体面部比例协调', img: '/chin-length-medium.png' },
+  { id: 'long', label: '偏长', sub: '下唇至下巴底部的距离较长', img: '/chin-length-long.png' },
+]
+const CHIN_TIP_OPTIONS = [
+  { id: 'round', label: '圆润型', sub: '底部呈柔和圆弧', img: '/chin-tip-round.png' },
+  { id: 'pointed', label: '尖窄型', sub: '向下逐渐收窄，形成较尖的轮廓', img: '/chin-tip-pointed.png' },
+  { id: 'square', label: '方阔型', sub: '底部较平，左右转角比较清楚', img: '/chin-tip-square.png' },
+]
 
 const FACE_QUESTIONS = [
   {
@@ -147,10 +157,14 @@ const FACE_QUESTIONS = [
     ],
   },
   {
-    id: 'chin', title: '你的下巴形状和大小更接近？', type: 'combo' as const,
-    groups: [
-      { label: '形状', options: ['圆', '尖', '匀', '凸', '方'] },
-      { label: '大小', options: ['大', '小', '适中'] },
+    id: 'chin', title: '你的下巴纵向比例和尖端轮廓更接近哪一种？', type: 'imageCombo' as const,
+    hints: [
+      '下巴纵向比例：从正面观察，你的下巴长度更接近哪一种。',
+      '下巴尖端轮廓：你的下巴最下端更接近哪一种。',
+    ],
+    imageGroups: [
+      { key: 'length', label: '下巴纵向比例', imgHeight: 260, imgFit: 'contain' as const, options: CHIN_LENGTH_OPTIONS },
+      { key: 'tip', label: '下巴尖端轮廓', imgHeight: 260, imgFit: 'contain' as const, options: CHIN_TIP_OPTIONS },
     ],
   },
   {
