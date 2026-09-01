@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { computeStyleScore, type StyleAnswers } from '../utils/styleScoring'
 import { useAuth } from '../hooks/useAuth'
 import { userScopedKey } from '../utils/userStorage'
+import { getStylePortraitSrc } from '../utils/styleImages'
 
 // ─── 设计系统（与 BodyTestPage 保持一致）─────────────────────
 const C = {
@@ -203,6 +204,15 @@ const FACE_QUESTIONS = [
 
 type Phase = 'intro' | 'face' | 'report'
 
+// 结果页用的一句话气质文案，按家族给（同一家族内的档位共用一句），后续想按 13 型精细区分可以再拆
+const FAMILY_TAGLINE: Record<string, string> = {
+  '经典型': '线条干净、比例均衡，你的气质自带一种从容的高级感。',
+  '少年型': '利落有个性，你的气质轻盈鲜活，充满少年感的张力。',
+  '自然型': '松弛自然，不刻意雕琢，你的气质舒展随性又真实。',
+  '戏剧型': '轮廓分明、气场强烈，你天生自带舞台感。',
+  '浪漫型': '曲线柔美，细节精致，你的气质温柔又有女人味。',
+}
+
 // 面部6个维度的中文标签，存档时一起写进去，Profile 页展示时不用再重复维护这份映射
 const FACE_DIMENSION_LABELS: Record<string, string> = {
   lip: '嘴唇', cheek: '两颊', cheekbone: '颧骨', chin: '下巴', eyes: '眼睛', nose: '鼻子',
@@ -374,52 +384,30 @@ export default function StyleTestPage() {
         })()}
 
         {/* ── 报告：两层匹配引擎算出的最终 13 型结果 ── */}
-        {phase === 'report' && scoreResult && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            <div style={{ textAlign: 'center', paddingBottom: '24px', borderBottom: `1px solid ${C.border}` }}>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.gold, marginBottom: '8px' }}>你的风格结论</p>
-              <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '36px', color: C.h1, fontWeight: 400, margin: '0 0 4px' }}>
+        {phase === 'report' && scoreResult && (() => {
+          const portraitSrc = getStylePortraitSrc(scoreResult.winningStyleInfo.cn || scoreResult.winningVariant)
+          const tagline = FAMILY_TAGLINE[scoreResult.winningStyleInfo.family] ?? ''
+          return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+            <div style={{ textAlign: 'center', padding: '12px 0 8px' }}>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.gold, marginBottom: '20px' }}>你的风格结论</p>
+              {portraitSrc && (
+                <img src={portraitSrc} alt={scoreResult.winningVariant} style={{
+                  width: '220px', height: '280px', objectFit: 'contain', borderRadius: '10px',
+                  margin: '0 auto 24px', display: 'block', background: '#f5f3ef',
+                }} />
+              )}
+              <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '42px', color: C.h1, fontWeight: 400, margin: '0 0 8px' }}>
                 {scoreResult.winningVariant}
               </h1>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, margin: 0 }}>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, margin: '0 0 20px' }}>
                 {scoreResult.winningStyleInfo.family}（{scoreResult.winningStyleInfo.familyEn}）家族 · 五行属{scoreResult.winningStyleInfo.element}
               </p>
-            </div>
-
-            <div style={{ border: `1px solid ${C.border}`, borderRadius: '8px', padding: '20px 24px' }}>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.gold, marginBottom: '14px' }}>家族匹配度</p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {Object.entries(scoreResult.looseScoreByFamily).sort((a, b) => b[1] - a[1]).map(([family, score]) => (
-                  <div key={family}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                      <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: family === scoreResult.winningFamily ? C.gold : C.body, margin: 0 }}>{family}</p>
-                      <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, margin: 0 }}>{Math.round(score * 100)}%</p>
-                    </div>
-                    <div style={{ height: '4px', background: '#f0f0ec', borderRadius: '2px' }}>
-                      <div style={{ height: '4px', borderRadius: '2px', background: family === scoreResult.winningFamily ? C.gold : C.border, width: `${score * 100}%` }} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div style={{ border: `1px solid ${C.border}`, borderRadius: '8px', padding: '20px 24px' }}>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.gold, marginBottom: '14px' }}>
-                {scoreResult.winningFamily} 家族内变体精匹配度
-              </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {Object.entries(scoreResult.strictScoreByVariant).sort((a, b) => b[1] - a[1]).map(([variant, score]) => (
-                  <div key={variant}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                      <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: variant === scoreResult.winningVariant ? C.gold : C.body, margin: 0 }}>{variant}</p>
-                      <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, margin: 0 }}>{Math.round(score * 100)}%</p>
-                    </div>
-                    <div style={{ height: '4px', background: '#f0f0ec', borderRadius: '2px' }}>
-                      <div style={{ height: '4px', borderRadius: '2px', background: variant === scoreResult.winningVariant ? C.gold : C.border, width: `${score * 100}%` }} />
-                    </div>
-                  </div>
-                ))}
-              </div>
+              {tagline && (
+                <p style={{ fontFamily: 'Georgia, serif', fontSize: '17px', color: C.h2, lineHeight: 1.8, maxWidth: '420px', margin: '0 auto' }}>
+                  {tagline}
+                </p>
+              )}
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '12px' }}>
@@ -428,7 +416,8 @@ export default function StyleTestPage() {
               <Link to="/profile" style={{ ...btnGold, textDecoration: 'none', textAlign: 'center' as const, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>进入我的档案</Link>
             </div>
           </div>
-        )}
+          )
+        })()}
 
       </div>
     </div>
