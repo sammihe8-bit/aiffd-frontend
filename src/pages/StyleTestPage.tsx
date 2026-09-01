@@ -21,30 +21,6 @@ const btnOutline: React.CSSProperties = {
   fontSize: '12px', cursor: 'pointer',
 }
 
-function MultiOptionCard({ label, active, onClick }: {
-  label: string; active: boolean; onClick: () => void
-}) {
-  return (
-    <button onClick={onClick} style={{
-      border: `1px solid ${active ? C.gold : C.border}`,
-      background: active ? '#fdf8ee' : '#fff',
-      padding: '12px 18px', textAlign: 'left', cursor: 'pointer',
-      transition: 'all 0.2s', borderRadius: '6px',
-      display: 'flex', alignItems: 'center', gap: '10px',
-    }}>
-      <span style={{
-        width: '16px', height: '16px', borderRadius: '4px', flexShrink: 0,
-        border: `1.5px solid ${active ? C.gold : C.border}`,
-        background: active ? C.gold : 'transparent',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-      }}>
-        {active && <span style={{ color: '#fff', fontSize: '11px', lineHeight: 1 }}>✓</span>}
-      </span>
-      <span style={{ fontFamily: 'Georgia, serif', fontSize: '14px', color: active ? C.gold : C.h2 }}>{label}</span>
-    </button>
-  )
-}
-
 // 图文单选卡片：嘴部宽度/嘴唇厚度这两组用，配图 + 标题 + 说明，单选（同组内选中一个自动取消其他）
 function ImageRadioCard({ img, label, sub, active, onClick, imgHeight = 140, imgFit = 'cover' }: {
   img: string; label: string; sub?: string; active: boolean; onClick: () => void; imgHeight?: number; imgFit?: 'cover' | 'contain'
@@ -261,13 +237,6 @@ export default function StyleTestPage() {
     else setPhase('intro')
   }
 
-  const toggleCombo = (qId: string, val: string) => {
-    setFaceAnswers(prev => {
-      const current = Array.isArray(prev[qId]) ? (prev[qId] as string[]) : []
-      const next = current.includes(val) ? current.filter(v => v !== val) : [...current, val]
-      return { ...prev, [qId]: next }
-    })
-  }
   // 图文双组单选题（嘴唇、面颊……）：某一组选完就记下来，等这道题的所有组都选完，
   // 把每组选中的中文标签按顺序合并成数组存进 faceAnswers，跟其他 combo 题的存档格式保持一致
   const selectImageComboOption = (qId: string, groupKey: string, optionId: string) => {
@@ -347,13 +316,10 @@ export default function StyleTestPage() {
           </div>
         )}
 
-        {/* ── 面部测试：6 题 ── */}
+        {/* ── 面部测试：6 题（全部为图文双组/三组单选）── */}
         {phase === 'face' && (() => {
           const q = FACE_QUESTIONS[faceIdx]
-          const comboValue = Array.isArray(faceAnswers[q.id]) ? (faceAnswers[q.id] as string[]) : []
-          const hasAnswer = q.type === 'imageCombo'
-            ? q.imageGroups!.every(g => !!imageComboSelections[q.id]?.[g.key])
-            : comboValue.length > 0
+          const hasAnswer = q.imageGroups.every(g => !!imageComboSelections[q.id]?.[g.key])
 
           return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
@@ -367,61 +333,41 @@ export default function StyleTestPage() {
                 </h2>
               </div>
 
-              {q.type === 'imageCombo' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-                  {'hint' in q && q.hint && (
-                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, margin: 0, lineHeight: 1.7 }}>{q.hint}</p>
-                  )}
-                  {'hints' in q && q.hints && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      {q.hints.map((line, i) => (
-                        <p key={i} style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, margin: 0, lineHeight: 1.7 }}>{line}</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+                {'hint' in q && q.hint && (
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, margin: 0, lineHeight: 1.7 }}>{q.hint}</p>
+                )}
+                {'hints' in q && q.hints && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {q.hints.map((line, i) => (
+                      <p key={i} style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, margin: 0, lineHeight: 1.7 }}>{line}</p>
+                    ))}
+                  </div>
+                )}
+                {q.imageGroups.map(g => (
+                  <div key={g.key}>
+                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted, letterSpacing: '1px', marginBottom: '10px' }}>{g.label}</p>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+                      {g.options.map(o => (
+                        <ImageRadioCard key={o.id} img={o.img} label={o.label} sub={'sub' in o ? o.sub : undefined}
+                          imgHeight={'imgHeight' in g ? g.imgHeight : undefined}
+                          imgFit={'imgFit' in g ? g.imgFit : undefined}
+                          active={imageComboSelections[q.id]?.[g.key] === o.id}
+                          onClick={() => selectImageComboOption(q.id, g.key, o.id)} />
                       ))}
                     </div>
-                  )}
-                  {q.imageGroups!.map(g => (
-                    <div key={g.key}>
-                      <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted, letterSpacing: '1px', marginBottom: '10px' }}>{g.label}</p>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
-                        {g.options.map(o => (
-                          <ImageRadioCard key={o.id} img={o.img} label={o.label} sub={'sub' in o ? o.sub : undefined}
-                            imgHeight={'imgHeight' in g ? g.imgHeight : undefined}
-                            imgFit={'imgFit' in g ? g.imgFit : undefined}
-                            active={imageComboSelections[q.id]?.[g.key] === o.id}
-                            onClick={() => selectImageComboOption(q.id, g.key, o.id)} />
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {q.type === 'combo' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                  {q.groups!.map(g => (
-                    <div key={g.label}>
-                      <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted, letterSpacing: '1px', marginBottom: '10px' }}>{g.label}</p>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                        {g.options.map(o => (
-                          <MultiOptionCard key={o} label={o} active={comboValue.includes(o)}
-                            onClick={() => toggleCombo(q.id, o)} />
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                  </div>
+                ))}
+              </div>
 
               <div style={{ display: 'flex', gap: '12px' }}>
                 <button onClick={goBackFace} style={btnOutline}>← 返回</button>
-                {(q.type === 'combo' || q.type === 'imageCombo') && (
-                  <button
-                    onClick={goNextFace}
-                    disabled={!hasAnswer}
-                    style={hasAnswer ? { ...btnGold, flex: 1 } : { ...btnGold, flex: 1, background: '#e0e0e0', cursor: 'not-allowed' }}>
-                    继续
-                  </button>
-                )}
+                <button
+                  onClick={goNextFace}
+                  disabled={!hasAnswer}
+                  style={hasAnswer ? { ...btnGold, flex: 1 } : { ...btnGold, flex: 1, background: '#e0e0e0', cursor: 'not-allowed' }}>
+                  继续
+                </button>
               </div>
             </div>
           )
