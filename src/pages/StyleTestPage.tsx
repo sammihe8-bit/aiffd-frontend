@@ -4,6 +4,7 @@ import { computeStyleScore, type StyleAnswers } from '../utils/styleScoring'
 import { useAuth } from '../hooks/useAuth'
 import { userScopedKey } from '../utils/userStorage'
 import { getStylePortraitSrc } from '../utils/styleImages'
+import ThreeStageProgress from '../components/ThreeStageProgress'
 
 // ─── 设计系统（与 BodyTestPage 保持一致）─────────────────────
 const C = {
@@ -316,7 +317,17 @@ export default function StyleTestPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#faf9f7', padding: '60px 24px' }}>
+    <div style={{ minHeight: '100vh', background: '#faf9f7' }}>
+      <ThreeStageProgress
+        activeStage="form"
+        formDone={!!completedResult}
+        colorDone={!!localStorage.getItem(userScopedKey('aiffd_25season', user))}
+        preferenceDone={false}
+        currentLabel={phase === 'face' ? FACE_QUESTIONS[faceIdx].title : undefined}
+        currentNum={phase === 'face' ? faceIdx + 1 : undefined}
+        currentTotal={phase === 'face' ? FACE_QUESTIONS.length : undefined}
+      />
+      <div style={{ padding: '60px 24px' }}>
       <div style={{ maxWidth: '680px', margin: '0 auto' }}>
 
         {/* ── 入口：检查体型测试是否已完成 ── */}
@@ -455,6 +466,7 @@ export default function StyleTestPage() {
           )
         })()}
 
+      </div>
       </div>
     </div>
   )
