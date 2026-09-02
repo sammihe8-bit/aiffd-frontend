@@ -325,6 +325,47 @@ function ColorSwatches({ colors }: { colors: [string, string][] }) {
   )
 }
 
+// c3「饱和度偏好」题用的三组色块：色值是按参考图目测取的，如果跟你原图不完全一致，
+// 改这里对应的 hex 值就行，不用出图/切图，色块是代码直接渲染的
+const SATURATION_OPTIONS = [
+  {
+    id: 'A', label: '低饱和', sub: '雾感 · 大地色 · 哑光',
+    colors: ['#B98790', '#A99B71', '#7E9A7C', '#7C97A0', '#7C8FB0', '#9A83A8'],
+  },
+  {
+    id: 'B', label: '中等饱和', sub: '清爽 · 自然 · 干净',
+    colors: ['#C15E71', '#C08A28', '#4C8C3E', '#2D8C82', '#5A73B8', '#8C4C96'],
+  },
+  {
+    id: 'C', label: '高饱和', sub: '浓郁 · 有分量 · 成熟',
+    colors: ['#B01F2E', '#D6791E', '#2E7D2E', '#157A72', '#1E3FA0', '#8A1A8A'],
+  },
+]
+
+// 整行可点击的色块选项：左侧文字标签 + 右侧一排色块，选中态跟文字题的 OptionBtn 保持一致的边框/背景高亮
+function SaturationRowOption({ label, sub, colors, active, onClick }: {
+  label: string; sub: string; colors: string[]; active: boolean; onClick: () => void
+}) {
+  return (
+    <button onClick={onClick} style={{
+      border: `1.5px solid ${active ? C.gold : C.border}`,
+      borderRadius: '10px', background: active ? '#fdf8ee' : '#fff',
+      padding: '16px 20px', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s',
+      display: 'flex', flexDirection: 'column', gap: '14px', width: '100%',
+    }}>
+      <div>
+        <p style={{ fontFamily: 'Georgia, serif', fontSize: '16px', color: active ? C.gold : C.h2, margin: '0 0 2px' }}>{label}</p>
+        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, margin: 0 }}>{sub}</p>
+      </div>
+      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+        {colors.map((hex, i) => (
+          <div key={i} style={{ width: '36px', height: '36px', borderRadius: '6px', background: hex, border: `1px solid ${C.border}` }} />
+        ))}
+      </div>
+    </button>
+  )
+}
+
 // ─── 报告组件 ─────────────────────────────────────────────────
 function SeasonReport({ result, onReset }: { result: SeasonResult; onReset: () => void }) {
   const navigate = useNavigate()
@@ -708,7 +749,24 @@ export default function ColorSeasonPage() {
         {/* 路径C */}
         {step === 'c1' && (<div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}><div><p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 03 · 暖色耐受</p><h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>你穿焦糖、橘色、南瓜色时，脸通常会？</h2></div><ColorSwatches colors={[['焦糖','#C68642'],['橘色','#E8734A'],['南瓜','#D2691E'],['驼色','#C4A882']]} /><div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>{[{id:'A',label:'有气色，温暖感，挺好看'},{id:'B',label:'显土显黄，不舒服，感觉更老'},{id:'C',label:'有时可以，有时不稳定'}].map(o=><OptionBtn key={o.id} {...o} active={cAnswers.c1===o.id} onClick={()=>setC('c1')(o.id)} />)}</div><div style={{ display: 'flex', gap: '12px' }}><BackBtn onClick={back} /><button onClick={next} disabled={!canNext.c1} style={!canNext.c1?btnDisabledStyle:btnPrimaryStyle}>继续</button></div></div>)}
         {step === 'c2' && (<div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}><div><p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 04 · 灰调颜色反应</p><h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>这些低饱和大地色靠近脸时，感觉是？</h2></div><ColorSwatches colors={[['墨绿','#2D5A3D'],['苔藓绿','#6B7A3E'],['蘑菇色','#B0A090'],['炭灰','#4A4A4A'],['燕麦','#D4C4A8'],['酒红','#7B1A2A']]} /><div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>{[{id:'A',label:'很高级，很稳，很舒服，感觉对了'},{id:'B',label:'显脏显暗，不好看，感觉更差'},{id:'C',label:'还可以，但不是最好的颜色'}].map(o=><OptionBtn key={o.id} {...o} active={cAnswers.c2===o.id} onClick={()=>setC('c2')(o.id)} />)}</div><div style={{ display: 'flex', gap: '12px' }}><BackBtn onClick={back} /><button onClick={next} disabled={!canNext.c2} style={!canNext.c2?btnDisabledStyle:btnPrimaryStyle}>继续</button></div></div>)}
-        {step === 'c3' && (<div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}><div><p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 05 · 饱和度偏好</p><h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>你买衣服时，自然会倾向选择哪类颜色？</h2></div><div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>{[{id:'A',label:'低饱和、雾感、大地色、哑光质感'},{id:'B',label:'中等饱和、清爽自然、看起来干净的颜色'},{id:'C',label:'浓郁、有分量感、成熟、厚重的颜色'}].map(o=><OptionBtn key={o.id} {...o} active={cAnswers.c3===o.id} onClick={()=>setC('c3')(o.id)} />)}</div><div style={{ display: 'flex', gap: '12px' }}><BackBtn onClick={back} /><button onClick={next} disabled={!canNext.c3} style={!canNext.c3?btnDisabledStyle:btnPrimaryStyle}>继续</button></div></div>)}
+        {step === 'c3' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+            <div>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 05 · 饱和度偏好</p>
+              <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>你买衣服时，自然会倾向选择哪类颜色？</h2>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {SATURATION_OPTIONS.map(o => (
+                <SaturationRowOption key={o.id} label={o.label} sub={o.sub} colors={o.colors}
+                  active={cAnswers.c3 === o.id} onClick={() => setC('c3')(o.id)} />
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <BackBtn onClick={back} />
+              <button onClick={next} disabled={!canNext.c3} style={!canNext.c3 ? btnDisabledStyle : btnPrimaryStyle}>继续</button>
+            </div>
+          </div>
+        )}
         {step === 'c4' && (<div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}><div><p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>Step 06 · 整体气质</p><h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>别人描述你的穿搭气质，通常是？</h2></div><div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>{[{id:'A',label:'稳重、高级、低调有质感、耐看'},{id:'B',label:'清新、年轻、自然干净、有活力'},{id:'C',label:'成熟、浓郁、有存在感、大气'}].map(o=><OptionBtn key={o.id} {...o} active={cAnswers.c4===o.id} onClick={()=>setC('c4')(o.id)} />)}</div><div style={{ display: 'flex', gap: '12px' }}><BackBtn onClick={back} /><button onClick={next} disabled={!canNext.c4} style={!canNext.c4?btnDisabledStyle:btnPrimaryStyle}>查看结果</button></div></div>)}
 
         {/* 路径D */}
