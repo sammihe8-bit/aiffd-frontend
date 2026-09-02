@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { userAPI } from '../utils/api'
 import { userScopedKey } from '../utils/userStorage'
+import { getStylePortraitSrc } from '../utils/styleImages'
 
 const C = {
   gold: '#B8973A', border: '#e8e8e4', muted: '#999999',
@@ -33,26 +34,6 @@ const ELEMENT_COLORS: Record<string, string> = {
 const WARMCOOL_LABELS: Record<string, string> = {
   warm: '暖调', cool: '冷调',
   neutral_warm: '中性偏暖', neutral_cool: '中性偏冷', olive: '橄榄灰黄',
-}
-
-// 13 型风格 → 模特图文件名 slug 的映射。
-// 图片放在 public/ 根目录下（不是 public/style-portraits/ 子文件夹），文件名按下面这个表命名。
-// 命名规则：家族英文-档位（soft/base/dramatic）
-// 等 13 张手绘模特图传上来，文件名按下面这个表放就行，代码不用再改。
-const VARIANT_IMAGE_SLUG: Record<string, string> = {
-  '浪漫型': 'romantic-base',
-  '戏剧浪漫型': 'romantic-dramatic',
-  '柔软少年型': 'gamine-soft',
-  '少年型': 'gamine-base',
-  '戏剧少年型': 'gamine-dramatic',
-  '柔软经典型': 'classic-soft',
-  '经典型': 'classic-base',
-  '戏剧经典型': 'classic-dramatic',
-  '浪漫自然型': 'natural-soft',
-  '自然型': 'natural-base',
-  '戏剧自然型': 'natural-dramatic',
-  '浪漫戏剧型': 'dramatic-soft',
-  '戏剧型': 'dramatic-base',
 }
 
 function SectionTitle({ label }: { label: string }) {
@@ -185,8 +166,7 @@ export default function ProfilePage() {
     ? (() => { try { return JSON.parse(faceRaw) } catch { return null } })()
     : null
   const styleDisplayName = styleResult?.styleInfo?.cn || styleResult?.variant || ''
-  const portraitSlug = styleDisplayName ? VARIANT_IMAGE_SLUG[styleDisplayName] : undefined
-  const portraitSrc = portraitSlug ? `/${portraitSlug}.png` : undefined
+  const portraitSrc = getStylePortraitSrc(styleDisplayName)
 
   const completedItems = [
     bodyResult, styleResult, warmCool, seasonName, elementName || finalSeason25,
@@ -419,7 +399,7 @@ export default function ProfilePage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1px', background: C.border, marginBottom: '16px' }}>
             {[
               { label: '冷暖底调', value: WARMCOOL_LABELS[warmCool] || null, to: '/test/color', tag: '第一层' },
-              { label: '五季主型', value: seasonName ? `${seasonName}（${seasonElement}）` : null, to: '/test/color/season', tag: '第二层' },
+              { label: '五季主型', value: seasonName ? `${seasonName}（季节自带·${seasonElement}）` : null, to: '/test/color/season', tag: '第二层' },
               { label: '东方 25 季', value: finalSeason25 || null, to: '/test/color/element', tag: '第三层' },
             ].map((item, i) => (
               <div key={i} style={{ background: '#fff', padding: '20px' }}>
@@ -433,6 +413,12 @@ export default function ProfilePage() {
             ))}
           </div>
 
+          {(seasonName || elementName) && (
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted, lineHeight: 1.8, marginBottom: '20px', background: '#faf8f4', padding: '10px 14px', borderRadius: '6px' }}>
+              💡 "季节自带"的五行是季节本身固有的属性（比如秋天固有属性是金），跟你个人测出的"副气"是两回事——两者组合在一起，才是你的东方 25 季分类（比如"秋水"＝秋季 + 你个人的水副气）。
+            </p>
+          )}
+
           {(elementName || seasonName) && (
             <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
               {elementName && (
@@ -445,7 +431,7 @@ export default function ProfilePage() {
                     <span style={{ fontFamily: 'Georgia, serif', fontSize: '16px', color: '#fff' }}>{elementName}</span>
                   </div>
                   <div>
-                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', color: C.muted, margin: '0 0 2px' }}>五行副气</p>
+                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', color: C.muted, margin: '0 0 2px' }}>个人五行副气</p>
                     <p style={{ fontFamily: 'Georgia, serif', fontSize: '15px', color: C.h1, margin: 0 }}>{elementName}副气</p>
                   </div>
                 </div>
