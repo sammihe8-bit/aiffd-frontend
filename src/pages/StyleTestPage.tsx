@@ -218,6 +218,12 @@ const FACE_DIMENSION_LABELS: Record<string, string> = {
   lip: '嘴唇', cheek: '两颊', cheekbone: '颧骨', chin: '下巴', eyes: '眼睛', nose: '鼻子',
 }
 
+// 报告页要展示的最终结果形状（跟 aiffd_style_result 存档结构一致）
+interface StyleReportResult {
+  variant: string
+  styleInfo: { cn: string; en: string; family: string; familyEn: string; element: string }
+}
+
 export default function StyleTestPage() {
   const { user } = useAuth() // 用来给读取的 key 加用户前缀，避免读到别的账号存的体型数据
   const [phase, setPhase] = useState<Phase>('intro')
@@ -227,6 +233,8 @@ export default function StyleTestPage() {
   // 嘴唇题的两组单选（宽度/厚度）分别记录用户选中的选项 id，供高亮显示；
   // 两组都选完后才把对应的中文标签合并写进 faceAnswers.lip，供后续打分和展示用
   const [imageComboSelections, setImageComboSelections] = useState<Record<string, Record<string, string>>>({})
+  // 报告页展示的结果：要么是这次刚测完当场算出来的，要么是一进页面就发现已经测过、直接读存档来的
+  const [completedResult, setCompletedResult] = useState<StyleReportResult | null>(null)
 
   useEffect(() => {
     const raw = localStorage.getItem(userScopedKey('aiffd_body_result', user))
@@ -238,9 +246,48 @@ export default function StyleTestPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id])
 
+  // 一进页面就检查这个账号是不是已经测过风格测试了，测过就直接跳结果页，不再让用户从头再答一遍
+  useEffect(() => {
+    const raw = localStorage.getItem(userScopedKey('aiffd_style_result', user))
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw)
+        if (parsed?.variant && parsed?.styleInfo) {
+          setCompletedResult({ variant: parsed.variant, styleInfo: parsed.styleInfo })
+          setPhase('report')
+        }
+      } catch { /* 存档损坏就当没测过，走正常流程 */ }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id])
+
+  // 答完最后一题面部测试：算出最终结论，存档，展示结果页
+  const finishFaceTest = () => {
+    const finalAnswers: StyleAnswers = { ...(bodyResult ?? {}), ...faceAnswers } as StyleAnswers
+    const scoreResult = computeStyleScore(finalAnswers)
+    const payload: StyleReportResult = { variant: scoreResult.winningVariant, styleInfo: scoreResult.winningStyleInfo }
+
+    localStorage.setItem(userScopedKey('aiffd_style_result', user), JSON.stringify({
+      family: scoreResult.winningFamily, variant: payload.variant, styleInfo: payload.styleInfo,
+    }))
+    // 面部测试原始答案单独存档，供 ProfilePage 展示"五官详细信息"用
+    // 数组类型的组合答案（比如颧骨的"大小+形状"）用" + "拼成一句话，跟体型详情表格的展示方式保持一致
+    const faceDetail: Record<string, { label: string; value: string }> = {}
+    Object.entries(faceAnswers).forEach(([id, val]) => {
+      faceDetail[id] = {
+        label: FACE_DIMENSION_LABELS[id] || id,
+        value: Array.isArray(val) ? val.join(' + ') : val,
+      }
+    })
+    localStorage.setItem(userScopedKey('aiffd_face_result', user), JSON.stringify(faceDetail))
+
+    setCompletedResult(payload)
+    setPhase('report')
+  }
+
   const goNextFace = () => {
     if (faceIdx < FACE_QUESTIONS.length - 1) setFaceIdx(faceIdx + 1)
-    else setPhase('report')
+    else finishFaceTest()
   }
   const goBackFace = () => {
     if (faceIdx > 0) setFaceIdx(faceIdx - 1)
@@ -264,33 +311,8 @@ export default function StyleTestPage() {
     })
   }
 
-  // 组合体型测试的原始数据 + 面部测试答案，交给两层匹配引擎统一打分
-  const finalAnswers: StyleAnswers = { ...(bodyResult ?? {}), ...faceAnswers } as StyleAnswers
-  const scoreResult = phase === 'report' ? computeStyleScore(finalAnswers) : null
-
-  useEffect(() => {
-    if (scoreResult) {
-      localStorage.setItem(userScopedKey('aiffd_style_result', user), JSON.stringify({
-        family: scoreResult.winningFamily,
-        variant: scoreResult.winningVariant,
-        styleInfo: scoreResult.winningStyleInfo,
-      }))
-      // 面部测试原始答案单独存档，供 ProfilePage 展示"五官详细信息"用
-      // 数组类型的组合答案（比如颧骨的"大小+形状"）用" + "拼成一句话，跟体型详情表格的展示方式保持一致
-      const faceDetail: Record<string, { label: string; value: string }> = {}
-      Object.entries(faceAnswers).forEach(([id, val]) => {
-        faceDetail[id] = {
-          label: FACE_DIMENSION_LABELS[id] || id,
-          value: Array.isArray(val) ? val.join(' + ') : val,
-        }
-      })
-      localStorage.setItem(userScopedKey('aiffd_face_result', user), JSON.stringify(faceDetail))
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase])
-
   const reset = () => {
-    setPhase('intro'); setFaceIdx(0); setFaceAnswers({}); setImageComboSelections({})
+    setPhase('intro'); setFaceIdx(0); setFaceAnswers({}); setImageComboSelections({}); setCompletedResult(null)
   }
 
   return (
@@ -384,30 +406,44 @@ export default function StyleTestPage() {
         })()}
 
         {/* ── 报告：两层匹配引擎算出的最终 13 型结果 ── */}
-        {phase === 'report' && scoreResult && (() => {
-          const portraitSrc = getStylePortraitSrc(scoreResult.winningStyleInfo.cn || scoreResult.winningVariant)
-          const tagline = FAMILY_TAGLINE[scoreResult.winningStyleInfo.family] ?? ''
+        {phase === 'report' && completedResult && (() => {
+          const portraitSrc = getStylePortraitSrc(completedResult.styleInfo.cn || completedResult.variant)
+          const tagline = FAMILY_TAGLINE[completedResult.styleInfo.family] ?? ''
           return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
             <div style={{ textAlign: 'center', padding: '12px 0 8px' }}>
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.gold, marginBottom: '20px' }}>你的风格结论</p>
               {portraitSrc && (
-                <img src={portraitSrc} alt={scoreResult.winningVariant} style={{
+                <img src={portraitSrc} alt={completedResult.variant} style={{
                   width: '220px', height: '280px', objectFit: 'contain', borderRadius: '10px',
                   margin: '0 auto 24px', display: 'block', background: '#f5f3ef',
                 }} />
               )}
               <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '42px', color: C.h1, fontWeight: 400, margin: '0 0 8px' }}>
-                {scoreResult.winningVariant}
+                {completedResult.variant}
               </h1>
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, margin: '0 0 20px' }}>
-                {scoreResult.winningStyleInfo.family}（{scoreResult.winningStyleInfo.familyEn}）家族 · 五行属{scoreResult.winningStyleInfo.element}
+                {completedResult.styleInfo.family}（{completedResult.styleInfo.familyEn}）家族 · 五行属{completedResult.styleInfo.element}
               </p>
               {tagline && (
                 <p style={{ fontFamily: 'Georgia, serif', fontSize: '17px', color: C.h2, lineHeight: 1.8, maxWidth: '420px', margin: '0 auto' }}>
                   {tagline}
                 </p>
               )}
+            </div>
+
+            {/* 下一步：色彩测试 */}
+            <div style={{ background: '#0f0f0d', borderRadius: '10px', padding: '28px 24px', textAlign: 'center' }}>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', marginBottom: '10px' }}>✓ 风格测试已完成 · 下一步</p>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: 'rgba(255,255,255,0.7)', lineHeight: 1.8, marginBottom: '20px' }}>
+                继续完成色彩测试，找到最适合你的冷暖底色和专属色板。
+              </p>
+              <Link to="/test/color" style={{
+                display: 'inline-block', background: C.gold, color: '#fff', padding: '14px 32px',
+                fontFamily: 'Inter, sans-serif', fontSize: '13px', letterSpacing: '1px', textDecoration: 'none', borderRadius: '4px',
+              }}>
+                进入色彩测试 →
+              </Link>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '12px' }}>
