@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { userScopedKey } from '../utils/userStorage'
+import ThreeStageProgress from '../components/ThreeStageProgress'
 
 const C = {
   h1: '#111111', h2: '#222222', sub: '#444444',
@@ -216,6 +217,15 @@ export default function ColorElementPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg, paddingBottom: '60px' }}>
+      <ThreeStageProgress
+        activeStage="color"
+        formDone={!!localStorage.getItem(userScopedKey('aiffd_style_result', user))}
+        colorDone={!!localStorage.getItem(userScopedKey('aiffd_25season', user))}
+        preferenceDone={false}
+        currentLabel={step !== 'intro' && step !== 'report' ? '五行副气测试' : undefined}
+        currentNum={step !== 'intro' && step !== 'report' ? currentIndex : undefined}
+        currentTotal={step !== 'intro' && step !== 'report' ? STEPS.length - 2 : undefined}
+      />
       {step !== 'intro' && step !== 'report' && (
         <div style={{ height: '3px', background: C.border }}>
           <div style={{ height: '100%', width: `${progress}%`, background: C.gold, transition: 'width 0.3s ease' }} />
