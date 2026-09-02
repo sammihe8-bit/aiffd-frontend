@@ -16,20 +16,6 @@ const C = {
 // 2026-08-31 调整：不再单独展示体型档案报告页，测完直接进风格测试；所有结果统一在 ProfilePage 展示，也不再用体型轮廓图。
 type Phase = 'method' | 'data' | 'skeleton' | 'flesh' | 'qixue'
 
-// ── 13型家族数据库（气血态 5 态 → 13 型家族 → 细分型）
-// 参考：AIFFD 架构文档 2026-08-25 第二章
-const FAMILY_INFO: Record<string, {
-  element: string        // 对应五行
-  familyName: string     // 家族中文名
-  familyEn: string       // 家族英文名
-  variants: { soft?: string; base: string; intense: string } // 细分型（部分家族无 soft 档）
-}> = {
-  '阴': { element: '水', familyName: '浪漫型', familyEn: 'Romantic', variants: { base: '浪漫型', intense: '戏剧浪漫型' } },
-  '阴多阳少': { element: '金', familyName: '少年型', familyEn: 'Gamine', variants: { soft: '柔软少年型', base: '少年型', intense: '戏剧少年型' } },
-  '阴阳和谐': { element: '土', familyName: '经典型', familyEn: 'Classic', variants: { soft: '柔软经典型', base: '经典型', intense: '戏剧经典型' } },
-  '阴少阳多': { element: '木', familyName: '自然型', familyEn: 'Natural', variants: { soft: '浪漫自然型', base: '自然型', intense: '戏剧自然型' } },
-  '阳': { element: '火', familyName: '戏剧型', familyEn: 'Dramatic', variants: { base: '浪漫戏剧型', intense: '戏剧型' } },
-}
 
 // ── 计算函数
 //
@@ -245,7 +231,6 @@ export default function BodyTestPage() {
   // ② 把体型测试 11 个原始维度存入 aiffd_body_result，供 StyleTestPage 的两层匹配引擎读取。
   const computeResult = () => {
     const qiXueState = calcQiXue(q1, q2, q3, q4)
-    const qiXueInfo = FAMILY_INFO[qiXueState] || FAMILY_INFO['阴阳和谐']
     // 腰型答案派生出的体格倾向提示（X/V/H/O），只在后台数据里出现，界面从不展示
     const bodyShapeHint = waistType.map(w => WAIST_BODYSHAPE_HINT[w]).filter(Boolean)
     // Q6(横向轮廓) + Q7(纵向比例) 合并成最终喂给引擎的腰型组合词，"适中"不贡献任何词
@@ -282,17 +267,6 @@ export default function BodyTestPage() {
     // 2026-08-31 调整：不再展示单独的体型档案报告页，测完直接进风格测试的面部测试，
     // 结果统一在 ProfilePage 里查看
     navigate('/test/style')
-  }
-
-  const reset = () => {
-    setPhase('method'); setMethod('')
-    setBust(''); setWaist(''); setHip(''); setConflict('')
-    setAiStatus('idle'); setPreviewUrl('')
-    setHeightRange(''); setBoneScale(''); setBoneRoundness(''); setBoneWidth(''); setShoulderShape([]); setWaistType([])
-    setWaistLength(''); setLimbLength(''); setHandFootSize(''); setBodyShape([]); setShowXTrap(false)
-    setHipProtrude([]); setChestProtrude([]); setFleshTexture([])
-    setQ1(''); setQ2(''); setQ3(''); setQ4('')
-    setSkeletonIdx(0); setFleshIdx(0); setQixueIdx(0)
   }
 
   // 骨架(10) + 皮肉(3) + 气血态(4) = 17 题，跨环节统一计数，方便一屏一题的进度展示
