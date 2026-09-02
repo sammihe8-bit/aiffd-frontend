@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { userScopedKey } from '../utils/userStorage'
+import ThreeStageProgress from '../components/ThreeStageProgress'
 
 const C = {
   h1: '#111111', h2: '#222222', sub: '#444444',
@@ -497,6 +498,18 @@ export default function ColorTestPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg, paddingBottom: '60px' }}>
+      <ThreeStageProgress
+        activeStage="color"
+        formDone={!!localStorage.getItem(userScopedKey('aiffd_style_result', user))}
+        colorDone={!!localStorage.getItem(userScopedKey('aiffd_25season', user))}
+        preferenceDone={false}
+        currentLabel={
+          step === 'q0' ? '明度判断' : step === 'q1' ? '首饰测试' : step === 'q2' ? '冷暖色卡'
+            : step === 'q3' ? '橘色驼色反应' : step === 'q4' ? '粉色反应' : step === 'q5' ? '综合颜色反应' : undefined
+        }
+        currentNum={['q0','q1','q2','q3','q4','q5'].includes(step) ? stepIndex[step] : undefined}
+        currentTotal={['q0','q1','q2','q3','q4','q5'].includes(step) ? 6 : undefined}
+      />
       {!['intro', 'ai_result', 'booking', 'report'].includes(step) && (
         <div style={{ height: '3px', background: C.border }}>
           <div style={{ height: '100%', width: `${progress}%`, background: C.gold, transition: 'width 0.3s ease' }} />
