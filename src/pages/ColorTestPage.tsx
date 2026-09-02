@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { userScopedKey } from '../utils/userStorage'
@@ -441,6 +441,39 @@ export default function ColorTestPage() {
   const [analyzing, setAnalyzing] = useState(false)
   const [answers, setAnswers] = useState<Answers>({ q0: '', q1: '', q2: '', q3: '', q4: '', q5: '' })
 
+  // 色彩测试跨三个页面（冷暖 → 五季 → 副气），东方25季是最后一层，
+  // 只要这个存在就说明三层全走完了，一进这个入口页就该直接给结论摘要，而不是让用户从头重答
+  const [completedSummary, setCompletedSummary] = useState<{
+    warmCoolTitle: string; seasonName: string; elementName: string; finalSeason25: string
+  } | null>(null)
+
+  useEffect(() => {
+    const finalSeason25 = localStorage.getItem(userScopedKey('aiffd_25season', user))
+    if (finalSeason25) {
+      const warmCool = localStorage.getItem(userScopedKey('aiffd_warmcool', user)) as WarmCoolResult | null
+      const seasonName = localStorage.getItem(userScopedKey('aiffd_season_name', user)) || ''
+      const elementName = localStorage.getItem(userScopedKey('aiffd_element_name', user)) || ''
+      setCompletedSummary({
+        warmCoolTitle: warmCool ? RESULT_PROFILES[warmCool].title : '',
+        seasonName, elementName, finalSeason25,
+      })
+    } else {
+      setCompletedSummary(null)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id])
+
+  // "重新测试"：清空色彩测试三层的所有存档，从冷暖测试第一步重新开始
+  const restartColorTest = () => {
+    const keysToClear = [
+      'aiffd_warmcool', 'aiffd_color_result', 'aiffd_season_result', 'aiffd_season_name',
+      'aiffd_season_element', 'aiffd_element_result', 'aiffd_element_name', 'aiffd_25season',
+    ]
+    keysToClear.forEach(k => localStorage.removeItem(userScopedKey(k, user)))
+    setCompletedSummary(null)
+    reset()
+  }
+
   const set = (key: keyof Answers) => (val: string) => setAnswers(prev => ({ ...prev, [key]: val }))
   const stepOrder: StepKey[] = ['intro', 'q0', 'q1', 'q2', 'q3', 'q4', 'q5', 'report']
   const next = () => { const i = stepOrder.indexOf(step); if (i < stepOrder.length - 1) setStep(stepOrder[i + 1]) }
@@ -472,8 +505,44 @@ export default function ColorTestPage() {
 
       <div style={{ maxWidth: '680px', margin: '0 auto', padding: '40px 32px' }}>
 
+        {/* ── 已完成过色彩测试三层：直接给结论摘要，不再从头走一遍 ── */}
+        {completedSummary && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+            <div style={{ textAlign: 'center', padding: '20px 0' }}>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.gold, marginBottom: '16px' }}>✓ 色彩测试已完成</p>
+              <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '38px', color: C.h1, fontWeight: 400, margin: '0 0 8px' }}>
+                {completedSummary.finalSeason25}
+              </h1>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, margin: 0 }}>
+                {completedSummary.warmCoolTitle} · {completedSummary.seasonName}季 · {completedSummary.elementName}副气
+              </p>
+            </div>
+
+            <div style={{ background: '#0f0f0d', borderRadius: '10px', padding: '28px 24px', textAlign: 'center' }}>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: 'rgba(255,255,255,0.7)', lineHeight: 1.8, marginBottom: '20px' }}>
+                完整的色彩档案、推荐色和避雷色可以在个人档案里查看。
+              </p>
+              <Link to="/profile" style={{
+                display: 'inline-block', background: C.gold, color: '#fff', padding: '14px 32px',
+                fontFamily: 'Inter, sans-serif', fontSize: '13px', letterSpacing: '1px', textDecoration: 'none', borderRadius: '4px',
+              }}>
+                查看完整档案 →
+              </Link>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <button onClick={restartColorTest} style={{ padding: '14px', background: 'transparent', border: `1px solid ${C.border}`, borderRadius: '6px', fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, cursor: 'pointer' }}>
+                重新测试
+              </button>
+              <Link to="/onboarding" style={{ padding: '14px', background: '#f5f0e8', border: 'none', borderRadius: '6px', fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.h2, textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                返回测试中心
+              </Link>
+            </div>
+          </div>
+        )}
+
         {/* ── 首页：拍摄技巧 + 上传 ── */}
-        {step === 'intro' && (
+        {!completedSummary && step === 'intro' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
             <div>
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '3px', textTransform: 'uppercase', marginBottom: '12px' }}>AIFFD · 色彩分析</p>
