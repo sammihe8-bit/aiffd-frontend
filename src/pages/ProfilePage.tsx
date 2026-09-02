@@ -168,11 +168,15 @@ export default function ProfilePage() {
   const styleDisplayName = styleResult?.styleInfo?.cn || styleResult?.variant || ''
   const portraitSrc = getStylePortraitSrc(styleDisplayName)
 
-  const completedItems = [
-    bodyResult, styleResult, warmCool, seasonName, elementName || finalSeason25,
-  ].filter(Boolean).length
-  const totalItems = 5
-  const completionPct = Math.round((completedItems / totalItems) * 100)
+  // 完整度计算：按 AIFFD 产品架构文档 3.2 节的比例（形45% + 色30% + 意20% + 合5%），
+  // 不再是"5个字段各占20%"的平均分配——三大模块权重不同，"形"和"色"本身各自也是分层递进的。
+  // "意"（个人爱好测试）还没上线，永远是 0；这也符合文档 10.1 的验收要求：
+  // "未完成个人需求模块时，结果页不得显示100%完整"——按这个公式最多只能到 80%，天然满足这条要求。
+  const formPct = styleResult ? 45 : bodyResult ? 22 : 0 // 形·风格基础：体型测试算一半，风格测试（含面部）才算完整
+  const colorPct = (warmCool ? 10 : 0) + (seasonName ? 10 : 0) + (finalSeason25 ? 10 : 0) // 色·天生色彩：三层各占10%
+  const preferencePct = 0 // 意·个人选择：个人爱好测试尚未上线
+  const generationPct = (styleResult && finalSeason25) ? 5 : 0 // 合·生成图谱：形+色都完整后，系统才算"生成了图谱"
+  const completionPct = formPct + colorPct + preferencePct + generationPct
 
   // "全部重新测试"：清空体型/风格/五官/色彩三层的存档，回到体型测试第一步重新开始
   const restartAllTests = () => {
@@ -226,14 +230,14 @@ export default function ProfilePage() {
 
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end', marginBottom: '24px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
-            <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', border: `1px solid ${C.gold}`, color: C.gold, padding: '4px 12px', letterSpacing: '2px' }}>
-              STYLE PROFILE {completionPct >= 80 ? '2.0' : completionPct >= 40 ? '1.5' : '1.0'}
+            <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', color: C.muted, letterSpacing: '1px' }}>
+              当前档案完成度
             </span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div style={{ width: '120px', height: '3px', background: C.border, borderRadius: '2px', overflow: 'hidden' }}>
                 <div style={{ height: '100%', width: `${completionPct}%`, background: C.gold, transition: 'width .4s ease' }} />
               </div>
-              <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', color: C.muted }}>{completionPct}% 完整</span>
+              <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', color: C.gold, fontWeight: 600 }}>{completionPct}%</span>
             </div>
           </div>
         </div>
