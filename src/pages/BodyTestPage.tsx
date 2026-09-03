@@ -643,6 +643,8 @@ export default function BodyTestPage() {
             { id: 'X型', label: 'X 型', sub: '肩宽≈髋宽，腰部明显收细，沙漏型轮廓' },
             { id: 'A型', label: 'A 型', sub: '肩窄髋宽，重心偏下，梨形轮廓' },
             { id: 'V型', label: 'V 型', sub: '肩宽髋窄，倒三角轮廓，上半身较壮' },
+            { id: 'O型', label: 'O 型', sub: '中段（腰腹）更圆润，肩髋差异不明显，苹果型轮廓' },
+            { id: '不确定', label: '不确定', sub: '分不清楚自己更接近以上哪一种' },
           ]
 
           const isBoneScaleQ = skeletonIdx === 1
@@ -652,7 +654,7 @@ export default function BodyTestPage() {
           const isWaistQ = skeletonIdx === 5
           const isWaistLengthQ = skeletonIdx === 6
           const isBodyShapeQ = skeletonIdx === 9
-          const isComboQ = isShoulderQ || isBodyShapeQ
+          const isComboQ = isShoulderQ
           const isTextQ = skeletonIdx in textQuestions
 
           const selectAndAdvance = (set: (v: string) => void, val: string) => {
@@ -680,8 +682,7 @@ export default function BodyTestPage() {
             { id: '直', label: '平直肩', img: '/shoulder_straight.png' },
           ]
 
-          const comboTitle = isShoulderQ ? '你的肩形接近哪些描述？（可多选）'
-            : '你的体型（骨骼轮廓）接近哪些？（可多选）'
+          const comboTitle = '你的肩形接近哪些描述？（可多选）'
 
           // 当前多选题对应的选项列表 + 已选值 + 更新函数（现在只有肩型走这条通用文字checkbox路径，
           // 腰型改成了下面独立的图片多选区块，体格 X 型陷阱逻辑也是独立区块，见下方）
@@ -694,7 +695,7 @@ export default function BodyTestPage() {
                   STEP 01 · 骨架测试 · {skeletonIdx + 1} / 10
                 </p>
                 <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '26px', color: C.h2, fontWeight: 400, margin: 0 }}>
-                  Q{currentQuestionNumber} · {isComboQ ? comboTitle : isBoneScaleQ ? '你的骨架大小更接近哪种？' : isWaistQ ? '你的腰部横向轮廓更接近哪一种？' : isWaistLengthQ ? '你的腰部纵向比例更接近哪一种？' : textQuestions[skeletonIdx].title}
+                  Q{currentQuestionNumber} · {isComboQ ? comboTitle : isBoneScaleQ ? '你的骨架大小更接近哪种？' : isWaistQ ? '你的腰部横向轮廓更接近哪一种？' : isWaistLengthQ ? '你的腰部纵向比例更接近哪一种？' : isBodyShapeQ ? '你的肩、腰、胯整体关系更接近？' : textQuestions[skeletonIdx].title}
                 </h2>
                 {isBoneRoundnessQ && (
                   <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '10px', lineHeight: 1.7 }}>
@@ -846,11 +847,11 @@ export default function BodyTestPage() {
                 <div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                     {bodyShapeOptions.map((o, i) => (
-                      <MultiOptionCard key={o.id} label={`${letterOf(i)} · ${o.label}`} sub={o.sub}
-                        active={bodyShape.includes(o.id)}
+                      <OptionCard key={o.id} label={`${letterOf(i)} · ${o.label}`} sub={o.sub}
+                        active={bodyShape[0] === o.id}
                         onClick={() => {
-                          toggle(bodyShape, setBodyShape, o.id)
-                          setShowXTrap(!bodyShape.includes(o.id) && o.id === 'X型' ? true : bodyShape.filter(v => v !== o.id).includes('X型'))
+                          setBodyShape([o.id])
+                          setShowXTrap(o.id === 'X型')
                         }} />
                     ))}
                   </div>
@@ -870,7 +871,7 @@ export default function BodyTestPage() {
 
               <div style={{ display: 'flex', gap: '12px' }}>
                 <button onClick={goBackSkeleton} style={btnOutline}>← 返回</button>
-                {isComboQ && (() => {
+                {(isComboQ || isBodyShapeQ) && (() => {
                   const currentValue = isShoulderQ ? shoulderShape : bodyShape
                   return (
                     <button
