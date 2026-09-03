@@ -632,10 +632,10 @@ export default function BodyTestPage() {
             { id: '尖', label: '尖', sub: '肩峰尖锐突出' },
           ]
           const waistOptions = [
-            { id: '细', img: '/waist-slim.png' },
-            { id: '匀', img: '/waist-evenly.png' },
-            { id: '直', img: '/waist-straight.png' },
-            { id: '宽', img: '/waist-wide.png' },
+            { id: '细', label: '细', img: '/waist-slim.png' },
+            { id: '匀', label: '匀', img: '/waist-evenly.png' },
+            { id: '直', label: '直', img: '/waist-straight.png' },
+            { id: '宽', label: '宽', img: '/waist-wide.png' },
           ]
           const bodyShapeOptions = [
             { id: 'H型', label: 'H 型', sub: '肩宽≈髋宽，腰部不明显，整体较方正' },
@@ -664,15 +664,18 @@ export default function BodyTestPage() {
           }
 
           const boneScaleOptions = [
-            { id: 'S', img: '/bone_small.png' },
-            { id: 'M', img: '/bone_medium.png' },
-            { id: 'L', img: '/bone_large.png' },
+            { id: 'S', label: '小骨架', img: '/bone_small.png' },
+            { id: 'M', label: '中骨架', img: '/bone_medium.png' },
+            { id: 'L', label: '大骨架', img: '/bone_large.png' },
           ]
 
+          // 肩线走向配图：文件名与 public/ 目录下实际上传的文件一致
+          // （之前写的 Shoulder_luo.png / Shoulder_ziran.png / shoulder_pingzhi.png 跟实际文件名不匹配，
+          // 导致图片一直裂开——2026-09-02 修正为实际文件名，并补上文字标签，不再只靠图片猜）
           const shoulderSlopeOptions = [
-            { id: '溜', img: '/Shoulder_luo.png' },
-            { id: '匀', img: '/Shoulder_ziran.png' },
-            { id: '直', img: '/shoulder_pingzhi.png' },
+            { id: '溜', label: '溜肩', img: '/shoulder_sloped.png' },
+            { id: '匀', label: '自然肩', img: '/shoulder_natural.png' },
+            { id: '直', label: '平直肩', img: '/shoulder_straight.png' },
           ]
 
           const comboTitle = isShoulderQ ? '你的肩形接近哪些描述？（可多选）'
@@ -724,7 +727,11 @@ export default function BodyTestPage() {
                       borderRadius: '8px', padding: 0, cursor: 'pointer', overflow: 'hidden',
                       background: boneScale === o.id ? '#fdf8ee' : '#fff', transition: 'all 0.2s',
                     }}>
-                      <img src={o.img} alt={o.id} style={{ width: '100%', height: '480px', objectFit: 'cover', display: 'block' }} />
+                      <img src={o.img} alt={o.label} style={{ width: '100%', height: '480px', objectFit: 'cover', display: 'block' }} />
+                      <p style={{
+                        fontFamily: 'Inter, sans-serif', fontSize: '13px', margin: 0, padding: '12px 0',
+                        textAlign: 'center' as const, color: boneScale === o.id ? C.gold : C.h2,
+                      }}>{o.label}</p>
                     </button>
                   ))}
                 </div>
@@ -738,7 +745,11 @@ export default function BodyTestPage() {
                       borderRadius: '8px', padding: 0, cursor: 'pointer', overflow: 'hidden',
                       background: boneWidth === o.id ? '#fdf8ee' : '#fff', transition: 'all 0.2s',
                     }}>
-                      <img src={o.img} alt={o.id} style={{ width: '100%', height: '480px', objectFit: 'cover', display: 'block' }} />
+                      <img src={o.img} alt={o.label} style={{ width: '100%', height: '480px', objectFit: 'cover', display: 'block' }} />
+                      <p style={{
+                        fontFamily: 'Inter, sans-serif', fontSize: '13px', margin: 0, padding: '12px 0',
+                        textAlign: 'center' as const, color: boneWidth === o.id ? C.gold : C.h2,
+                      }}>{o.label}</p>
                     </button>
                   ))}
                 </div>
@@ -774,7 +785,7 @@ export default function BodyTestPage() {
                         borderRadius: '8px', padding: 0, cursor: 'pointer', overflow: 'hidden', position: 'relative',
                         background: active ? '#fdf8ee' : '#fff', transition: 'all 0.2s',
                       }}>
-                        <img src={o.img} alt={o.id} style={{ width: '100%', height: '280px', objectFit: 'cover', display: 'block' }} />
+                        <img src={o.img} alt={o.label} style={{ width: '100%', height: '280px', objectFit: 'cover', display: 'block' }} />
                         <span style={{
                           position: 'absolute', top: '8px', right: '8px', width: '20px', height: '20px', borderRadius: '5px',
                           border: `1.5px solid ${active ? C.gold : 'rgba(255,255,255,0.9)'}`,
@@ -783,6 +794,10 @@ export default function BodyTestPage() {
                         }}>
                           {active && <span style={{ color: '#fff', fontSize: '12px', lineHeight: 1 }}>✓</span>}
                         </span>
+                        <p style={{
+                          fontFamily: 'Inter, sans-serif', fontSize: '13px', margin: 0, padding: '10px 0',
+                          textAlign: 'center' as const, color: active ? C.gold : C.h2,
+                        }}>{o.label}</p>
                       </button>
                     )
                   })}
@@ -851,113 +866,3 @@ export default function BodyTestPage() {
               { id: '小胸', label: '小胸', sub: '胸围偏小' },
             ]},
             { title: '你的皮肉质地接近哪些描述？（可多选）', value: fleshTexture, set: setFleshTexture, options: [
-              { id: '软肉', label: '软肉', sub: '触感柔软，有肉感' },
-              { id: '紧实', label: '紧实', sub: '触感紧致，线条清楚' },
-              { id: '健壮', label: '健壮', sub: '骨肉结实，力量感强' },
-              { id: '松肉', label: '松肉', sub: '皮肉松弛' },
-              { id: '适中', label: '适中', sub: '不紧不松' },
-              { id: '肌肉', label: '肌肉', sub: '肌肉线条明显' },
-            ]},
-          ]
-          const current = questions[fleshIdx]
-
-          const toggle = (arr: string[], set: (v: string[]) => void, val: string) => {
-            set(arr.includes(val) ? arr.filter(v => v !== val) : [...arr, val])
-          }
-
-          return (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-              <div>
-                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', marginBottom: '8px' }}>
-                  STEP 02 · 皮肉测试 · {fleshIdx + 1} / 3
-                </p>
-                <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '26px', color: C.h2, fontWeight: 400, margin: 0 }}>
-                  Q{currentQuestionNumber} · {current.title}
-                </h2>
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {current.options.map((o, i) => (
-                  <MultiOptionCard key={o.id} label={`${letterOf(i)} · ${o.label}`} sub={o.sub} active={current.value.includes(o.id)}
-                    onClick={() => toggle(current.value, current.set, o.id)} />
-                ))}
-              </div>
-
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <button onClick={goBackFlesh} style={btnOutline}>← 返回</button>
-                <button
-                  onClick={goNextFlesh}
-                  disabled={current.value.length === 0}
-                  style={current.value.length > 0
-                    ? { ...btnGold, flex: 1 } : { ...btnGold, flex: 1, background: '#e0e0e0', cursor: 'not-allowed' }}>
-                  继续
-                </button>
-              </div>
-            </div>
-          )
-        })()}
-
-        {/* ── Step 4: 气血态（4题，5态直选）── */}
-        {phase === 'qixue' && (() => {
-          const titles = [
-            '你的气质第一印象更接近？',
-            '你的皮肉 / 身形给人的感觉更接近？',
-            '你的面部线条更接近？',
-            '别人对你整体气场的评价更接近？',
-          ]
-          const values = [q1, q2, q3, q4]
-          const setters = [setQ1, setQ2, setQ3, setQ4]
-          const idx = qixueIdx
-          const options = [
-            { id: '阴', text: idx === 0 ? '温婉柔美，让人想亲近' : idx === 1 ? '柔软丰盈，曲线感强' : idx === 2 ? '圆润饱满，五官柔和' : '性感、有女人味' },
-            { id: '阴多阳少', text: idx === 0 ? '清新灵动，元气感强' : idx === 1 ? '紧致小巧，灵巧轻盈' : idx === 2 ? '小巧精致，略带俏皮' : '可爱、少女感' },
-            { id: '阴阳和谐', text: idx === 0 ? '优雅得体，落落大方' : idx === 1 ? '匀称适中，不软不硬' : idx === 2 ? '端正对称，比例均衡' : '优雅、精致' },
-            { id: '阴少阳多', text: idx === 0 ? '自然松弛，随性洒脱' : idx === 1 ? '自然松弛，不刻意雕琢' : idx === 2 ? '舒展自然，不做作' : '随性、休闲' },
-            { id: '阳', text: idx === 0 ? '干练飒爽，气场强烈' : idx === 1 ? '紧实健硕，线条分明' : idx === 2 ? '棱角分明，五官立体锐利' : '帅气、有力量感' },
-          ]
-
-          const selectAndAdvance = (val: string) => {
-            setters[idx](val)
-            setTimeout(goNextQixue, AUTO_ADVANCE_DELAY)
-          }
-
-          return (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-              <div>
-                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', marginBottom: '8px' }}>
-                  STEP 03 · 气血态 · {idx + 1} / 4
-                </p>
-                <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '26px', color: C.h2, fontWeight: 400, margin: 0 }}>
-                  Q{currentQuestionNumber} · {titles[idx]}
-                </h2>
-                {idx === 0 && (
-                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, marginTop: '8px' }}>
-                    气血态决定你的 13 型所属大类家族（浪漫 / 少年 / 经典 / 自然 / 戏剧）
-                  </p>
-                )}
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {options.map((o, i) => (
-                  <button key={o.id} onClick={() => selectAndAdvance(o.id)} style={{
-                    border: `1px solid ${values[idx] === o.id ? C.gold : C.border}`,
-                    background: values[idx] === o.id ? '#fdf8ee' : '#fff',
-                    padding: '14px 18px', textAlign: 'left', cursor: 'pointer', borderRadius: '6px',
-                  }}>
-                    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: values[idx] === o.id ? C.h2 : C.body }}>{letterOf(i)} · {o.text}</span>
-                  </button>
-                ))}
-              </div>
-
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <button onClick={goBackQixue} style={btnOutline}>← 返回</button>
-              </div>
-            </div>
-          )
-        })()}
-
-        {/* ── 报告页 ── */}
-      </div>
-    </div>
-  )
-}
