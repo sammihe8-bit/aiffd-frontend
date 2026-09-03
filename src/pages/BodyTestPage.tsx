@@ -721,7 +721,7 @@ export default function BodyTestPage() {
 
               {isBoneScaleQ && (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
-                  {boneScaleOptions.map((o) => (
+                  {boneScaleOptions.map((o, i) => (
                     <button key={o.id} onClick={() => selectAndAdvance(setBoneScale, o.id)} style={{
                       border: 'none', boxShadow: boneScale === o.id ? `0 0 0 2px ${C.gold}` : 'none',
                       borderRadius: '8px', padding: 0, cursor: 'pointer', overflow: 'hidden',
@@ -731,7 +731,7 @@ export default function BodyTestPage() {
                       <p style={{
                         fontFamily: 'Inter, sans-serif', fontSize: '13px', margin: 0, padding: '12px 0',
                         textAlign: 'center' as const, color: boneScale === o.id ? C.gold : C.h2,
-                      }}>{o.label}</p>
+                      }}>{letterOf(i)} · {o.label}</p>
                     </button>
                   ))}
                 </div>
@@ -739,7 +739,7 @@ export default function BodyTestPage() {
 
               {isBoneWidthQ && (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
-                  {shoulderSlopeOptions.map(o => (
+                  {shoulderSlopeOptions.map((o, i) => (
                     <button key={o.id} onClick={() => selectAndAdvance(setBoneWidth, o.id)} style={{
                       border: 'none', boxShadow: boneWidth === o.id ? `0 0 0 2px ${C.gold}` : 'none',
                       borderRadius: '8px', padding: 0, cursor: 'pointer', overflow: 'hidden',
@@ -749,7 +749,7 @@ export default function BodyTestPage() {
                       <p style={{
                         fontFamily: 'Inter, sans-serif', fontSize: '13px', margin: 0, padding: '12px 0',
                         textAlign: 'center' as const, color: boneWidth === o.id ? C.gold : C.h2,
-                      }}>{o.label}</p>
+                      }}>{letterOf(i)} · {o.label}</p>
                     </button>
                   ))}
                 </div>
@@ -777,7 +777,7 @@ export default function BodyTestPage() {
 
               {isWaistQ && (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '10px' }}>
-                  {waistOptions.map(o => {
+                  {waistOptions.map((o, i) => {
                     const active = waistType.includes(o.id)
                     return (
                       <button key={o.id} onClick={() => toggle(waistType, setWaistType, o.id)} style={{
@@ -797,7 +797,7 @@ export default function BodyTestPage() {
                         <p style={{
                           fontFamily: 'Inter, sans-serif', fontSize: '13px', margin: 0, padding: '10px 0',
                           textAlign: 'center' as const, color: active ? C.gold : C.h2,
-                        }}>{o.label}</p>
+                        }}>{letterOf(i)} · {o.label}</p>
                       </button>
                     )
                   })}
