@@ -59,7 +59,7 @@ export default function App() {
             } />
             <Route path="/test/fashion" element={
               <PrivateRoute>
-                <PlaceholderPage title="时尚个性测试" description="时尚个性测试即将上线" />
+                <PlaceholderPage title="个人时尚选择" description="个人时尚选择即将上线" />
               </PrivateRoute>
             } />
 
