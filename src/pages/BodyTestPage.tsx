@@ -616,15 +616,13 @@ export default function BodyTestPage() {
             ]},
           }
 
-          // 肩型 / 腰型 表格里会出现组合词（如"圆+溜"），做成多选：可以勾多个描述词
+          // 2026-09-03 换上真实照片素材（人像特写，不是线稿插画）。这三张图原始比例完全不同
+          // （1.25 / 1.5 / 1），照片类素材用"裁切铺满"（cover）+ 居中定位，而不是像其他插画题那样
+          // "完整显示不裁切"（contain）——这样三张图里锁骨/肩膀的呈现大小才能保持一致
           const shoulderOptions = [
-            { id: '圆', label: '圆', sub: '肩线圆润' },
-            { id: '直', label: '直', sub: '肩线平直' },
-            { id: '宽', label: '宽', sub: '肩宽度较宽' },
-            { id: '匀', label: '匀', sub: '肩线匀称对称' },
-            { id: '溜', label: '溜', sub: '肩部略向下斜（溜肩）' },
-            { id: '方', label: '方', sub: '肩型方正，棱角分明' },
-            { id: '尖', label: '尖', sub: '肩峰尖锐突出' },
+            { id: 'rounded', label: '圆润', sub: '肩线外轮廓柔和，没有明显棱角', img: '/shoulder-rounded.png' },
+            { id: 'blunt_angular', label: '方正', sub: '肩型偏方正、钝角，有力量感', img: '/shoulder-square.png' },
+            { id: 'sharp_angular', label: '尖锐 / 骨点明显', sub: '肩峰锐角、骨点突出，线条窄削', img: '/shoulder-sharp.png' },
           ]
           const waistOptions: { id: string; label: string; sub: string; img: string }[] = [
             { id: '细', label: '细', sub: '腰最清楚，曲线感明显', img: '/waist-slim.png' },
@@ -654,7 +652,6 @@ export default function BodyTestPage() {
           const isWaistQ = skeletonIdx === 5
           const isWaistLengthQ = skeletonIdx === 6
           const isBodyShapeQ = skeletonIdx === 9
-          const isComboQ = isShoulderQ
           const isTextQ = skeletonIdx in textQuestions
 
           const selectAndAdvance = (set: (v: string) => void, val: string) => {
@@ -682,12 +679,6 @@ export default function BodyTestPage() {
             { id: '直', label: '平直肩', img: '/shoulder_straight.png' },
           ]
 
-          const comboTitle = '你的肩形接近哪些描述？（可多选）'
-
-          // 当前多选题对应的选项列表 + 已选值 + 更新函数（现在只有肩型走这条通用文字checkbox路径，
-          // 腰型改成了下面独立的图片多选区块，体格 X 型陷阱逻辑也是独立区块，见下方）
-          const comboConfig = { options: shoulderOptions, value: shoulderShape, set: setShoulderShape }
-
           return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
               <div>
@@ -695,7 +686,7 @@ export default function BodyTestPage() {
                   STEP 01 · 骨架测试 · {skeletonIdx + 1} / 10
                 </p>
                 <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '26px', color: C.h2, fontWeight: 400, margin: 0 }}>
-                  Q{currentQuestionNumber} · {isComboQ ? comboTitle : isBoneScaleQ ? '你的骨架大小更接近哪种？' : isWaistQ ? '你的腰部横向轮廓更接近哪一种？' : isWaistLengthQ ? '你的腰部纵向比例更接近哪一种？' : isBodyShapeQ ? '你的肩、腰、胯整体关系更接近？' : textQuestions[skeletonIdx].title}
+                  Q{currentQuestionNumber} · {isBoneScaleQ ? '你的骨架大小更接近哪种？' : isShoulderQ ? '你的肩峰形态更接近哪一种？' : isWaistQ ? '你的腰部横向轮廓更接近哪一种？' : isWaistLengthQ ? '你的腰部纵向比例更接近哪一种？' : isBodyShapeQ ? '你的肩、腰、胯整体关系更接近？' : textQuestions[skeletonIdx].title}
                 </h2>
                 {isBoneRoundnessQ && (
                   <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '10px', lineHeight: 1.7 }}>
@@ -774,12 +765,32 @@ export default function BodyTestPage() {
               )}
 
               {isShoulderQ && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {comboConfig.options.map((o, i) => (
-                    <MultiOptionCard key={o.id} label={`${letterOf(i)} · ${o.label}`} sub={o.sub}
-                      active={comboConfig.value.includes(o.id)}
-                      onClick={() => toggle(comboConfig.value, comboConfig.set, o.id)} />
-                  ))}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+                  {shoulderOptions.map((o, i) => {
+                    const active = shoulderShape[0] === o.id
+                    return (
+                      <button key={o.id} onClick={() => selectAndAdvance((v) => setShoulderShape([v]), o.id)} style={{
+                        border: `1px solid ${active ? C.gold : C.border}`, outline: 'none',
+                        boxShadow: active ? `0 0 0 2px ${C.gold}` : 'none',
+                        borderRadius: '8px', padding: 0, cursor: 'pointer', overflow: 'hidden',
+                        background: '#fff', transition: 'all 0.2s',
+                      }}>
+                        <div style={{ height: '260px', overflow: 'hidden' }}>
+                          <img src={o.img} alt={o.label} style={{
+                            width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block',
+                          }} />
+                        </div>
+                        <p style={{
+                          fontFamily: 'Inter, sans-serif', fontSize: '13px', margin: 0, padding: '10px 12px 2px',
+                          textAlign: 'center' as const, color: active ? C.gold : C.h2,
+                        }}>{letterOf(i)} · {o.label}</p>
+                        <p style={{
+                          fontFamily: 'Inter, sans-serif', fontSize: '12px', margin: 0, padding: '0 12px 12px',
+                          textAlign: 'center' as const, color: C.muted, lineHeight: 1.5,
+                        }}>{o.sub}</p>
+                      </button>
+                    )
+                  })}
                 </div>
               )}
 
@@ -871,8 +882,8 @@ export default function BodyTestPage() {
 
               <div style={{ display: 'flex', gap: '12px' }}>
                 <button onClick={goBackSkeleton} style={btnOutline}>← 返回</button>
-                {(isComboQ || isBodyShapeQ) && (() => {
-                  const currentValue = isShoulderQ ? shoulderShape : bodyShape
+                {isBodyShapeQ && (() => {
+                  const currentValue = bodyShape
                   return (
                     <button
                       onClick={goNextSkeleton}
