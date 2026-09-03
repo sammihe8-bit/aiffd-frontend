@@ -170,11 +170,11 @@ export default function ProfilePage() {
 
   // 完整度计算：按 AIFFD 产品架构文档 3.2 节的比例（形45% + 色30% + 意20% + 合5%），
   // 不再是"5个字段各占20%"的平均分配——三大模块权重不同，"形"和"色"本身各自也是分层递进的。
-  // "意"（个人爱好测试）还没上线，永远是 0；这也符合文档 10.1 的验收要求：
+  // "意"（个人时尚选择）还没上线，永远是 0；这也符合文档 10.1 的验收要求：
   // "未完成个人需求模块时，结果页不得显示100%完整"——按这个公式最多只能到 80%，天然满足这条要求。
   const formPct = styleResult ? 45 : bodyResult ? 22 : 0 // 形·风格基础：体型测试算一半，风格测试（含面部）才算完整
   const colorPct = (warmCool ? 10 : 0) + (seasonName ? 10 : 0) + (finalSeason25 ? 10 : 0) // 色·天生色彩：三层各占10%
-  const preferencePct = 0 // 意·个人选择：个人爱好测试尚未上线
+  const preferencePct = 0 // 意·个人选择：个人时尚选择尚未上线
   const generationPct = (styleResult && finalSeason25) ? 5 : 0 // 合·生成图谱：形+色都完整后，系统才算"生成了图谱"
   const completionPct = formPct + colorPct + preferencePct + generationPct
 
@@ -457,9 +457,9 @@ export default function ProfilePage() {
         </div>
 
         <div style={{ background: '#fff', border: `1px solid ${C.border}`, borderRadius: '8px', padding: '28px', marginBottom: '24px' }}>
-          <SectionTitle label="个人爱好" />
+          <SectionTitle label="个人时尚选择" />
           <div style={{ textAlign: 'center', padding: '24px 0' }}>
-            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, margin: 0 }}>个人爱好测试即将上线</p>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, margin: 0 }}>个人时尚选择即将上线</p>
           </div>
         </div>
 
@@ -485,7 +485,7 @@ export default function ProfilePage() {
           {[
             { to: '/test/body', label: '风格测试', desc: '体型 + 五官 · 13型判定', done: !!styleResult },
             { to: '/test/color', label: '色彩测试', desc: '冷暖 → 五季 → 25季', done: !!finalSeason25 },
-            { to: '/test/fashion', label: '个人爱好测试', desc: '即将上线', done: false },
+            { to: '/test/fashion', label: '个人时尚选择', desc: '即将上线', done: false },
             { to: '/profile', label: '风格档案图谱', desc: '完整档案总览（本页）', done: false },
           ].map(item => (
             <Link key={item.label} to={item.to} style={{
