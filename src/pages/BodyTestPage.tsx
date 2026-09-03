@@ -732,7 +732,7 @@ export default function BodyTestPage() {
                       background: '#fff', transition: 'all 0.2s',
                     }}>
                       <img src={o.img} alt={o.label} style={{
-                        width: '100%', height: '420px', objectFit: 'contain', display: 'block', background: '#f7f4ef',
+                        width: '100%', height: '420px', objectFit: 'contain', display: 'block', background: '#f8f4f1',
                       }} />
                       <p style={{
                         fontFamily: 'Inter, sans-serif', fontSize: '13px', margin: 0, padding: '12px 0',
@@ -753,7 +753,7 @@ export default function BodyTestPage() {
                       background: '#fff', transition: 'all 0.2s',
                     }}>
                       <img src={o.img} alt={o.label} style={{
-                        width: '100%', height: '420px', objectFit: 'contain', display: 'block', background: '#f7f4ef',
+                        width: '100%', height: '420px', objectFit: 'contain', display: 'block', background: '#f8f4f1',
                       }} />
                       <p style={{
                         fontFamily: 'Inter, sans-serif', fontSize: '13px', margin: 0, padding: '12px 0',
@@ -795,7 +795,7 @@ export default function BodyTestPage() {
                         borderRadius: '8px', padding: 0, cursor: 'pointer', overflow: 'hidden',
                         background: '#fff', transition: 'all 0.2s',
                       }}>
-                        <div style={{ height: '300px', overflow: 'hidden', background: '#f7f4ef' }}>
+                        <div style={{ height: '300px', overflow: 'hidden', background: '#f8f4f1' }}>
                           <img src={o.img} alt={o.label} style={{
                             width: '100%', height: '100%', objectFit: 'contain', display: 'block',
                             transform: o.scale ? `scale(${o.scale})` : undefined,
