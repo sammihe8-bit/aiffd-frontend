@@ -571,7 +571,7 @@ export default function BodyTestPage() {
                     const whr = waistN / hipN
                     const bustWaistDiff = bustN - waistN
                     if (bodyShape.length === 0) setBodyShape([whr > 0.88 ? 'H型' : bustN - hipN > 3 ? 'V型' : hipN - bustN > 5 ? 'A型' : 'X型'])
-                    if (hipProtrude.length === 0) setHipProtrude([hipN - bustN > 5 ? '凸' : '扁平'])
+                    if (hipProtrude.length === 0) setHipProtrude([hipN - bustN > 5 ? '圆翘' : '扁平'])
                     if (chestProtrude.length === 0) setChestProtrude([bustN - hipN > 3 ? '凸' : '扁平'])
                     if (fleshTexture.length === 0) setFleshTexture([bustWaistDiff > 20 ? '软肉' : '紧实'])
                   }
@@ -938,11 +938,10 @@ export default function BodyTestPage() {
         {/* ── Step 3: 皮肉测试（3题，均为多选组合词）── */}
         {phase === 'flesh' && (() => {
           const questions = [
-            { title: '你的臀部接近哪些描述？（可多选）', value: hipProtrude, set: setHipProtrude, options: [
-              { id: '凸', label: '凸', sub: '臀部突出，有明显弧度' },
-              { id: '扁平', label: '扁平', sub: '臀部平坦，弧度不明显' },
-              { id: '适中', label: '适中', sub: '不凸不平，适中' },
-              { id: '有肉', label: '有肉', sub: '带肉感' },
+            { title: '从侧面看，你的臀部轮廓更接近哪一种？', value: hipProtrude, set: setHipProtrude, options: [
+              { id: '扁平', label: '扁平', sub: '臀部向后突出较少，侧面弧度不明显' },
+              { id: '适中', label: '适中', sub: '臀部有自然弧度，向后突出程度适中' },
+              { id: '圆翘', label: '圆翘', sub: '臀部向后突出明显，侧面弧度较饱满' },
             ]},
             { title: '你的胸部接近哪些描述？（可多选）', value: chestProtrude, set: setChestProtrude, options: [
               { id: '凸', label: '凸', sub: '胸部突出，有明显弧度' },
@@ -961,6 +960,13 @@ export default function BodyTestPage() {
             ]},
           ]
           const current = questions[fleshIdx]
+          // 目前只有"臀部轮廓"这一题（fleshIdx 0）改成了单选，胸部和皮肉质地两题仍然是多选
+          const isFleshSingleSelect = fleshIdx === 0
+
+          const selectAndAdvanceFlesh = (set: (v: string[]) => void, val: string) => {
+            set([val])
+            setTimeout(goNextFlesh, AUTO_ADVANCE_DELAY)
+          }
 
           const toggle = (arr: string[], set: (v: string[]) => void, val: string) => {
             set(arr.includes(val) ? arr.filter(v => v !== val) : [...arr, val])
@@ -979,20 +985,28 @@ export default function BodyTestPage() {
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {current.options.map((o, i) => (
-                  <MultiOptionCard key={o.id} label={`${letterOf(i)} · ${o.label}`} sub={o.sub} active={current.value.includes(o.id)}
-                    onClick={() => toggle(current.value, current.set, o.id)} />
+                  isFleshSingleSelect ? (
+                    <OptionCard key={o.id} label={`${letterOf(i)} · ${o.label}`} sub={o.sub}
+                      active={current.value[0] === o.id}
+                      onClick={() => selectAndAdvanceFlesh(current.set, o.id)} />
+                  ) : (
+                    <MultiOptionCard key={o.id} label={`${letterOf(i)} · ${o.label}`} sub={o.sub} active={current.value.includes(o.id)}
+                      onClick={() => toggle(current.value, current.set, o.id)} />
+                  )
                 ))}
               </div>
 
               <div style={{ display: 'flex', gap: '12px' }}>
                 <button onClick={goBackFlesh} style={btnOutline}>← 返回</button>
-                <button
-                  onClick={goNextFlesh}
-                  disabled={current.value.length === 0}
-                  style={current.value.length > 0
-                    ? { ...btnGold, flex: 1 } : { ...btnGold, flex: 1, background: '#e0e0e0', cursor: 'not-allowed' }}>
-                  继续
-                </button>
+                {!isFleshSingleSelect && (
+                  <button
+                    onClick={goNextFlesh}
+                    disabled={current.value.length === 0}
+                    style={current.value.length > 0
+                      ? { ...btnGold, flex: 1 } : { ...btnGold, flex: 1, background: '#e0e0e0', cursor: 'not-allowed' }}>
+                    继续
+                  </button>
+                )}
               </div>
             </div>
           )
