@@ -632,10 +632,10 @@ export default function BodyTestPage() {
             { id: '尖', label: '尖', sub: '肩峰尖锐突出' },
           ]
           const waistOptions = [
-            { id: '细', label: '细', img: '/waist-slim.png' },
-            { id: '匀', label: '匀', img: '/waist-evenly.png' },
-            { id: '直', label: '直', img: '/waist-straight.png' },
-            { id: '宽', label: '宽', img: '/waist-wide.png' },
+            { id: '细', label: '细', sub: '腰最清楚，曲线感明显', img: '/waist-slim.png' },
+            { id: '匀', label: '匀', sub: '有一定腰线，整体过渡均衡', img: '/waist-evenly.png' },
+            { id: '直', label: '直', sub: '整体直上直下，腰线不明显', img: '/waist-straight.png' },
+            { id: '宽', label: '宽', sub: '中段量感明显，腰线较弱', img: '/waist-wide.png' },
           ]
           const bodyShapeOptions = [
             { id: 'H型', label: 'H 型', sub: '肩宽≈髋宽，腰部不明显，整体较方正' },
@@ -787,9 +787,13 @@ export default function BodyTestPage() {
                       }}>
                         <img src={o.img} alt={o.label} style={{ width: '100%', height: '280px', objectFit: 'cover', display: 'block' }} />
                         <p style={{
-                          fontFamily: 'Inter, sans-serif', fontSize: '13px', margin: 0, padding: '10px 0',
+                          fontFamily: 'Inter, sans-serif', fontSize: '13px', margin: 0, padding: '10px 12px 2px',
                           textAlign: 'center' as const, color: active ? C.gold : C.h2,
                         }}>{letterOf(i)} · {o.label}</p>
+                        <p style={{
+                          fontFamily: 'Inter, sans-serif', fontSize: '12px', margin: 0, padding: '0 12px 12px',
+                          textAlign: 'center' as const, color: C.muted, lineHeight: 1.5,
+                        }}>{o.sub}</p>
                       </button>
                     )
                   })}
