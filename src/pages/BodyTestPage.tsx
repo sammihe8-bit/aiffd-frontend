@@ -659,10 +659,8 @@ export default function BodyTestPage() {
             setTimeout(goNextSkeleton, AUTO_ADVANCE_DELAY)
           }
 
-          // 多选题的勾选切换（肩型/腰型/体格通用）
-          const toggle = (arr: string[], set: (v: string[]) => void, val: string) => {
-            set(arr.includes(val) ? arr.filter(v => v !== val) : [...arr, val])
-          }
+          // 骨架区块目前所有题目都已经改成单选（肩型/腰型/体格都不再是多选），
+          // 皮肉测试区块仍然是多选，那边单独定义了自己的 toggle 函数（见下方 flesh 区块）
 
           const boneScaleOptions = [
             { id: 'S', label: '小骨架', img: '/bone_small.png' },
