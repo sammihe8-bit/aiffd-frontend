@@ -625,7 +625,7 @@ export default function BodyTestPage() {
             { id: 'sharp_angular', label: '尖锐 / 骨点明显', sub: '肩峰锐角、骨点突出，线条窄削', img: '/shoulder-sharp.png' },
           ]
           const waistOptions: { id: string; label: string; sub: string; img: string }[] = [
-            { id: '细', label: '细', sub: '腰最清楚，曲线感明显', img: '/waist-slim.png' },
+            { id: '细', label: '细', sub: '腰最清楚，曲线感明显', img: '/waist-slim2.png' },
             { id: '匀', label: '匀', sub: '有一定腰线，整体过渡均衡', img: '/waist-evenly.png' },
             { id: '直', label: '直', sub: '整体直上直下，腰线不明显', img: '/waist-straight.png' },
             { id: '宽', label: '宽', sub: '中段量感明显，腰线较弱', img: '/waist-wide.png' },
