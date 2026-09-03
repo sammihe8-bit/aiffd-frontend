@@ -608,6 +608,12 @@ export default function BodyTestPage() {
               { id: '匀', label: '自然肩', sub: '下降程度适中' },
               { id: '直', label: '平直肩', sub: '肩线较水平' },
             ]},
+            7: { title: '你的四肢相对躯干的长度如何？', value: limbLength, set: setLimbLength, options: [
+              { id: '偏短', label: '偏短', sub: '手臂和腿部相对较短，整体比例显得紧凑' },
+              { id: '适中', label: '适中', sub: '手臂、腿部与躯干比例较均衡，没有明显偏长或偏短' },
+              { id: '偏长', label: '偏长', sub: '手臂和腿部相对较长，整体比例显得修长、舒展' },
+              { id: '不确定', label: '不太确定', sub: '手臂和腿部长度不一致，或自己难以判断' },
+            ]},
             8: { title: '你的手脚大小？', value: handFootSize, set: setHandFootSize, options: [
               { id: '娇小', label: '娇小' }, { id: '适中', label: '适中' }, { id: '偏大', label: '偏大' },
             ]},
@@ -634,13 +640,6 @@ export default function BodyTestPage() {
             { id: '长', label: '长', sub: '腰段偏长，上半身占比更明显', img: '/waist-long.png' },
           ]
 
-          // 四肢长度：前三项有配图，"以上都不太确定"没有配图，用纯文字选项
-          const limbLengthOptions: { id: string; label: string; img?: string }[] = [
-            { id: '偏短', label: '偏短', img: '/limbs-short.png' },
-            { id: '适中', label: '适中', img: '/limbs-balance.png' },
-            { id: '偏长', label: '偏长', img: '/limbs-length.png' },
-            { id: '不确定', label: '以上都不太确定' },
-          ]
           const bodyShapeOptions = [
             { id: 'H型', label: 'H 型', sub: '肩宽≈髋宽，腰部不明显，整体较方正' },
             { id: 'X型', label: 'X 型', sub: '肩宽≈髋宽，腰部明显收细，沙漏型轮廓' },
@@ -656,7 +655,6 @@ export default function BodyTestPage() {
           const isShoulderQ = skeletonIdx === 4
           const isWaistQ = skeletonIdx === 5
           const isWaistLengthQ = skeletonIdx === 6
-          const isLimbLengthQ = skeletonIdx === 7
           const isBodyShapeQ = skeletonIdx === 9
           const isTextQ = skeletonIdx in textQuestions
 
@@ -690,8 +688,13 @@ export default function BodyTestPage() {
                   STEP 01 · 骨架测试 · {skeletonIdx + 1} / 10
                 </p>
                 <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '26px', color: C.h2, fontWeight: 400, margin: 0 }}>
-                  Q{currentQuestionNumber} · {isBoneScaleQ ? '你的骨架大小更接近哪种？' : isShoulderQ ? '你的肩峰形态更接近哪一种？' : isWaistQ ? '你的腰部横向轮廓更接近哪一种？' : isWaistLengthQ ? '你的腰部纵向比例更接近哪一种？' : isLimbLengthQ ? '你的四肢长度？' : isBodyShapeQ ? '你的肩、腰、胯整体关系更接近？' : textQuestions[skeletonIdx].title}
+                  Q{currentQuestionNumber} · {isBoneScaleQ ? '你的骨架大小更接近哪种？' : isShoulderQ ? '你的肩峰形态更接近哪一种？' : isWaistQ ? '你的腰部横向轮廓更接近哪一种？' : isWaistLengthQ ? '你的腰部纵向比例更接近哪一种？' : isBodyShapeQ ? '你的肩、腰、胯整体关系更接近？' : textQuestions[skeletonIdx].title}
                 </h2>
+                {skeletonIdx === 7 && (
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '10px', lineHeight: 1.7 }}>
+                    请综合判断手臂和腿部相对于身体躯干的长度
+                  </p>
+                )}
                 {isBoneRoundnessQ && (
                   <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '10px', lineHeight: 1.7 }}>
                     观察手腕、脚踝、肩峰、膝盖等位置的骨点是否明显
@@ -807,20 +810,20 @@ export default function BodyTestPage() {
                         border: `1px solid ${active ? C.gold : C.border}`, outline: 'none',
                         boxShadow: active ? `0 0 0 2px ${C.gold}` : 'none',
                         borderRadius: '8px', padding: 0, cursor: 'pointer', overflow: 'hidden',
-                        background: '#fff', transition: 'all 0.2s',
+                        background: '#f8f4f1', transition: 'all 0.2s',
                       }}>
                         <div style={{ height: '300px', overflow: 'hidden', background: '#f8f4f1' }}>
                           <img src={o.img} alt={o.label} style={{
-                            width: '100%', height: '100%', objectFit: 'contain', display: 'block',
+                            width: '100%', height: '100%', objectFit: 'contain', display: 'block', background: '#f8f4f1',
                           }} />
                         </div>
                         <p style={{
                           fontFamily: 'Inter, sans-serif', fontSize: '13px', margin: 0, padding: '10px 12px 2px',
-                          textAlign: 'center' as const, color: active ? C.gold : C.h2,
+                          textAlign: 'center' as const, color: active ? C.gold : C.h2, background: '#fff',
                         }}>{letterOf(i)} · {o.label}</p>
                         <p style={{
                           fontFamily: 'Inter, sans-serif', fontSize: '12px', margin: 0, padding: '0 12px 12px',
-                          textAlign: 'center' as const, color: C.muted, lineHeight: 1.5,
+                          textAlign: 'center' as const, color: C.muted, lineHeight: 1.5, background: '#fff',
                         }}>{o.sub}</p>
                       </button>
                     )
@@ -855,38 +858,6 @@ export default function BodyTestPage() {
                       </button>
                     )
                   })}
-                </div>
-              )}
-
-              {isLimbLengthQ && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
-                    {limbLengthOptions.filter(o => o.img).map((o, i) => {
-                      const active = limbLength === o.id
-                      return (
-                        <button key={o.id} onClick={() => selectAndAdvance(setLimbLength, o.id)} style={{
-                          border: `1px solid ${active ? C.gold : C.border}`, outline: 'none',
-                          boxShadow: active ? `0 0 0 2px ${C.gold}` : 'none',
-                          borderRadius: '8px', padding: 0, cursor: 'pointer', overflow: 'hidden',
-                          background: '#fff', transition: 'all 0.2s',
-                        }}>
-                          <div style={{ height: '420px', overflow: 'hidden', background: '#f8f4f1' }}>
-                            <img src={o.img} alt={o.label} style={{
-                              width: '100%', height: '100%', objectFit: 'contain', display: 'block',
-                            }} />
-                          </div>
-                          <p style={{
-                            fontFamily: 'Inter, sans-serif', fontSize: '13px', margin: 0, padding: '12px 0',
-                            textAlign: 'center' as const, color: active ? C.gold : C.h2,
-                          }}>{letterOf(i)} · {o.label}</p>
-                        </button>
-                      )
-                    })}
-                  </div>
-                  <OptionCard
-                    label={`${letterOf(3)} · ${limbLengthOptions[3].label}`}
-                    active={limbLength === limbLengthOptions[3].id}
-                    onClick={() => selectAndAdvance(setLimbLength, limbLengthOptions[3].id)} />
                 </div>
               )}
 
