@@ -45,9 +45,9 @@ const MODULES = [
     ],
   },
   {
-    id: 'lifestyle', num: '03', tag: 'LIFESTYLE TEST', title: '个人爱好测试',
+    id: 'lifestyle', num: '03', tag: 'PERSONAL FASHION CHOICES', title: '个人时尚选择',
     subtitle: '发现你的后天个性',
-    desc: '通过生活方式、消费态度与审美向往，挖掘你的后天风格基因，生成专属个性标签，让档案从底色走向你真实的自我表达。',
+    desc: '了解你喜欢什么、实际会穿什么、现在需要什么、不接受什么，把风格向往和真实生活习惯一起纳入你的档案。',
     time: '约 8 分钟', to: '/test/fashion', available: false,
     subTests: [],
   },
