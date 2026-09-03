@@ -44,6 +44,21 @@ export default function FashionTestPage() {
   const { user } = useAuth()
   const [phase, setPhase] = useState<Phase>('intro')
 
+  // 是否已经存在这个模块的测试结果。已完成的用户重新进入这个页面时，
+  // 不应该直接看到 Q1 从头开始，而是先看到"已完成"提示屏；
+  // 只有明确点"重新测试"并在二次确认后，才真正清空重来。
+  const fashionKey = userScopedKey('aiffd_fashion_style', user)
+  const [retestState, setRetestState] = useState<'none' | 'confirming'>('none')
+  const [confirmedRetest, setConfirmedRetest] = useState(false)
+  const existingFashionResult = !confirmedRetest && !!localStorage.getItem(fashionKey)
+
+  const confirmRestart = () => {
+    localStorage.removeItem(fashionKey)
+    setConfirmedRetest(true)
+    setRetestState('none')
+    setPhase('intro')
+  }
+
   // Q1：理想形象，最少3最多5，其中可以标1个"最喜欢"
   const [q1Selected, setQ1Selected] = useState<string[]>([])
   const [q1Primary, setQ1Primary] = useState<string | null>(null)
@@ -94,7 +109,7 @@ export default function FashionTestPage() {
       gap = overlap / q2Selected.length >= 0.5 ? 'stable' : 'gap'
     }
 
-    localStorage.setItem(userScopedKey('aiffd_fashion_style', user), JSON.stringify({
+    localStorage.setItem(fashionKey, JSON.stringify({
       aspired_style_primary: q1Primary,
       aspired_style_secondary: secondary,
       style_image_ids: q1Selected,
@@ -111,7 +126,7 @@ export default function FashionTestPage() {
         activeStage="preference"
         formDone={!!localStorage.getItem(userScopedKey('aiffd_style_result', user))}
         colorDone={!!localStorage.getItem(userScopedKey('aiffd_25season', user))}
-        preferenceDone={!!localStorage.getItem(userScopedKey('aiffd_fashion_style', user))}
+        preferenceDone={!!localStorage.getItem(fashionKey)}
         currentLabel={phase === 'q1' ? '理想形象 · 你想成为的样子' : phase === 'q2' ? '理想形象 · 实际最常穿' : phase === 'q3' ? '理想形象 · 明确不喜欢' : undefined}
         currentNum={phase === 'q1' ? 1 : phase === 'q2' ? 2 : phase === 'q3' ? 3 : undefined}
         currentTotal={(phase === 'q1' || phase === 'q2' || phase === 'q3') ? 3 : undefined}
@@ -119,195 +134,232 @@ export default function FashionTestPage() {
 
       <div style={{ maxWidth: '680px', margin: '0 auto', padding: '48px 24px 80px' }}>
 
-        {phase === 'intro' && (
+        {existingFashionResult && retestState === 'none' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
             <div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '3px', textTransform: 'uppercase', marginBottom: '12px' }}>个人时尚选择 · 第一部分</p>
-              <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '32px', color: C.h1, fontWeight: 400, lineHeight: 1.3, margin: '0 0 16px' }}>理想形象</h1>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '3px', textTransform: 'uppercase', marginBottom: '12px' }}>个人时尚选择 · 理想形象</p>
+              <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '28px', color: C.h1, fontWeight: 400, lineHeight: 1.3, margin: '0 0 16px' }}>你已经完成过这项测试</h1>
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: C.muted, lineHeight: 1.9, margin: 0 }}>
-                这一部分想了解你"想呈现的感觉"、"实际的穿着习惯"，以及"明确不喜欢的方向"——这些是你的主观偏好，不会覆盖体型和风格测试算出的客观结论，而是跟它们放在一起，让推荐更贴近你的真实想法。
+                可以直接去档案页查看已经记录的结果，也可以重新测试一遍——但重新测试会清空并替换这部分之前的答案。
               </p>
             </div>
-            <div style={{ background: '#fdf8ee', borderRadius: '8px', padding: '16px 20px', borderLeft: `3px solid ${C.gold}` }}>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.sub, margin: 0, lineHeight: 1.7 }}>
-                💡 共 3 道题，约 2 分钟。个人时尚选择完整版还包含商品款式、色彩选择等 5 个模块，会陆续上线。
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <Link to="/profile" style={{ ...btnGold, textDecoration: 'none', textAlign: 'center' as const, display: 'block' }}>查看我的档案结果</Link>
+              <button onClick={() => setRetestState('confirming')} style={btnOutline}>重新测试</button>
+              <Link to="/onboarding" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, textDecoration: 'none', textAlign: 'center' as const }}>返回测试中心</Link>
+            </div>
+          </div>
+        )}
+
+        {existingFashionResult && retestState === 'confirming' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: '#c0392b', letterSpacing: '2px', marginBottom: '10px' }}>⚠ 请确认</p>
+              <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>重新测试会清空之前的结果</h2>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.body, lineHeight: 1.8, marginTop: '12px' }}>
+                你之前在"理想形象"里选择的最喜欢形象、实际最常穿和明确不喜欢的类型都会被删除，替换成这次重新测试的新结果，且无法恢复。档案里其他测试模块不受影响。
               </p>
             </div>
-            <button onClick={() => setPhase('q1')} style={btnGold}>开始 →</button>
-          </div>
-        )}
-
-        {phase === 'q1' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            <div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', marginBottom: '10px' }}>Q1 · {q1Selected.length} / 5</p>
-              <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>
-                不考虑年龄、身材和现在的衣橱，以下哪些形象最接近你想成为的样子？
-              </h2>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '8px' }}>请选择最喜欢的 3 项，最多选择 5 项。选中后可以再点一次星标，标记其中最喜欢的 1 项。</p>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-              {STYLE_OPTIONS.map(o => {
-                const active = q1Selected.includes(o.id)
-                return (
-                  <div key={o.id} style={{ position: 'relative' }}>
-                    <StyleTagCard label={o.label} desc={o.desc} active={active} disabled={q1Selected.length >= 5} onClick={() => toggleQ1(o.id)} />
-                    {active && (
-                      <button
-                        onClick={() => setQ1Primary(q1Primary === o.id ? null : o.id)}
-                        style={{
-                          position: 'absolute', top: '8px', right: '8px', border: 'none', cursor: 'pointer',
-                          background: 'none', fontSize: '18px', color: q1Primary === o.id ? C.gold : '#ddd',
-                          lineHeight: 1, padding: '4px',
-                        }}
-                        aria-label="设为最喜欢"
-                      >★</button>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
             <div style={{ display: 'flex', gap: '12px' }}>
-              <button onClick={() => setPhase('intro')} style={btnOutline}>← 返回</button>
-              <button
-                onClick={() => setPhase('q2')}
-                disabled={q1Selected.length < 3}
-                style={q1Selected.length >= 3 ? { ...btnGold, flex: 1 } : { ...btnGold, flex: 1, background: '#e0e0e0', cursor: 'not-allowed' }}>
-                继续
-              </button>
+              <button onClick={() => setRetestState('none')} style={btnOutline}>取消，返回</button>
+              <button onClick={confirmRestart} style={{ ...btnGold, flex: 1, background: '#c0392b' }}>确认清空并重新测试</button>
             </div>
           </div>
         )}
 
-        {phase === 'q2' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            <div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', marginBottom: '10px' }}>Q2 · {q2Selected.includes(NO_FIXED_STYLE) ? '—' : `${q2Selected.length} / 3`}</p>
-              <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>
-                回想最近一个月，你实际穿得最多的是哪些类型？
-              </h2>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '8px' }}>最多选择 3 项。</p>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-              {STYLE_OPTIONS.map(o => (
-                <StyleTagCard key={o.id} label={o.label} desc={o.desc}
-                  active={q2Selected.includes(o.id)}
-                  disabled={q2Selected.length >= 3 || q2Selected.includes(NO_FIXED_STYLE)}
-                  onClick={() => toggleQ2(o.id)} />
-              ))}
-              <StyleTagCard label="没有固定风格" desc="穿搭比较随机，没有明显偏好方向"
-                active={q2Selected.includes(NO_FIXED_STYLE)} onClick={() => toggleQ2(NO_FIXED_STYLE)} />
-            </div>
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button onClick={() => setPhase('q1')} style={btnOutline}>← 返回</button>
-              <button
-                onClick={() => setPhase('q3')}
-                disabled={q2Selected.length === 0}
-                style={q2Selected.length > 0 ? { ...btnGold, flex: 1 } : { ...btnGold, flex: 1, background: '#e0e0e0', cursor: 'not-allowed' }}>
-                继续
-              </button>
-            </div>
-          </div>
-        )}
-
-        {phase === 'q3' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            <div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', marginBottom: '10px' }}>Q3</p>
-              <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>
-                以下哪些形象是你明确不喜欢的？
-              </h2>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '8px' }}>请选择所有不喜欢的类型，不限数量。</p>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-              {STYLE_OPTIONS.map(o => (
-                <StyleTagCard key={o.id} label={o.label} desc={o.desc}
-                  active={q3Selected.includes(o.id)}
-                  disabled={q3Selected.includes(NO_REJECTED_STYLE)}
-                  onClick={() => toggleQ3(o.id)} />
-              ))}
-              <StyleTagCard label="没有特别排斥的风格" desc="以上类型都还能接受"
-                active={q3Selected.includes(NO_REJECTED_STYLE)} onClick={() => toggleQ3(NO_REJECTED_STYLE)} />
-            </div>
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button onClick={() => setPhase('q2')} style={btnOutline}>← 返回</button>
-              <button
-                onClick={finishFashionStyle}
-                disabled={q3Selected.length === 0}
-                style={q3Selected.length > 0 ? { ...btnGold, flex: 1 } : { ...btnGold, flex: 1, background: '#e0e0e0', cursor: 'not-allowed' }}>
-                完成
-              </button>
-            </div>
-          </div>
-        )}
-
-        {phase === 'report' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            <div style={{ textAlign: 'center', paddingBottom: '20px', borderBottom: `1px solid ${C.border}` }}>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.gold, marginBottom: '8px' }}>✓ 理想形象已记录</p>
-              <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '28px', color: C.h1, fontWeight: 400, margin: 0 }}>你的风格向往</h1>
-            </div>
-
-            <div style={{ border: `1px solid ${C.border}`, borderRadius: '8px', padding: '20px 24px' }}>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '2px', color: C.gold, marginBottom: '12px' }}>最想成为的样子</p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                {q1Primary && (
-                  <span style={{ border: `1.5px solid ${C.gold}`, background: '#fdf8ee', color: C.gold, padding: '6px 14px', borderRadius: '20px', fontFamily: 'Inter, sans-serif', fontSize: '12px' }}>
-                    ★ {styleLabelOf(q1Primary)}
-                  </span>
-                )}
-                {q1Selected.filter(id => id !== q1Primary).map(id => (
-                  <span key={id} style={{ border: `1px solid ${C.border}`, color: C.body, padding: '6px 14px', borderRadius: '20px', fontFamily: 'Inter, sans-serif', fontSize: '12px' }}>
-                    {styleLabelOf(id)}
-                  </span>
-                ))}
+        {!existingFashionResult && (
+          <>
+            {phase === 'intro' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+                <div>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '3px', textTransform: 'uppercase', marginBottom: '12px' }}>个人时尚选择 · 第一部分</p>
+                  <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '32px', color: C.h1, fontWeight: 400, lineHeight: 1.3, margin: '0 0 16px' }}>理想形象</h1>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: C.muted, lineHeight: 1.9, margin: 0 }}>
+                    这一部分想了解你"想呈现的感觉"、"实际的穿着习惯"，以及"明确不喜欢的方向"——这些是你的主观偏好，不会覆盖体型和风格测试算出的客观结论，而是跟它们放在一起，让推荐更贴近你的真实想法。
+                  </p>
+                </div>
+                <div style={{ background: '#fdf8ee', borderRadius: '8px', padding: '16px 20px', borderLeft: `3px solid ${C.gold}` }}>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.sub, margin: 0, lineHeight: 1.7 }}>
+                    💡 共 3 道题，约 2 分钟。个人时尚选择完整版还包含商品款式、色彩选择等 5 个模块，会陆续上线。
+                  </p>
+                </div>
+                <button onClick={() => setPhase('q1')} style={btnGold}>开始 →</button>
               </div>
-            </div>
+            )}
 
-            <div style={{ border: `1px solid ${C.border}`, borderRadius: '8px', padding: '20px 24px' }}>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '2px', color: C.gold, marginBottom: '12px' }}>实际最常穿</p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                {q2Selected.includes(NO_FIXED_STYLE) ? (
-                  <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted }}>没有固定风格</span>
-                ) : q2Selected.map(id => (
-                  <span key={id} style={{ border: `1px solid ${C.border}`, color: C.body, padding: '6px 14px', borderRadius: '20px', fontFamily: 'Inter, sans-serif', fontSize: '12px' }}>
-                    {styleLabelOf(id)}
-                  </span>
-                ))}
-              </div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, marginTop: '14px', marginBottom: 0, lineHeight: 1.7 }}>
-                {q2Selected.includes(NO_FIXED_STYLE)
-                  ? '目前还没有稳定的风格方向，后续会优先给你基础衣橱和风格建立方案。'
-                  : q2Selected.filter(id => q1Selected.includes(id)).length / q2Selected.length >= 0.5
-                    ? '你实际的穿着习惯跟你向往的形象比较接近，风格已经比较稳定了。'
-                    : '你实际穿的和你向往的形象有一些差距——这正是可以帮你逐步过渡的地方。'}
-              </p>
-            </div>
-
-            {!q3Selected.includes(NO_REJECTED_STYLE) && q3Selected.length > 0 && (
-              <div style={{ border: `1px solid ${C.border}`, borderRadius: '8px', padding: '20px 24px' }}>
-                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '2px', color: C.muted, marginBottom: '12px' }}>明确不喜欢</p>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                  {q3Selected.map(id => (
-                    <span key={id} style={{ background: '#f5f5f3', color: C.body, padding: '6px 14px', borderRadius: '20px', fontFamily: 'Inter, sans-serif', fontSize: '12px' }}>
-                      {styleLabelOf(id)}
-                    </span>
-                  ))}
+            {phase === 'q1' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                <div>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', marginBottom: '10px' }}>Q1 · {q1Selected.length} / 5</p>
+                  <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>
+                    不考虑年龄、身材和现在的衣橱，以下哪些形象最接近你想成为的样子？
+                  </h2>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '8px' }}>请选择最喜欢的 3 项，最多选择 5 项。选中后可以再点一次星标，标记其中最喜欢的 1 项。</p>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  {STYLE_OPTIONS.map(o => {
+                    const active = q1Selected.includes(o.id)
+                    return (
+                      <div key={o.id} style={{ position: 'relative' }}>
+                        <StyleTagCard label={o.label} desc={o.desc} active={active} disabled={q1Selected.length >= 5} onClick={() => toggleQ1(o.id)} />
+                        {active && (
+                          <button
+                            onClick={() => setQ1Primary(q1Primary === o.id ? null : o.id)}
+                            style={{
+                              position: 'absolute', top: '8px', right: '8px', border: 'none', cursor: 'pointer',
+                              background: 'none', fontSize: '18px', color: q1Primary === o.id ? C.gold : '#ddd',
+                              lineHeight: 1, padding: '4px',
+                            }}
+                            aria-label="设为最喜欢"
+                          >★</button>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button onClick={() => setPhase('intro')} style={btnOutline}>← 返回</button>
+                  <button
+                    onClick={() => setPhase('q2')}
+                    disabled={q1Selected.length < 3}
+                    style={q1Selected.length >= 3 ? { ...btnGold, flex: 1 } : { ...btnGold, flex: 1, background: '#e0e0e0', cursor: 'not-allowed' }}>
+                    继续
+                  </button>
                 </div>
               </div>
             )}
 
-            <div style={{ background: '#f7f4ef', borderRadius: '8px', padding: '20px 24px' }}>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.body, lineHeight: 1.8, margin: 0 }}>
-                个人时尚选择接下来还有商品款式、色彩选择、图案与材质、场景与边界、表达目标共 5 个模块，会陆续上线。
-              </p>
-            </div>
+            {phase === 'q2' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                <div>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', marginBottom: '10px' }}>Q2 · {q2Selected.includes(NO_FIXED_STYLE) ? '—' : `${q2Selected.length} / 3`}</p>
+                  <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>
+                    回想最近一个月，你实际穿得最多的是哪些类型？
+                  </h2>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '8px' }}>最多选择 3 项。</p>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  {STYLE_OPTIONS.map(o => (
+                    <StyleTagCard key={o.id} label={o.label} desc={o.desc}
+                      active={q2Selected.includes(o.id)}
+                      disabled={q2Selected.length >= 3 || q2Selected.includes(NO_FIXED_STYLE)}
+                      onClick={() => toggleQ2(o.id)} />
+                  ))}
+                  <StyleTagCard label="没有固定风格" desc="穿搭比较随机，没有明显偏好方向"
+                    active={q2Selected.includes(NO_FIXED_STYLE)} onClick={() => toggleQ2(NO_FIXED_STYLE)} />
+                </div>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button onClick={() => setPhase('q1')} style={btnOutline}>← 返回</button>
+                  <button
+                    onClick={() => setPhase('q3')}
+                    disabled={q2Selected.length === 0}
+                    style={q2Selected.length > 0 ? { ...btnGold, flex: 1 } : { ...btnGold, flex: 1, background: '#e0e0e0', cursor: 'not-allowed' }}>
+                    继续
+                  </button>
+                </div>
+              </div>
+            )}
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: '12px' }}>
-              <Link to="/onboarding" style={{ ...btnOutline, textDecoration: 'none', textAlign: 'center' as const, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>返回测试中心</Link>
-              <Link to="/profile" style={{ ...btnGold, textDecoration: 'none', textAlign: 'center' as const, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>进入我的档案</Link>
-            </div>
-          </div>
+            {phase === 'q3' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                <div>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', marginBottom: '10px' }}>Q3</p>
+                  <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h2, lineHeight: 1.4, fontWeight: 400, margin: 0 }}>
+                    以下哪些形象是你明确不喜欢的？
+                  </h2>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '8px' }}>请选择所有不喜欢的类型，不限数量。</p>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  {STYLE_OPTIONS.map(o => (
+                    <StyleTagCard key={o.id} label={o.label} desc={o.desc}
+                      active={q3Selected.includes(o.id)}
+                      disabled={q3Selected.includes(NO_REJECTED_STYLE)}
+                      onClick={() => toggleQ3(o.id)} />
+                  ))}
+                  <StyleTagCard label="没有特别排斥的风格" desc="以上类型都还能接受"
+                    active={q3Selected.includes(NO_REJECTED_STYLE)} onClick={() => toggleQ3(NO_REJECTED_STYLE)} />
+                </div>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button onClick={() => setPhase('q2')} style={btnOutline}>← 返回</button>
+                  <button
+                    onClick={finishFashionStyle}
+                    disabled={q3Selected.length === 0}
+                    style={q3Selected.length > 0 ? { ...btnGold, flex: 1 } : { ...btnGold, flex: 1, background: '#e0e0e0', cursor: 'not-allowed' }}>
+                    完成
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {phase === 'report' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                <div style={{ textAlign: 'center', paddingBottom: '20px', borderBottom: `1px solid ${C.border}` }}>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.gold, marginBottom: '8px' }}>✓ 理想形象已记录</p>
+                  <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '28px', color: C.h1, fontWeight: 400, margin: 0 }}>你的风格向往</h1>
+                </div>
+
+                <div style={{ border: `1px solid ${C.border}`, borderRadius: '8px', padding: '20px 24px' }}>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '2px', color: C.gold, marginBottom: '12px' }}>最想成为的样子</p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {q1Primary && (
+                      <span style={{ border: `1.5px solid ${C.gold}`, background: '#fdf8ee', color: C.gold, padding: '6px 14px', borderRadius: '20px', fontFamily: 'Inter, sans-serif', fontSize: '12px' }}>
+                        ★ {styleLabelOf(q1Primary)}
+                      </span>
+                    )}
+                    {q1Selected.filter(id => id !== q1Primary).map(id => (
+                      <span key={id} style={{ border: `1px solid ${C.border}`, color: C.body, padding: '6px 14px', borderRadius: '20px', fontFamily: 'Inter, sans-serif', fontSize: '12px' }}>
+                        {styleLabelOf(id)}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div style={{ border: `1px solid ${C.border}`, borderRadius: '8px', padding: '20px 24px' }}>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '2px', color: C.gold, marginBottom: '12px' }}>实际最常穿</p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {q2Selected.includes(NO_FIXED_STYLE) ? (
+                      <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted }}>没有固定风格</span>
+                    ) : q2Selected.map(id => (
+                      <span key={id} style={{ border: `1px solid ${C.border}`, color: C.body, padding: '6px 14px', borderRadius: '20px', fontFamily: 'Inter, sans-serif', fontSize: '12px' }}>
+                        {styleLabelOf(id)}
+                      </span>
+                    ))}
+                  </div>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, marginTop: '14px', marginBottom: 0, lineHeight: 1.7 }}>
+                    {q2Selected.includes(NO_FIXED_STYLE)
+                      ? '目前还没有稳定的风格方向，后续会优先给你基础衣橱和风格建立方案。'
+                      : q2Selected.filter(id => q1Selected.includes(id)).length / q2Selected.length >= 0.5
+                        ? '你实际的穿着习惯跟你向往的形象比较接近，风格已经比较稳定了。'
+                        : '你实际穿的和你向往的形象有一些差距——这正是可以帮你逐步过渡的地方。'}
+                  </p>
+                </div>
+
+                {!q3Selected.includes(NO_REJECTED_STYLE) && q3Selected.length > 0 && (
+                  <div style={{ border: `1px solid ${C.border}`, borderRadius: '8px', padding: '20px 24px' }}>
+                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '2px', color: C.muted, marginBottom: '12px' }}>明确不喜欢</p>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                      {q3Selected.map(id => (
+                        <span key={id} style={{ background: '#f5f5f3', color: C.body, padding: '6px 14px', borderRadius: '20px', fontFamily: 'Inter, sans-serif', fontSize: '12px' }}>
+                          {styleLabelOf(id)}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div style={{ background: '#f7f4ef', borderRadius: '8px', padding: '20px 24px' }}>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.body, lineHeight: 1.8, margin: 0 }}>
+                    个人时尚选择接下来还有商品款式、色彩选择、图案与材质、场景与边界、表达目标共 5 个模块，会陆续上线。
+                  </p>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: '12px' }}>
+                  <Link to="/onboarding" style={{ ...btnOutline, textDecoration: 'none', textAlign: 'center' as const, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>返回测试中心</Link>
+                  <Link to="/profile" style={{ ...btnGold, textDecoration: 'none', textAlign: 'center' as const, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>进入我的档案</Link>
+                </div>
+              </div>
+            )}
+          </>
         )}
 
       </div>
