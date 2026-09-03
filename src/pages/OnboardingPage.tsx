@@ -47,8 +47,8 @@ const MODULES = [
   {
     id: 'lifestyle', num: '03', tag: 'PERSONAL FASHION CHOICES', title: '个人时尚选择',
     subtitle: '发现你的后天个性',
-    desc: '了解你喜欢什么、实际会穿什么、现在需要什么、不接受什么，把风格向往和真实生活习惯一起纳入你的档案。',
-    time: '约 8 分钟', to: '/test/fashion', available: false,
+    desc: '了解你喜欢什么、实际会穿什么、现在需要什么、不接受什么，把风格向往和真实生活习惯一起纳入你的档案。目前已上线"理想形象"部分，其余模块陆续开放。',
+    time: '约 2 分钟（第一部分）', to: '/test/fashion', available: true,
     subTests: [],
   },
 ]
