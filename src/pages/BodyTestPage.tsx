@@ -631,11 +631,8 @@ export default function BodyTestPage() {
             { id: '方', label: '方', sub: '肩型方正，棱角分明' },
             { id: '尖', label: '尖', sub: '肩峰尖锐突出' },
           ]
-          const waistOptions: { id: string; label: string; sub: string; img: string; scale?: number }[] = [
-            // '细' 这张图本身画的模特占画布比例就比其他三张小（细瘦体型本身在插画里就画得更"小一号"），
-            // 这里用 scale 做一个局部放大补丁，让四张图视觉上更接近；以后如果换了新图，
-            // 这个补丁参数可能需要重新调整或去掉
-            { id: '细', label: '细', sub: '腰最清楚，曲线感明显', img: '/waist-slim.png', scale: 1.3 },
+          const waistOptions: { id: string; label: string; sub: string; img: string }[] = [
+            { id: '细', label: '细', sub: '腰最清楚，曲线感明显', img: '/waist-slim.png' },
             { id: '匀', label: '匀', sub: '有一定腰线，整体过渡均衡', img: '/waist-evenly.png' },
             { id: '直', label: '直', sub: '整体直上直下，腰线不明显', img: '/waist-straight.png' },
             { id: '宽', label: '宽', sub: '中段量感明显，腰线较弱', img: '/waist-wide.png' },
@@ -798,7 +795,6 @@ export default function BodyTestPage() {
                         <div style={{ height: '300px', overflow: 'hidden', background: '#f8f4f1' }}>
                           <img src={o.img} alt={o.label} style={{
                             width: '100%', height: '100%', objectFit: 'contain', display: 'block',
-                            transform: o.scale ? `scale(${o.scale})` : undefined,
                           }} />
                         </div>
                         <p style={{
