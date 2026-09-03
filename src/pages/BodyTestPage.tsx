@@ -898,12 +898,11 @@ export default function BodyTestPage() {
               { id: '适中', label: '适中', sub: '臀部有自然弧度，向后突出程度适中' },
               { id: '圆翘', label: '圆翘', sub: '臀部向后突出明显，侧面弧度较饱满' },
             ]},
-            { title: '你的胸部接近哪些描述？（可多选）', value: chestProtrude, set: setChestProtrude, options: [
-              { id: '凸', label: '凸', sub: '胸部突出，有明显弧度' },
-              { id: '扁平', label: '扁平', sub: '胸部平坦，弧度不明显' },
-              { id: '适中', label: '适中', sub: '不凸不平，适中' },
-              { id: '大胸', label: '大胸', sub: '胸围偏大' },
-              { id: '小胸', label: '小胸', sub: '胸围偏小' },
+            { title: '你的胸部轮廓更接近哪一种？', value: chestProtrude, set: setChestProtrude, options: [
+              { id: 'subtle', label: '轮廓较平缓', sub: '胸部体积相对较小，正面和侧面的曲线都不太明显' },
+              { id: 'balanced', label: '轮廓适中', sub: '胸部与整体身材比例较均衡，有自然曲线但不突出' },
+              { id: 'full', label: '轮廓较饱满', sub: '胸部相对于躯干较有体积，上半身曲线比较明显' },
+              { id: 'uncertain', label: '不太确定', sub: '受内衣、体重变化或其他因素影响，暂时难以判断' },
             ]},
             { title: '你的皮肉质地接近哪些描述？（可多选）', value: fleshTexture, set: setFleshTexture, options: [
               { id: '软肉', label: '软肉', sub: '触感柔软，有肉感' },
@@ -916,7 +915,8 @@ export default function BodyTestPage() {
           ]
           const current = questions[fleshIdx]
           // 目前只有"臀部轮廓"这一题（fleshIdx 0）改成了单选，胸部和皮肉质地两题仍然是多选
-          const isFleshSingleSelect = fleshIdx === 0
+          // 臀部（0）和胸部（1）都已改成单选，皮肉质地（2）仍然是多选
+          const isFleshSingleSelect = fleshIdx === 0 || fleshIdx === 1
 
           const selectAndAdvanceFlesh = (set: (v: string[]) => void, val: string) => {
             set([val])
@@ -936,6 +936,11 @@ export default function BodyTestPage() {
                 <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '26px', color: C.h2, fontWeight: 400, margin: 0 }}>
                   Q{currentQuestionNumber} · {current.title}
                 </h2>
+                {fleshIdx === 1 && (
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '10px', lineHeight: 1.7 }}>
+                    请穿着无明显厚垫的内衣或合身上衣，观察胸部相对于肩、腰和躯干的整体比例
+                  </p>
+                )}
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
