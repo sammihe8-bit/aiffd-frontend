@@ -781,7 +781,8 @@ export default function BodyTestPage() {
                     const active = waistType.includes(o.id)
                     return (
                       <button key={o.id} onClick={() => toggle(waistType, setWaistType, o.id)} style={{
-                        border: 'none', boxShadow: active ? `0 0 0 2px ${C.gold}` : 'none',
+                        border: 'none', outline: 'none',
+                        boxShadow: active ? `0 0 0 3px ${C.gold}` : `0 0 0 1px ${C.border}`,
                         borderRadius: '8px', padding: 0, cursor: 'pointer', overflow: 'hidden', position: 'relative',
                         background: active ? '#fdf8ee' : '#fff', transition: 'all 0.2s',
                       }}>
