@@ -773,9 +773,9 @@ export default function BodyTestPage() {
                         borderRadius: '8px', padding: 0, cursor: 'pointer', overflow: 'hidden',
                         background: '#fff', transition: 'all 0.2s',
                       }}>
-                        <div style={{ height: '260px', overflow: 'hidden' }}>
+                        <div style={{ height: '150px', overflow: 'hidden' }}>
                           <img src={o.img} alt={o.label} style={{
-                            width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block',
+                            width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 40%', display: 'block',
                           }} />
                         </div>
                         <p style={{
