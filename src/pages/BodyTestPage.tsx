@@ -499,11 +499,6 @@ export default function BodyTestPage() {
 
         {/* ── Step 1: 数据收集（手动）── */}
         {phase === 'data' && method === 'manual' && (() => {
-          const bustN = parseFloat(bust) || 0
-          const waistN = parseFloat(waist) || 0
-          const hipN = parseFloat(hip) || 0
-          const hasBasic = bustN > 0 && waistN > 0 && hipN > 0
-
           return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
               <div>
@@ -565,18 +560,7 @@ export default function BodyTestPage() {
 
               <div style={{ display: 'flex', gap: '12px' }}>
                 <button onClick={() => setPhase('method')} style={btnOutline}>← 返回</button>
-                <button onClick={() => {
-                  // 用三围数据给骨架/皮肉步骤一个合理的默认建议，用户在下一步仍可修改
-                  if (hasBasic) {
-                    const whr = waistN / hipN
-                    const bustWaistDiff = bustN - waistN
-                    if (bodyShape.length === 0) setBodyShape([whr > 0.88 ? 'H型' : bustN - hipN > 3 ? 'V型' : hipN - bustN > 5 ? 'A型' : 'X型'])
-                    if (hipProtrude.length === 0) setHipProtrude([hipN - bustN > 5 ? '圆翘' : '扁平'])
-                    if (chestProtrude.length === 0) setChestProtrude([bustN - hipN > 3 ? '凸' : '扁平'])
-                    if (fleshTexture.length === 0) setFleshTexture([bustWaistDiff > 20 ? '软肉' : '紧实'])
-                  }
-                  setPhase('skeleton')
-                }}
+                <button onClick={() => setPhase('skeleton')}
                   disabled={!bust || !waist || !hip}
                   style={bust && waist && hip ? { ...btnGold, flex: 1 } : { ...btnGold, flex: 1, background: '#e0e0e0', cursor: 'not-allowed' }}>
                   继续
