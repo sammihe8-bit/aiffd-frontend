@@ -786,14 +786,6 @@ export default function BodyTestPage() {
                         background: active ? '#fdf8ee' : '#fff', transition: 'all 0.2s',
                       }}>
                         <img src={o.img} alt={o.label} style={{ width: '100%', height: '280px', objectFit: 'cover', display: 'block' }} />
-                        <span style={{
-                          position: 'absolute', top: '8px', right: '8px', width: '20px', height: '20px', borderRadius: '5px',
-                          border: `1.5px solid ${active ? C.gold : 'rgba(255,255,255,0.9)'}`,
-                          background: active ? C.gold : 'rgba(255,255,255,0.5)',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        }}>
-                          {active && <span style={{ color: '#fff', fontSize: '12px', lineHeight: 1 }}>✓</span>}
-                        </span>
                         <p style={{
                           fontFamily: 'Inter, sans-serif', fontSize: '13px', margin: 0, padding: '10px 0',
                           textAlign: 'center' as const, color: active ? C.gold : C.h2,
