@@ -608,11 +608,6 @@ export default function BodyTestPage() {
               { id: '匀', label: '自然肩', sub: '下降程度适中' },
               { id: '直', label: '平直肩', sub: '肩线较水平' },
             ]},
-            6: { title: '你的腰部纵向比例更接近哪一种？', value: waistLength, set: setWaistLength, options: [
-              { id: '短', label: '短', sub: '腰段偏短，下半身量感更明显' },
-              { id: '适中', label: '适中', sub: '腰段长度适中，比例均衡' },
-              { id: '长', label: '长', sub: '腰段偏长，上半身占比更明显' },
-            ]},
             7: { title: '你的四肢长度？', value: limbLength, set: setLimbLength, options: [
               { id: '偏短', label: '偏短' }, { id: '适中', label: '适中' }, { id: '偏长', label: '偏长' },
             ]},
@@ -637,6 +632,12 @@ export default function BodyTestPage() {
             { id: '直', label: '直', sub: '整体直上直下，腰线不明显', img: '/waist-straight.png' },
             { id: '宽', label: '宽', sub: '中段量感明显，腰线较弱', img: '/waist-wide.png' },
           ]
+
+          const waistLengthOptions: { id: string; label: string; sub: string; img: string }[] = [
+            { id: '短', label: '短', sub: '腰段偏短，下半身量感更明显', img: '/waist-short.png' },
+            { id: '适中', label: '适中', sub: '腰段长度适中，比例均衡', img: '/waist-medium.png' },
+            { id: '长', label: '长', sub: '腰段偏长，上半身占比更明显', img: '/waist-long.png' },
+          ]
           const bodyShapeOptions = [
             { id: 'H型', label: 'H 型', sub: '肩宽≈髋宽，腰部不明显，整体较方正' },
             { id: 'X型', label: 'X 型', sub: '肩宽≈髋宽，腰部明显收细，沙漏型轮廓' },
@@ -649,6 +650,7 @@ export default function BodyTestPage() {
           const isBoneWidthQ = skeletonIdx === 3
           const isShoulderQ = skeletonIdx === 4
           const isWaistQ = skeletonIdx === 5
+          const isWaistLengthQ = skeletonIdx === 6
           const isBodyShapeQ = skeletonIdx === 9
           const isComboQ = isShoulderQ || isBodyShapeQ
           const isTextQ = skeletonIdx in textQuestions
@@ -692,7 +694,7 @@ export default function BodyTestPage() {
                   STEP 01 · 骨架测试 · {skeletonIdx + 1} / 10
                 </p>
                 <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '26px', color: C.h2, fontWeight: 400, margin: 0 }}>
-                  Q{currentQuestionNumber} · {isComboQ ? comboTitle : isBoneScaleQ ? '你的骨架大小更接近哪种？' : isWaistQ ? '你的腰部横向轮廓更接近哪一种？' : textQuestions[skeletonIdx].title}
+                  Q{currentQuestionNumber} · {isComboQ ? comboTitle : isBoneScaleQ ? '你的骨架大小更接近哪种？' : isWaistQ ? '你的腰部横向轮廓更接近哪一种？' : isWaistLengthQ ? '你的腰部纵向比例更接近哪一种？' : textQuestions[skeletonIdx].title}
                 </h2>
                 {isBoneRoundnessQ && (
                   <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '10px', lineHeight: 1.7 }}>
@@ -792,6 +794,36 @@ export default function BodyTestPage() {
                         background: '#fff', transition: 'all 0.2s',
                       }}>
                         <div style={{ height: '300px', overflow: 'hidden', background: '#f8f4f1' }}>
+                          <img src={o.img} alt={o.label} style={{
+                            width: '100%', height: '100%', objectFit: 'contain', display: 'block',
+                          }} />
+                        </div>
+                        <p style={{
+                          fontFamily: 'Inter, sans-serif', fontSize: '13px', margin: 0, padding: '10px 12px 2px',
+                          textAlign: 'center' as const, color: active ? C.gold : C.h2,
+                        }}>{letterOf(i)} · {o.label}</p>
+                        <p style={{
+                          fontFamily: 'Inter, sans-serif', fontSize: '12px', margin: 0, padding: '0 12px 12px',
+                          textAlign: 'center' as const, color: C.muted, lineHeight: 1.5,
+                        }}>{o.sub}</p>
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+
+              {isWaistLengthQ && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+                  {waistLengthOptions.map((o, i) => {
+                    const active = waistLength === o.id
+                    return (
+                      <button key={o.id} onClick={() => selectAndAdvance(setWaistLength, o.id)} style={{
+                        border: `1px solid ${active ? C.gold : C.border}`, outline: 'none',
+                        boxShadow: active ? `0 0 0 2px ${C.gold}` : 'none',
+                        borderRadius: '8px', padding: 0, cursor: 'pointer', overflow: 'hidden',
+                        background: '#fff', transition: 'all 0.2s',
+                      }}>
+                        <div style={{ height: '420px', overflow: 'hidden', background: '#f8f4f1' }}>
                           <img src={o.img} alt={o.label} style={{
                             width: '100%', height: '100%', objectFit: 'contain', display: 'block',
                           }} />
