@@ -631,8 +631,11 @@ export default function BodyTestPage() {
             { id: '方', label: '方', sub: '肩型方正，棱角分明' },
             { id: '尖', label: '尖', sub: '肩峰尖锐突出' },
           ]
-          const waistOptions = [
-            { id: '细', label: '细', sub: '腰最清楚，曲线感明显', img: '/waist-slim.png' },
+          const waistOptions: { id: string; label: string; sub: string; img: string; scale?: number }[] = [
+            // '细' 这张图本身画的模特占画布比例就比其他三张小（细瘦体型本身在插画里就画得更"小一号"），
+            // 这里用 scale 做一个局部放大补丁，让四张图视觉上更接近；以后如果换了新图，
+            // 这个补丁参数可能需要重新调整或去掉
+            { id: '细', label: '细', sub: '腰最清楚，曲线感明显', img: '/waist-slim.png', scale: 1.3 },
             { id: '匀', label: '匀', sub: '有一定腰线，整体过渡均衡', img: '/waist-evenly.png' },
             { id: '直', label: '直', sub: '整体直上直下，腰线不明显', img: '/waist-straight.png' },
             { id: '宽', label: '宽', sub: '中段量感明显，腰线较弱', img: '/waist-wide.png' },
@@ -723,11 +726,14 @@ export default function BodyTestPage() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
                   {boneScaleOptions.map((o, i) => (
                     <button key={o.id} onClick={() => selectAndAdvance(setBoneScale, o.id)} style={{
-                      border: 'none', boxShadow: boneScale === o.id ? `0 0 0 2px ${C.gold}` : 'none',
+                      border: `1px solid ${boneScale === o.id ? C.gold : C.border}`, outline: 'none',
+                      boxShadow: boneScale === o.id ? `0 0 0 2px ${C.gold}` : 'none',
                       borderRadius: '8px', padding: 0, cursor: 'pointer', overflow: 'hidden',
-                      background: boneScale === o.id ? '#fdf8ee' : '#fff', transition: 'all 0.2s',
+                      background: '#fff', transition: 'all 0.2s',
                     }}>
-                      <img src={o.img} alt={o.label} style={{ width: '100%', height: '480px', objectFit: 'cover', display: 'block' }} />
+                      <img src={o.img} alt={o.label} style={{
+                        width: '100%', height: '420px', objectFit: 'contain', display: 'block', background: '#f7f4ef',
+                      }} />
                       <p style={{
                         fontFamily: 'Inter, sans-serif', fontSize: '13px', margin: 0, padding: '12px 0',
                         textAlign: 'center' as const, color: boneScale === o.id ? C.gold : C.h2,
@@ -741,11 +747,14 @@ export default function BodyTestPage() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
                   {shoulderSlopeOptions.map((o, i) => (
                     <button key={o.id} onClick={() => selectAndAdvance(setBoneWidth, o.id)} style={{
-                      border: 'none', boxShadow: boneWidth === o.id ? `0 0 0 2px ${C.gold}` : 'none',
+                      border: `1px solid ${boneWidth === o.id ? C.gold : C.border}`, outline: 'none',
+                      boxShadow: boneWidth === o.id ? `0 0 0 2px ${C.gold}` : 'none',
                       borderRadius: '8px', padding: 0, cursor: 'pointer', overflow: 'hidden',
-                      background: boneWidth === o.id ? '#fdf8ee' : '#fff', transition: 'all 0.2s',
+                      background: '#fff', transition: 'all 0.2s',
                     }}>
-                      <img src={o.img} alt={o.label} style={{ width: '100%', height: '480px', objectFit: 'cover', display: 'block' }} />
+                      <img src={o.img} alt={o.label} style={{
+                        width: '100%', height: '420px', objectFit: 'contain', display: 'block', background: '#f7f4ef',
+                      }} />
                       <p style={{
                         fontFamily: 'Inter, sans-serif', fontSize: '13px', margin: 0, padding: '12px 0',
                         textAlign: 'center' as const, color: boneWidth === o.id ? C.gold : C.h2,
@@ -781,12 +790,17 @@ export default function BodyTestPage() {
                     const active = waistType.includes(o.id)
                     return (
                       <button key={o.id} onClick={() => toggle(waistType, setWaistType, o.id)} style={{
-                        border: 'none', outline: 'none',
-                        boxShadow: active ? `0 0 0 3px ${C.gold}` : `0 0 0 1px ${C.border}`,
-                        borderRadius: '8px', padding: 0, cursor: 'pointer', overflow: 'hidden', position: 'relative',
-                        background: active ? '#fdf8ee' : '#fff', transition: 'all 0.2s',
+                        border: `1px solid ${active ? C.gold : C.border}`, outline: 'none',
+                        boxShadow: active ? `0 0 0 2px ${C.gold}` : 'none',
+                        borderRadius: '8px', padding: 0, cursor: 'pointer', overflow: 'hidden',
+                        background: '#fff', transition: 'all 0.2s',
                       }}>
-                        <img src={o.img} alt={o.label} style={{ width: '100%', height: '280px', objectFit: 'cover', display: 'block' }} />
+                        <div style={{ height: '300px', overflow: 'hidden', background: '#f7f4ef' }}>
+                          <img src={o.img} alt={o.label} style={{
+                            width: '100%', height: '100%', objectFit: 'contain', display: 'block',
+                            transform: o.scale ? `scale(${o.scale})` : undefined,
+                          }} />
+                        </div>
                         <p style={{
                           fontFamily: 'Inter, sans-serif', fontSize: '13px', margin: 0, padding: '10px 12px 2px',
                           textAlign: 'center' as const, color: active ? C.gold : C.h2,
