@@ -650,7 +650,7 @@ export default function BodyTestPage() {
           const isShoulderQ = skeletonIdx === 4
           const isWaistQ = skeletonIdx === 5
           const isBodyShapeQ = skeletonIdx === 9
-          const isComboQ = isShoulderQ || isWaistQ || isBodyShapeQ
+          const isComboQ = isShoulderQ || isBodyShapeQ
           const isTextQ = skeletonIdx in textQuestions
 
           const selectAndAdvance = (set: (v: string) => void, val: string) => {
@@ -679,7 +679,6 @@ export default function BodyTestPage() {
           ]
 
           const comboTitle = isShoulderQ ? '你的肩形接近哪些描述？（可多选）'
-            : isWaistQ ? '你的腰型接近哪些描述？（可多选）'
             : '你的体型（骨骼轮廓）接近哪些？（可多选）'
 
           // 当前多选题对应的选项列表 + 已选值 + 更新函数（现在只有肩型走这条通用文字checkbox路径，
@@ -693,7 +692,7 @@ export default function BodyTestPage() {
                   STEP 01 · 骨架测试 · {skeletonIdx + 1} / 10
                 </p>
                 <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '26px', color: C.h2, fontWeight: 400, margin: 0 }}>
-                  Q{currentQuestionNumber} · {isComboQ ? comboTitle : isBoneScaleQ ? '你的骨架大小更接近哪种？' : textQuestions[skeletonIdx].title}
+                  Q{currentQuestionNumber} · {isComboQ ? comboTitle : isBoneScaleQ ? '你的骨架大小更接近哪种？' : isWaistQ ? '你的腰部横向轮廓更接近哪一种？' : textQuestions[skeletonIdx].title}
                 </h2>
                 {isBoneRoundnessQ && (
                   <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '10px', lineHeight: 1.7 }}>
@@ -784,9 +783,9 @@ export default function BodyTestPage() {
               {isWaistQ && (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '10px' }}>
                   {waistOptions.map((o, i) => {
-                    const active = waistType.includes(o.id)
+                    const active = waistType[0] === o.id
                     return (
-                      <button key={o.id} onClick={() => toggle(waistType, setWaistType, o.id)} style={{
+                      <button key={o.id} onClick={() => selectAndAdvance((v) => setWaistType([v]), o.id)} style={{
                         border: `1px solid ${active ? C.gold : C.border}`, outline: 'none',
                         boxShadow: active ? `0 0 0 2px ${C.gold}` : 'none',
                         borderRadius: '8px', padding: 0, cursor: 'pointer', overflow: 'hidden',
@@ -840,7 +839,7 @@ export default function BodyTestPage() {
               <div style={{ display: 'flex', gap: '12px' }}>
                 <button onClick={goBackSkeleton} style={btnOutline}>← 返回</button>
                 {isComboQ && (() => {
-                  const currentValue = isShoulderQ ? shoulderShape : isWaistQ ? waistType : bodyShape
+                  const currentValue = isShoulderQ ? shoulderShape : bodyShape
                   return (
                     <button
                       onClick={goNextSkeleton}
