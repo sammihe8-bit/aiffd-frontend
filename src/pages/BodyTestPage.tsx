@@ -883,9 +883,9 @@ export default function BodyTestPage() {
               { id: 'uncertain', label: '不太确定', sub: '受内衣、姿势或体重变化影响，目前难以判断' },
             ]},
             { title: '你的身体轮廓更接近哪种状态？', value: fleshTexture, set: setFleshTexture, options: [
-              { id: 'taut', label: '紧实清晰', sub: '身体轮廓较紧，骨点或肌肉转折相对清楚，不容易显得柔软圆润' },
-              { id: 'balanced', label: '自然均衡', sub: '身体既没有明显的紧绷或肌肉感，也没有明显的柔软饱满感' },
-              { id: 'soft', label: '柔和饱满', sub: '即使体重不高，上臂、大腿或腰腹仍容易呈现柔软、圆润的轮廓' },
+              { id: 'taut', label: '紧实清晰', sub: '身体轮廓较紧，骨点或肌肉转折相对清楚，不容易显得柔软圆润', img: '/body-taut.png' },
+              { id: 'balanced', label: '自然均衡', sub: '身体既没有明显的紧绷或肌肉感，也没有明显的柔软饱满感', img: '/body-balanced.png' },
+              { id: 'soft', label: '柔和饱满', sub: '即使体重不高，上臂、大腿或腰腹仍容易呈现柔软、圆润的轮廓', img: '/body-soft.png' },
               { id: 'uncertain', label: '不太确定', sub: '受运动、体重变化或年龄状态影响，目前难以判断' },
             ]},
           ]
@@ -919,44 +919,34 @@ export default function BodyTestPage() {
                 )}
               </div>
 
-              {fleshIdx === 0 || fleshIdx === 1 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
-                    {current.options.filter(o => o.img).map((o, i) => {
-                      const active = current.value[0] === o.id
-                      return (
-                        <button key={o.id} onClick={() => selectAndAdvanceFlesh(current.set, o.id)} style={{
-                          border: `1px solid ${active ? C.gold : C.border}`, outline: 'none',
-                          boxShadow: active ? `0 0 0 2px ${C.gold}` : 'none',
-                          borderRadius: '8px', padding: 0, cursor: 'pointer', overflow: 'hidden',
-                          background: '#f8f4f1', transition: 'all 0.2s',
-                        }}>
-                          <img src={o.img} alt={o.label} style={{
-                            width: '100%', height: 'auto', display: 'block',
-                          }} />
-                          <p style={{
-                            fontFamily: 'Inter, sans-serif', fontSize: '13px', margin: 0, padding: '10px 12px',
-                            textAlign: 'center' as const, color: active ? C.gold : C.h2, background: '#fff',
-                          }}>{letterOf(i)} · {o.label}</p>
-                        </button>
-                      )
-                    })}
-                  </div>
-                  {current.options.filter(o => !o.img).map((o) => (
-                    <OptionCard key={o.id} label={`${letterOf(current.options.findIndex(x => x.id === o.id))} · ${o.label}`} sub={o.sub}
-                      active={current.value[0] === o.id}
-                      onClick={() => selectAndAdvanceFlesh(current.set, o.id)} />
-                  ))}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+                  {current.options.filter(o => o.img).map((o, i) => {
+                    const active = current.value[0] === o.id
+                    return (
+                      <button key={o.id} onClick={() => selectAndAdvanceFlesh(current.set, o.id)} style={{
+                        border: `1px solid ${active ? C.gold : C.border}`, outline: 'none',
+                        boxShadow: active ? `0 0 0 2px ${C.gold}` : 'none',
+                        borderRadius: '8px', padding: 0, cursor: 'pointer', overflow: 'hidden',
+                        background: '#f8f4f1', transition: 'all 0.2s',
+                      }}>
+                        <img src={o.img} alt={o.label} style={{
+                          width: '100%', height: 'auto', display: 'block',
+                        }} />
+                        <p style={{
+                          fontFamily: 'Inter, sans-serif', fontSize: '13px', margin: 0, padding: '10px 12px',
+                          textAlign: 'center' as const, color: active ? C.gold : C.h2, background: '#fff',
+                        }}>{letterOf(i)} · {o.label}</p>
+                      </button>
+                    )
+                  })}
                 </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {current.options.map((o, i) => (
-                    <OptionCard key={o.id} label={`${letterOf(i)} · ${o.label}`} sub={o.sub}
-                      active={current.value[0] === o.id}
-                      onClick={() => selectAndAdvanceFlesh(current.set, o.id)} />
-                  ))}
-                </div>
-              )}
+                {current.options.filter(o => !o.img).map((o) => (
+                  <OptionCard key={o.id} label={`${letterOf(current.options.findIndex(x => x.id === o.id))} · ${o.label}`} sub={o.sub}
+                    active={current.value[0] === o.id}
+                    onClick={() => selectAndAdvanceFlesh(current.set, o.id)} />
+                ))}
+              </div>
 
               <div style={{ display: 'flex', gap: '12px' }}>
                 <button onClick={goBackFlesh} style={btnOutline}>← 返回</button>
