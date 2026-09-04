@@ -526,7 +526,7 @@ export default function BodyTestPage() {
                 </summary>
                 <div style={{ marginTop: '14px' }}>
                   <img
-                    src="/measure-guide.png"
+                    src="/measure-guide2.png"
                     alt="身体尺寸测量方法：胸围、腰围、臀围、肩宽测量示意图"
                     style={{ width: '100%', maxWidth: '100%', height: 'auto', display: 'block', borderRadius: '8px', border: `1px solid ${C.border}` }}
                   />
