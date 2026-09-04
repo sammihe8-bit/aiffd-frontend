@@ -873,11 +873,11 @@ export default function BodyTestPage() {
               { id: '适中', label: '适中', sub: '臀部有自然弧度，向后突出程度适中' },
               { id: '圆翘', label: '圆翘', sub: '臀部向后突出明显，侧面弧度较饱满' },
             ]},
-            { title: '你的胸部轮廓更接近哪一种？', value: chestProtrude, set: setChestProtrude, options: [
-              { id: 'subtle', label: '轮廓较平缓', sub: '胸部体积相对较小，正面和侧面的曲线都不太明显' },
-              { id: 'balanced', label: '轮廓适中', sub: '胸部与整体身材比例较均衡，有自然曲线但不突出' },
-              { id: 'full', label: '轮廓较饱满', sub: '胸部相对于躯干较有体积，上半身曲线比较明显' },
-              { id: 'uncertain', label: '不太确定', sub: '受内衣、体重变化或其他因素影响，暂时难以判断' },
+            { title: '从侧面看，你的胸部轮廓更接近哪一种？', value: chestProtrude, set: setChestProtrude, options: [
+              { id: 'shallow', label: '较平缓', sub: '胸部向前延伸较少，侧面轮廓比较平缓' },
+              { id: 'moderate', label: '适中', sub: '胸部有自然的向前弧度，整体不过分平缓或突出' },
+              { id: 'prominent', label: '较饱满', sub: '胸部向前延伸较明显，侧面呈现较完整的圆润弧度' },
+              { id: 'uncertain', label: '不太确定', sub: '受内衣、姿势或体重变化影响，目前难以判断' },
             ]},
             { title: '你的身体轮廓更接近哪种状态？', value: fleshTexture, set: setFleshTexture, options: [
               { id: 'taut', label: '紧实清晰', sub: '身体轮廓较紧，骨点或肌肉转折相对清楚，不容易显得柔软圆润' },
@@ -906,7 +906,7 @@ export default function BodyTestPage() {
                 </h2>
                 {fleshIdx === 1 && (
                   <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '10px', lineHeight: 1.7 }}>
-                    请穿着无明显厚垫的内衣或合身上衣，观察胸部相对于肩、腰和躯干的整体比例
+                    建议侧身照镜子，自然站立，不挺胸、不含胸，并避免穿着明显增厚或聚拢型内衣
                   </p>
                 )}
                 {fleshIdx === 2 && (
