@@ -877,9 +877,9 @@ export default function BodyTestPage() {
               { id: '圆翘', label: '臀部侧面线条饱满', sub: '臀部向后突出明显，侧面弧度较饱满', img: '/hip-round.png' },
             ]},
             { title: '从侧面看，你的胸部轮廓更接近哪一种？', value: chestProtrude, set: setChestProtrude, options: [
-              { id: 'shallow', label: '较平缓', sub: '胸部向前延伸较少，侧面轮廓比较平缓' },
-              { id: 'moderate', label: '适中', sub: '胸部有自然的向前弧度，整体不过分平缓或突出' },
-              { id: 'prominent', label: '较饱满', sub: '胸部向前延伸较明显，侧面呈现较完整的圆润弧度' },
+              { id: 'shallow', label: '较平缓', sub: '胸部向前延伸较少，侧面轮廓比较平缓', img: '/chest-flat.png' },
+              { id: 'moderate', label: '适中', sub: '胸部有自然的向前弧度，整体不过分平缓或突出', img: '/chest-medium.png' },
+              { id: 'prominent', label: '较饱满', sub: '胸部向前延伸较明显，侧面呈现较完整的圆润弧度', img: '/chest-round.png' },
               { id: 'uncertain', label: '不太确定', sub: '受内衣、姿势或体重变化影响，目前难以判断' },
             ]},
             { title: '你的身体轮廓更接近哪种状态？', value: fleshTexture, set: setFleshTexture, options: [
@@ -919,27 +919,34 @@ export default function BodyTestPage() {
                 )}
               </div>
 
-              {fleshIdx === 0 ? (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
-                  {current.options.map((o, i) => {
-                    const active = current.value[0] === o.id
-                    return (
-                      <button key={o.id} onClick={() => selectAndAdvanceFlesh(current.set, o.id)} style={{
-                        border: `1px solid ${active ? C.gold : C.border}`, outline: 'none',
-                        boxShadow: active ? `0 0 0 2px ${C.gold}` : 'none',
-                        borderRadius: '8px', padding: 0, cursor: 'pointer', overflow: 'hidden',
-                        background: '#f8f4f1', transition: 'all 0.2s',
-                      }}>
-                        <img src={o.img} alt={o.label} style={{
-                          width: '100%', height: 'auto', display: 'block',
-                        }} />
-                        <p style={{
-                          fontFamily: 'Inter, sans-serif', fontSize: '13px', margin: 0, padding: '10px 12px',
-                          textAlign: 'center' as const, color: active ? C.gold : C.h2, background: '#fff',
-                        }}>{letterOf(i)}｜{o.label}</p>
-                      </button>
-                    )
-                  })}
+              {fleshIdx === 0 || fleshIdx === 1 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+                    {current.options.filter(o => o.img).map((o, i) => {
+                      const active = current.value[0] === o.id
+                      return (
+                        <button key={o.id} onClick={() => selectAndAdvanceFlesh(current.set, o.id)} style={{
+                          border: `1px solid ${active ? C.gold : C.border}`, outline: 'none',
+                          boxShadow: active ? `0 0 0 2px ${C.gold}` : 'none',
+                          borderRadius: '8px', padding: 0, cursor: 'pointer', overflow: 'hidden',
+                          background: '#f8f4f1', transition: 'all 0.2s',
+                        }}>
+                          <img src={o.img} alt={o.label} style={{
+                            width: '100%', height: 'auto', display: 'block',
+                          }} />
+                          <p style={{
+                            fontFamily: 'Inter, sans-serif', fontSize: '13px', margin: 0, padding: '10px 12px',
+                            textAlign: 'center' as const, color: active ? C.gold : C.h2, background: '#fff',
+                          }}>{letterOf(i)}｜{o.label}</p>
+                        </button>
+                      )
+                    })}
+                  </div>
+                  {current.options.filter(o => !o.img).map((o) => (
+                    <OptionCard key={o.id} label={`${letterOf(current.options.findIndex(x => x.id === o.id))} · ${o.label}`} sub={o.sub}
+                      active={current.value[0] === o.id}
+                      onClick={() => selectAndAdvanceFlesh(current.set, o.id)} />
+                  ))}
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
