@@ -921,7 +921,7 @@ export default function BodyTestPage() {
 
               {fleshIdx === 0 ? (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
-                  {current.options.map((o, i) => {
+                  {current.options.map((o) => {
                     const active = current.value[0] === o.id
                     return (
                       <button key={o.id} onClick={() => selectAndAdvanceFlesh(current.set, o.id)} style={{
