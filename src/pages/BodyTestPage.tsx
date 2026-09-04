@@ -87,33 +87,8 @@ function OptionCard({ label, sub, active, onClick }: {
   )
 }
 
-// 多选卡片（用于肩型/腰型/体格等会出现组合词的维度）：勾选态用左侧圆点+描边区分，样式与 OptionCard 保持一致
-function MultiOptionCard({ label, sub, active, onClick }: {
-  label: string; sub?: string; active: boolean; onClick: () => void
-}) {
-  return (
-    <button onClick={onClick} style={{
-      border: `1px solid ${active ? C.gold : C.border}`,
-      background: active ? '#fdf8ee' : '#fff',
-      padding: '16px 20px', textAlign: 'left', cursor: 'pointer',
-      transition: 'all 0.2s', width: '100%', borderRadius: '6px',
-      display: 'flex', alignItems: 'center', gap: '14px',
-    }}>
-      <span style={{
-        width: '18px', height: '18px', borderRadius: '4px', flexShrink: 0,
-        border: `1.5px solid ${active ? C.gold : C.border}`,
-        background: active ? C.gold : 'transparent',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-      }}>
-        {active && <span style={{ color: '#fff', fontSize: '12px', lineHeight: 1 }}>✓</span>}
-      </span>
-      <span>
-        <p style={{ fontFamily: 'Georgia, serif', fontSize: '15px', color: active ? C.gold : C.h2, margin: 0 }}>{label}</p>
-        {sub && <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, margin: '4px 0 0' }}>{sub}</p>}
-      </span>
-    </button>
-  )
-}
+// 多选卡片组件已删除（2026-09-03）：肩型/腰型/体格/臀部/胸部/身体轮廓等题目已陆续全部改成单选，
+// 目前整个测试流程里已经没有题目在用多选勾选样式了
 
 function ProgressBar({ current, total, label }: { current: number; total: number; label: string }) {
   return (
@@ -202,7 +177,7 @@ export default function BodyTestPage() {
   const [bodyShape, setBodyShape] = useState<string[]>([]) // 多选：H型/X型/A型/V型（与打分矩阵词汇一致，带"型"字）
   const [showXTrap, setShowXTrap] = useState(false)
 
-  // 皮肉测试 3 维度
+  // 身体轮廓 3 维度
   const [hipProtrude, setHipProtrude] = useState<string[]>([])
   const [chestProtrude, setChestProtrude] = useState<string[]>([])
   const [fleshTexture, setFleshTexture] = useState<string[]>([])
@@ -383,7 +358,7 @@ export default function BodyTestPage() {
         colorDone={!!localStorage.getItem(userScopedKey('aiffd_25season', user))}
         preferenceDone={false}
         currentLabel={
-          phase === 'skeleton' ? '骨架测试' : phase === 'flesh' ? '皮肉测试' : phase === 'qixue' ? '气血态' : undefined
+          phase === 'skeleton' ? '骨架测试' : phase === 'flesh' ? '身体轮廓' : phase === 'qixue' ? '气血态' : undefined
         }
         currentNum={(phase === 'skeleton' || phase === 'flesh' || phase === 'qixue') ? currentQuestionNumber : undefined}
         currentTotal={(phase === 'skeleton' || phase === 'flesh' || phase === 'qixue') ? TOTAL_QUESTIONS : undefined}
@@ -435,12 +410,12 @@ export default function BodyTestPage() {
                 了解你的<br />体型底色
               </h1>
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: C.muted, lineHeight: 1.8, margin: 0 }}>
-                通过骨架、皮肉和气血态三个维度，建立专属体型档案。
+                通过骨架、身体轮廓和气血态三个维度，建立专属体型档案。
               </p>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <OptionCard label="AI 拍照识别" sub="上传正面照片，AI 自动预填骨架与皮肉判断，可手动修正" active={method === 'ai'} onClick={() => setMethod('ai')} />
-              <OptionCard label="手动填写数据" sub="输入胸围、腰围、臀围，辅助后续骨架与皮肉判断" active={method === 'manual'} onClick={() => setMethod('manual')} />
+              <OptionCard label="AI 拍照识别" sub="上传正面照片，AI 自动识别骨架特征，可手动修正" active={method === 'ai'} onClick={() => setMethod('ai')} />
+              <OptionCard label="手动填写数据" sub="输入胸围、腰围、臀围，辅助后续骨架判断" active={method === 'manual'} onClick={() => setMethod('manual')} />
             </div>
             <button onClick={() => setPhase('data')} disabled={!method}
               style={method ? btnGold : { ...btnGold, background: '#e0e0e0', cursor: 'not-allowed' }}>
@@ -485,8 +460,8 @@ export default function BodyTestPage() {
             )}
             {aiStatus === 'done' && (
               <div style={{ background: '#fdf8ee', border: `1px solid ${C.gold}`, borderRadius: '8px', padding: '20px' }}>
-                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', marginBottom: '8px' }}>AI 已预填骨架与皮肉判断</p>
-                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, margin: 0 }}>接下来的骨架测试、皮肉测试步骤中，你可以确认或手动修正每一项</p>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', marginBottom: '8px' }}>AI 已预填骨架识别结果</p>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, margin: 0 }}>接下来的骨架测试、身体轮廓步骤中，你可以确认或手动修正每一项</p>
               </div>
             )}
             <div style={{ display: 'flex', gap: '12px' }}>
@@ -505,7 +480,7 @@ export default function BodyTestPage() {
                 <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', marginBottom: '8px' }}>体型计算器</p>
                 <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '26px', color: C.h2, fontWeight: 400, margin: 0 }}>输入你的围度数据</h2>
                 <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '8px' }}>
-                  用软尺紧贴皮肤测量，站立自然呼吸状态，单位：cm。这组数据将用于辅助后续骨架与皮肉判断的默认建议。
+                  用软尺紧贴皮肤测量，站立自然呼吸状态，单位：cm。这组数据仅供参考，后续每一题仍需要你自己判断作答。
                 </p>
               </div>
 
@@ -647,8 +622,8 @@ export default function BodyTestPage() {
             setTimeout(goNextSkeleton, AUTO_ADVANCE_DELAY)
           }
 
-          // 骨架区块目前所有题目都已经改成单选（肩型/腰型/体格都不再是多选），
-          // 皮肉测试区块仍然是多选，那边单独定义了自己的 toggle 函数（见下方 flesh 区块）
+          // 骨架区块和身体轮廓（原皮肉测试）区块目前所有题目都已经改成单选，
+          // 整个测试流程里已经没有题目在用多选 toggle 逻辑了
 
           const boneScaleOptions = [
             { id: 'S', label: '小骨架', img: '/bone_small.png' },
@@ -890,7 +865,7 @@ export default function BodyTestPage() {
           )
         })()}
 
-        {/* ── Step 3: 皮肉测试（3题，均为多选组合词）── */}
+        {/* ── Step 3: 身体轮廓（3题，均为单选）── */}
         {phase === 'flesh' && (() => {
           const questions = [
             { title: '从侧面看，你的臀部轮廓更接近哪一种？', value: hipProtrude, set: setHipProtrude, options: [
@@ -904,34 +879,27 @@ export default function BodyTestPage() {
               { id: 'full', label: '轮廓较饱满', sub: '胸部相对于躯干较有体积，上半身曲线比较明显' },
               { id: 'uncertain', label: '不太确定', sub: '受内衣、体重变化或其他因素影响，暂时难以判断' },
             ]},
-            { title: '你的皮肉质地接近哪些描述？（可多选）', value: fleshTexture, set: setFleshTexture, options: [
-              { id: '软肉', label: '软肉', sub: '触感柔软，有肉感' },
-              { id: '紧实', label: '紧实', sub: '触感紧致，线条清楚' },
-              { id: '健壮', label: '健壮', sub: '骨肉结实，力量感强' },
-              { id: '松肉', label: '松肉', sub: '皮肉松弛' },
-              { id: '适中', label: '适中', sub: '不紧不松' },
-              { id: '肌肉', label: '肌肉', sub: '肌肉线条明显' },
+            { title: '你的身体轮廓更接近哪种状态？', value: fleshTexture, set: setFleshTexture, options: [
+              { id: 'taut', label: '紧实清晰', sub: '身体轮廓较紧，骨点或肌肉转折相对清楚，不容易显得柔软圆润' },
+              { id: 'balanced', label: '自然均衡', sub: '身体既没有明显的紧绷或肌肉感，也没有明显的柔软饱满感' },
+              { id: 'soft', label: '柔和饱满', sub: '即使体重不高，上臂、大腿或腰腹仍容易呈现柔软、圆润的轮廓' },
+              { id: 'uncertain', label: '不太确定', sub: '受运动、体重变化或年龄状态影响，目前难以判断' },
             ]},
           ]
           const current = questions[fleshIdx]
-          // 目前只有"臀部轮廓"这一题（fleshIdx 0）改成了单选，胸部和皮肉质地两题仍然是多选
-          // 臀部（0）和胸部（1）都已改成单选，皮肉质地（2）仍然是多选
-          const isFleshSingleSelect = fleshIdx === 0 || fleshIdx === 1
+          // 2026-09-03：臀部、胸部、身体轮廓三题现在全部改成单选了，点选即自动跳下一题，
+          // 不再需要多选的 toggle 切换逻辑和手动"继续"按钮
 
           const selectAndAdvanceFlesh = (set: (v: string[]) => void, val: string) => {
             set([val])
             setTimeout(goNextFlesh, AUTO_ADVANCE_DELAY)
           }
 
-          const toggle = (arr: string[], set: (v: string[]) => void, val: string) => {
-            set(arr.includes(val) ? arr.filter(v => v !== val) : [...arr, val])
-          }
-
           return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
               <div>
                 <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', marginBottom: '8px' }}>
-                  STEP 02 · 皮肉测试 · {fleshIdx + 1} / 3
+                  STEP 02 · 身体轮廓 · {fleshIdx + 1} / 3
                 </p>
                 <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '26px', color: C.h2, fontWeight: 400, margin: 0 }}>
                   Q{currentQuestionNumber} · {current.title}
@@ -941,32 +909,23 @@ export default function BodyTestPage() {
                     请穿着无明显厚垫的内衣或合身上衣，观察胸部相对于肩、腰和躯干的整体比例
                   </p>
                 )}
+                {fleshIdx === 2 && (
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '10px', lineHeight: 1.7 }}>
+                    自然站立时，观察上臂、大腿和腰腹的整体轮廓，请忽略暂时性的体重变化
+                  </p>
+                )}
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {current.options.map((o, i) => (
-                  isFleshSingleSelect ? (
-                    <OptionCard key={o.id} label={`${letterOf(i)} · ${o.label}`} sub={o.sub}
-                      active={current.value[0] === o.id}
-                      onClick={() => selectAndAdvanceFlesh(current.set, o.id)} />
-                  ) : (
-                    <MultiOptionCard key={o.id} label={`${letterOf(i)} · ${o.label}`} sub={o.sub} active={current.value.includes(o.id)}
-                      onClick={() => toggle(current.value, current.set, o.id)} />
-                  )
+                  <OptionCard key={o.id} label={`${letterOf(i)} · ${o.label}`} sub={o.sub}
+                    active={current.value[0] === o.id}
+                    onClick={() => selectAndAdvanceFlesh(current.set, o.id)} />
                 ))}
               </div>
 
               <div style={{ display: 'flex', gap: '12px' }}>
                 <button onClick={goBackFlesh} style={btnOutline}>← 返回</button>
-                {!isFleshSingleSelect && (
-                  <button
-                    onClick={goNextFlesh}
-                    disabled={current.value.length === 0}
-                    style={current.value.length > 0
-                      ? { ...btnGold, flex: 1 } : { ...btnGold, flex: 1, background: '#e0e0e0', cursor: 'not-allowed' }}>
-                    继续
-                  </button>
-                )}
               </div>
             </div>
           )
