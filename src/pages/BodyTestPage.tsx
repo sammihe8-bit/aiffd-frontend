@@ -870,11 +870,11 @@ export default function BodyTestPage() {
 
         {/* ── Step 3: 身体轮廓（3题，均为单选）── */}
         {phase === 'flesh' && (() => {
-          const questions = [
+          const questions: { title: string; value: string[]; set: (v: string[]) => void; options: { id: string; label: string; sub: string; img?: string }[] }[] = [
             { title: '从侧面看，你的臀部轮廓更接近哪一种？', value: hipProtrude, set: setHipProtrude, options: [
-              { id: '扁平', label: '扁平', sub: '臀部向后突出较少，侧面弧度不明显' },
-              { id: '适中', label: '适中', sub: '臀部有自然弧度，向后突出程度适中' },
-              { id: '圆翘', label: '圆翘', sub: '臀部向后突出明显，侧面弧度较饱满' },
+              { id: '扁平', label: '扁平', sub: '臀部向后突出较少，侧面弧度不明显', img: '/hip-flat.png' },
+              { id: '适中', label: '适中', sub: '臀部有自然弧度，向后突出程度适中', img: '/hip-medium.png' },
+              { id: '圆翘', label: '圆翘', sub: '臀部向后突出明显，侧面弧度较饱满', img: '/hip-round.png' },
             ]},
             { title: '从侧面看，你的胸部轮廓更接近哪一种？', value: chestProtrude, set: setChestProtrude, options: [
               { id: 'shallow', label: '较平缓', sub: '胸部向前延伸较少，侧面轮廓比较平缓' },
@@ -919,13 +919,34 @@ export default function BodyTestPage() {
                 )}
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {current.options.map((o, i) => (
-                  <OptionCard key={o.id} label={`${letterOf(i)} · ${o.label}`} sub={o.sub}
-                    active={current.value[0] === o.id}
-                    onClick={() => selectAndAdvanceFlesh(current.set, o.id)} />
-                ))}
-              </div>
+              {fleshIdx === 0 ? (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+                  {current.options.map((o, i) => {
+                    const active = current.value[0] === o.id
+                    return (
+                      <button key={o.id} onClick={() => selectAndAdvanceFlesh(current.set, o.id)} style={{
+                        border: `1px solid ${active ? C.gold : C.border}`, outline: 'none',
+                        boxShadow: active ? `0 0 0 2px ${C.gold}` : 'none',
+                        borderRadius: '8px', padding: 0, cursor: 'pointer', overflow: 'hidden',
+                        background: '#f8f4f1', transition: 'all 0.2s',
+                      }}>
+                        {/* 图片本身已经画好了标题和说明文字，这里不再额外叠加文字，避免重复 */}
+                        <img src={o.img} alt={`${o.label}：${o.sub}`} style={{
+                          width: '100%', height: 'auto', display: 'block',
+                        }} />
+                      </button>
+                    )
+                  })}
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {current.options.map((o, i) => (
+                    <OptionCard key={o.id} label={`${letterOf(i)} · ${o.label}`} sub={o.sub}
+                      active={current.value[0] === o.id}
+                      onClick={() => selectAndAdvanceFlesh(current.set, o.id)} />
+                  ))}
+                </div>
+              )}
 
               <div style={{ display: 'flex', gap: '12px' }}>
                 <button onClick={goBackFlesh} style={btnOutline}>← 返回</button>
