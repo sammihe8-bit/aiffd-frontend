@@ -829,6 +829,9 @@ export default function BodyTestPage() {
                         onClick={() => {
                           setBodyShape([o.id])
                           setShowXTrap(o.id === 'X型')
+                          // 只有选中 X 型才留在本题手动确认（好让人看到下面的陷阱提示），
+                          // 其余 5 个选项跟别的单选题一样自动跳下一题
+                          if (o.id !== 'X型') setTimeout(goNextSkeleton, AUTO_ADVANCE_DELAY)
                         }} />
                     ))}
                   </div>
@@ -848,7 +851,7 @@ export default function BodyTestPage() {
 
               <div style={{ display: 'flex', gap: '12px' }}>
                 <button onClick={goBackSkeleton} style={btnOutline}>← 返回</button>
-                {isBodyShapeQ && (() => {
+                {isBodyShapeQ && bodyShape[0] === 'X型' && (() => {
                   const currentValue = bodyShape
                   return (
                     <button
