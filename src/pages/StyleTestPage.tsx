@@ -23,6 +23,11 @@ const btnOutline: React.CSSProperties = {
   fontSize: '12px', cursor: 'pointer',
 }
 
+// 选项字母标注：A/B/C/D/E，跟 BodyTestPage 里的同名工具函数保持一致，用于"整体风格复核"的选项
+function letterOf(i: number): string {
+  return String.fromCharCode(65 + i)
+}
+
 // 图文单选卡片：嘴部宽度/嘴唇厚度这两组用，配图 + 标题 + 说明，单选（同组内选中一个自动取消其他）
 function ImageRadioCard({ img, label, sub, active, onClick, imgHeight = 140, imgFit = 'cover' }: {
   img: string; label: string; sub?: string; active: boolean; onClick: () => void; imgHeight?: number; imgFit?: 'cover' | 'contain'
@@ -203,7 +208,61 @@ const FACE_QUESTIONS = [
   },
 ]
 
-type Phase = 'intro' | 'face' | 'report'
+// ─── 整体风格复核（原"气血态"）──────────────────────────────────
+// 2026-09-04 架构调整：这 4 题原本放在体型测试里，现在独立成一个模块，插在面部测试完成之后、
+// 出最终结果之前。作用也从"直接决定 13 型所属大类家族"改成"辅助校验前面体型+面部测出的结果"——
+// 体型+面部两层匹配引擎的得分占最终家族判定权重的 80%-85%，这 4 题占 15%-20%，加权逻辑在
+// styleScoring.ts 的 computeStyleScore 第二个参数（qiXueState）里实现，见该文件 VERIFY_WEIGHT_RATIO。
+// 5 态直选计票机制不变：阴/阴多阳少/阴阳和谐/阴少阳多/阳，4 票选最高票，打平判定为"阴阳和谐"（居中态）。
+// 这个结果也不只用于风格判定——色彩测试那边依赖它计算五行，所以存档的 key（aiffd_qixue_result）
+// 和数据结构（qiXueState + q1~q4）必须保持不变。
+const VERIFY_QUESTIONS = [
+  {
+    title: '你的气质第一印象更接近哪一种？',
+    hint: '观察自己在不刻意造型时给人的第一感觉。',
+    optionText: {
+      '阴': '温婉柔美，让人想亲近', '阴多阳少': '清新灵动，元气感强', '阴阳和谐': '优雅得体，落落大方',
+      '阴少阳多': '自然松弛，随性洒脱', '阳': '干练飒爽，气场强烈',
+    },
+  },
+  {
+    title: '你的身体整体线条给人的感觉更接近哪一种？',
+    hint: '综合看上臂、腰腹、大腿这些部位给人的整体印象，不用纠结胖瘦或触感。',
+    optionText: {
+      '阴': '柔软丰盈，曲线感强', '阴多阳少': '紧致小巧，灵巧轻盈', '阴阳和谐': '匀称适中，不软不硬',
+      '阴少阳多': '自然松弛，不刻意雕琢', '阳': '紧实健硕，线条分明',
+    },
+  },
+  {
+    title: '你的面部整体线条更接近哪一种？',
+    hint: '请综合观察脸部轮廓和五官线条给人的整体感觉，跟性格无关。',
+    optionText: {
+      '阴': '圆润饱满，五官柔和', '阴多阳少': '小巧精致，略带俏皮', '阴阳和谐': '端正对称，比例均衡',
+      '阴少阳多': '舒展自然，不做作', '阳': '棱角分明，五官立体锐利',
+    },
+  },
+  {
+    title: '熟悉你的人通常怎样评价你的整体气场？',
+    hint: '想一想家人、朋友这些真正了解你的人的评价，而不是陌生人第一眼因为穿着、职业或场合产生的印象。',
+    optionText: {
+      '阴': '性感、有女人味', '阴多阳少': '可爱、少女感', '阴阳和谐': '优雅、精致',
+      '阴少阳多': '随性、休闲', '阳': '帅气、有力量感',
+    },
+  },
+]
+
+// 气血态：5 态直选计票，取最高票；打平判定为"阴阳和谐"（居中态）
+function calcQiXue(q1: string, q2: string, q3: string, q4: string): string {
+  const scores: Record<string, number> = { '阴': 0, '阴多阳少': 0, '阴阳和谐': 0, '阴少阳多': 0, '阳': 0 }
+  ;[q1, q2, q3, q4].forEach(v => { if (v && scores[v] !== undefined) scores[v]++ })
+  const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1])
+  const top = sorted[0][1]
+  const tied = sorted.filter(([, v]) => v === top)
+  if (tied.length > 1) return '阴阳和谐'
+  return sorted[0][0]
+}
+
+type Phase = 'intro' | 'face' | 'verify' | 'report'
 
 // 结果页用的一句话气质文案，按家族给（同一家族内的档位共用一句），后续想按 13 型精细区分可以再拆
 const FAMILY_TAGLINE: Record<string, string> = {
@@ -234,6 +293,12 @@ export default function StyleTestPage() {
   // 嘴唇题的两组单选（宽度/厚度）分别记录用户选中的选项 id，供高亮显示；
   // 两组都选完后才把对应的中文标签合并写进 faceAnswers.lip，供后续打分和展示用
   const [imageComboSelections, setImageComboSelections] = useState<Record<string, Record<string, string>>>({})
+  // "整体风格复核"4 题的当前索引和四个答案（阴/阴多阳少/阴阳和谐/阴少阳多/阳 五选一）
+  const [verifyIdx, setVerifyIdx] = useState(0)
+  const [verifyQ1, setVerifyQ1] = useState('')
+  const [verifyQ2, setVerifyQ2] = useState('')
+  const [verifyQ3, setVerifyQ3] = useState('')
+  const [verifyQ4, setVerifyQ4] = useState('')
   // 报告页展示的结果：要么是这次刚测完当场算出来的，要么是一进页面就发现已经测过、直接读存档来的
   const [completedResult, setCompletedResult] = useState<StyleReportResult | null>(null)
 
@@ -262,10 +327,16 @@ export default function StyleTestPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id])
 
-  // 答完最后一题面部测试：算出最终结论，存档，展示结果页
-  const finishFaceTest = () => {
+  // 答完"整体风格复核"最后一题：算出最终结论，存档，展示结果页
+  // 13 型结论由体型+面部两层匹配引擎算出家族粗匹配分，再叠加"整体风格复核"4 题映射家族的
+  // 校验加成（占最终家族判定权重 15%-20%，具体换算逻辑见 styleScoring.ts 的 VERIFY_WEIGHT_RATIO），
+  // 加成只影响"五大家族选哪个"这一层，不影响锁定家族后"具体是哪个变体"的精匹配结果。
+  const finishAll = () => {
+    // 整体风格复核 4 题先算出五态，作为家族层的校验加成传给打分引擎；
+    // qiXueState 本身也单独存档，供色彩测试计算五行使用（key 和结构不变）
+    const qiXueState = calcQiXue(verifyQ1, verifyQ2, verifyQ3, verifyQ4)
     const finalAnswers: StyleAnswers = { ...(bodyResult ?? {}), ...faceAnswers } as StyleAnswers
-    const scoreResult = computeStyleScore(finalAnswers)
+    const scoreResult = computeStyleScore(finalAnswers, qiXueState)
     const payload: StyleReportResult = { variant: scoreResult.winningVariant, styleInfo: scoreResult.winningStyleInfo }
 
     localStorage.setItem(userScopedKey('aiffd_style_result', user), JSON.stringify({
@@ -282,17 +353,31 @@ export default function StyleTestPage() {
     })
     localStorage.setItem(userScopedKey('aiffd_face_result', user), JSON.stringify(faceDetail))
 
+    // 整体风格复核 4 题的结果单独存档，供色彩测试计算五行使用
+    localStorage.setItem(userScopedKey('aiffd_qixue_result', user), JSON.stringify({
+      qiXueState, q1: verifyQ1, q2: verifyQ2, q3: verifyQ3, q4: verifyQ4,
+    }))
+
     setCompletedResult(payload)
     setPhase('report')
   }
 
   const goNextFace = () => {
     if (faceIdx < FACE_QUESTIONS.length - 1) setFaceIdx(faceIdx + 1)
-    else finishFaceTest()
+    else { setPhase('verify'); setVerifyIdx(0) } // 面部测试做完，进入"整体风格复核"，还不直接出结果
   }
   const goBackFace = () => {
     if (faceIdx > 0) setFaceIdx(faceIdx - 1)
     else setPhase('intro')
+  }
+
+  const goNextVerify = () => {
+    if (verifyIdx < VERIFY_QUESTIONS.length - 1) setVerifyIdx(verifyIdx + 1)
+    else finishAll()
+  }
+  const goBackVerify = () => {
+    if (verifyIdx > 0) setVerifyIdx(verifyIdx - 1)
+    else { setPhase('face'); setFaceIdx(FACE_QUESTIONS.length - 1) }
   }
 
   // 图文双组单选题（嘴唇、面颊……）：某一组选完就记下来，等这道题的所有组都选完，
@@ -313,7 +398,9 @@ export default function StyleTestPage() {
   }
 
   const reset = () => {
-    setPhase('intro'); setFaceIdx(0); setFaceAnswers({}); setImageComboSelections({}); setCompletedResult(null)
+    setPhase('intro'); setFaceIdx(0); setFaceAnswers({}); setImageComboSelections({})
+    setVerifyIdx(0); setVerifyQ1(''); setVerifyQ2(''); setVerifyQ3(''); setVerifyQ4('')
+    setCompletedResult(null)
   }
 
   return (
@@ -323,9 +410,9 @@ export default function StyleTestPage() {
         formDone={!!completedResult}
         colorDone={!!localStorage.getItem(userScopedKey('aiffd_25season', user))}
         preferenceDone={false}
-        currentLabel={phase === 'face' ? FACE_QUESTIONS[faceIdx].title : undefined}
-        currentNum={phase === 'face' ? faceIdx + 1 : undefined}
-        currentTotal={phase === 'face' ? FACE_QUESTIONS.length : undefined}
+        currentLabel={phase === 'face' ? FACE_QUESTIONS[faceIdx].title : phase === 'verify' ? '整体风格复核' : undefined}
+        currentNum={phase === 'face' ? faceIdx + 1 : phase === 'verify' ? verifyIdx + 1 : undefined}
+        currentTotal={phase === 'face' ? FACE_QUESTIONS.length : phase === 'verify' ? VERIFY_QUESTIONS.length : undefined}
       />
       <div style={{ padding: '60px 24px' }}>
       <div style={{ maxWidth: '680px', margin: '0 auto' }}>
@@ -342,8 +429,8 @@ export default function StyleTestPage() {
               </h2>
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.body, lineHeight: 1.8, marginTop: '14px' }}>
                 {bodyResult
-                  ? '风格测试的 13 型结论 = 体型测试的骨架+皮肉数据 + 接下来 6 道面部测试题，两者一起计算。'
-                  : '风格测试需要用到体型测试（骨架+皮肉）的数据才能计算最终结论，请先完成体型测试。'}
+                  ? '风格测试分三步：体型测试（已完成）→ 面部测试 → 整体风格复核，三部分一起算出你的 13 型结论。'
+                  : '风格测试需要用到体型测试（骨架+身体轮廓）的数据才能计算最终结论，请先完成体型测试。'}
               </p>
             </div>
 
@@ -411,6 +498,60 @@ export default function StyleTestPage() {
                   style={hasAnswer ? { ...btnGold, flex: 1 } : { ...btnGold, flex: 1, background: '#e0e0e0', cursor: 'not-allowed' }}>
                   继续
                 </button>
+              </div>
+            </div>
+          )
+        })()}
+
+        {/* ── 整体风格复核：4 题，用来校验前面测出的类型是否符合整体印象，不是重新测量身体或五官 ── */}
+        {phase === 'verify' && (() => {
+          const idx = verifyIdx
+          const q = VERIFY_QUESTIONS[idx]
+          const values = [verifyQ1, verifyQ2, verifyQ3, verifyQ4]
+          const setters = [setVerifyQ1, setVerifyQ2, setVerifyQ3, setVerifyQ4]
+          const options = Object.entries(q.optionText) as [string, string][]
+
+          const selectAndAdvance = (val: string) => {
+            setters[idx](val)
+            setTimeout(goNextVerify, 260)
+          }
+
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+              <ProgressBar current={idx + 1} total={VERIFY_QUESTIONS.length} label="整体风格复核" />
+              <div>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', marginBottom: '8px' }}>
+                  整体风格复核 · {idx + 1} / {VERIFY_QUESTIONS.length}
+                </p>
+                <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '26px', color: C.h2, fontWeight: 400, margin: 0 }}>
+                  {q.title}
+                </h2>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '10px', lineHeight: 1.7 }}>
+                  {q.hint}
+                </p>
+                {idx === 0 && (
+                  <div style={{ background: '#fdf8ee', borderRadius: '8px', padding: '14px 18px', marginTop: '16px' }}>
+                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.body, lineHeight: 1.8, margin: 0 }}>
+                      💡 这 4 题不是重新测量身体尺寸或五官，而是从你的整体印象出发，帮忙校验一下前面体型和面部测出的类型准不准。
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {options.map(([id, text], i) => (
+                  <button key={id} onClick={() => selectAndAdvance(id)} style={{
+                    border: `1px solid ${values[idx] === id ? C.gold : C.border}`,
+                    background: values[idx] === id ? '#fdf8ee' : '#fff',
+                    padding: '14px 18px', textAlign: 'left', cursor: 'pointer', borderRadius: '6px',
+                  }}>
+                    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: values[idx] === id ? C.h2 : C.body }}>{letterOf(i)} · {text}</span>
+                  </button>
+                ))}
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button onClick={goBackVerify} style={btnOutline}>← 返回</button>
               </div>
             </div>
           )
