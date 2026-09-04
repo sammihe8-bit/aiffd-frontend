@@ -937,7 +937,7 @@ export default function BodyTestPage() {
                           <p style={{
                             fontFamily: 'Inter, sans-serif', fontSize: '13px', margin: 0, padding: '10px 12px',
                             textAlign: 'center' as const, color: active ? C.gold : C.h2, background: '#fff',
-                          }}>{letterOf(i)}｜{o.label}</p>
+                          }}>{letterOf(i)} · {o.label}</p>
                         </button>
                       )
                     })}
