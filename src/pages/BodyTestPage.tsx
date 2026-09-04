@@ -11,10 +11,16 @@ const C = {
 }
 
 // ── 流程
-// AI 路径:    method → data(AI拍照) → skeleton(AI预填) → flesh → qixue → 完成后直接跳风格测试面部测试
-// 手动路径:   method → data(三围输入) → skeleton → flesh → qixue → 完成后直接跳风格测试面部测试
+// AI 路径:    method → data(AI拍照) → skeleton(AI预填) → flesh → 完成后直接跳风格测试面部测试
+// 手动路径:   method → data(三围输入) → skeleton → flesh → 完成后直接跳风格测试面部测试
 // 2026-08-31 调整：不再单独展示体型档案报告页，测完直接进风格测试；所有结果统一在 ProfilePage 展示，也不再用体型轮廓图。
-type Phase = 'method' | 'data' | 'skeleton' | 'flesh' | 'qixue'
+// 2026-09-04 调整：原本放在这里的"气血态"4 题（气质印象/身体线条/面部线条/气场评价）已经整体挪到
+// 面部测试完成之后的独立模块"整体风格复核"（STEP 03），不再属于体型测试的一部分，
+// 相关的 phase/state/计算函数已从本文件移除，详见 aiffd-frontend 项目里新的"整体风格复核"页面。
+// 注意：那 4 题算出的结果（qiXueState）不只用于风格判定，色彩测试那边也依赖它计算五行，
+// 新模块必须保留同样的 localStorage 存储行为（key 名和数据结构不变），不能因为主要用途变成
+// "辅助校验 13 型"就把这条线断掉。
+type Phase = 'method' | 'data' | 'skeleton' | 'flesh'
 
 
 // ── 计算函数
@@ -24,18 +30,7 @@ type Phase = 'method' | 'data' | 'skeleton' | 'flesh' | 'qixue'
 // 一起交给 `src/utils/styleScoring.ts` 的两层匹配引擎统一打分（详见架构文档第 2.3 节）。
 // 本页只负责采集原始答案并存入 localStorage，calcBoneQuality / calcBodyLine / calcStyleVariant
 // 三个旧函数（基于已废弃的"气血 4 态投票直接决定家族"架构）已删除。
-
-// 气血态：5 态直选计票，取最高票；打平判定为"阴阳和谐"（居中态）
-// 注意：此结果不再用于风格测试的 13 型判定，只作为色彩测试计算五行的输入（见架构文档第四章）
-function calcQiXue(q1: string, q2: string, q3: string, q4: string): string {
-  const scores: Record<string, number> = { '阴': 0, '阴多阳少': 0, '阴阳和谐': 0, '阴少阳多': 0, '阳': 0 }
-  ;[q1, q2, q3, q4].forEach(v => { if (v && scores[v] !== undefined) scores[v]++ })
-  const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1])
-  const top = sorted[0][1]
-  const tied = sorted.filter(([, v]) => v === top)
-  if (tied.length > 1) return '阴阳和谐'
-  return sorted[0][0]
-}
+// calcQiXue 函数已随气血态 4 题一起移到"整体风格复核"独立模块，本文件不再需要。
 
 // 进度快照的形状（存进 localStorage 或后端 test_progress 表的 data_json，两边格式统一）
 interface BodySnapshot {
@@ -43,8 +38,7 @@ interface BodySnapshot {
   heightRange: string; boneScale: string; boneRoundness: string; boneWidth: string
   shoulderShape: string[]; waistType: string[]; waistLength: string; limbLength: string; handFootSize: string
   bodyShape: string[]; hipProtrude: string[]; chestProtrude: string[]; fleshTexture: string[]
-  q1: string; q2: string; q3: string; q4: string
-  skeletonIdx: number; fleshIdx: number; qixueIdx: number
+  skeletonIdx: number; fleshIdx: number
   waist_ui_label?: string[]; body_shape_hint?: string[] // 2026-08-28 新增，见 WAIST_BODYSHAPE_HINT 注释
 }
 
@@ -182,16 +176,9 @@ export default function BodyTestPage() {
   const [chestProtrude, setChestProtrude] = useState<string[]>([])
   const [fleshTexture, setFleshTexture] = useState<string[]>([])
 
-  // 气血态 4 题
-  const [q1, setQ1] = useState('')
-  const [q2, setQ2] = useState('')
-  const [q3, setQ3] = useState('')
-  const [q4, setQ4] = useState('')
-
-  // 一屏一题：各环节当前题目索引（骨架 0-6 / 皮肉 0-2 / 气血态 0-3）
+  // 一屏一题：各环节当前题目索引（骨架 0-9 / 身体轮廓 0-2）
   const [skeletonIdx, setSkeletonIdx] = useState(0)
   const [fleshIdx, setFleshIdx] = useState(0)
-  const [qixueIdx, setQixueIdx] = useState(0)
 
   const checkConflict = (b: string, w: string, h: string) => {
     const bN = parseFloat(b), wN = parseFloat(w), hN = parseFloat(h)
@@ -202,10 +189,9 @@ export default function BodyTestPage() {
   }
 
   // 2026-08-26 架构调整：本页不再计算最终 13 型结果（需要面部测试的数据才能算完整）。
-  // 这里只做两件事：① 把气血 4 题的结果单独存起来，供色彩测试计算五行用；
-  // ② 把体型测试 11 个原始维度存入 aiffd_body_result，供 StyleTestPage 的两层匹配引擎读取。
+  // 本函数只负责把体型测试 11 个原始维度存入 aiffd_body_result，供 StyleTestPage 的两层匹配引擎读取。
+  // （原本这里还会顺带算气血态 qiXueState，现在气血态 4 题已经挪到独立模块，这里不再处理）
   const computeResult = () => {
-    const qiXueState = calcQiXue(q1, q2, q3, q4)
     // 腰型答案派生出的体格倾向提示（X/V/H/O），只在后台数据里出现，界面从不展示
     const bodyShapeHint = waistType.map(w => WAIST_BODYSHAPE_HINT[w]).filter(Boolean)
     // Q6(横向轮廓) + Q7(纵向比例) 合并成最终喂给引擎的腰型组合词，"适中"不贡献任何词
@@ -222,16 +208,13 @@ export default function BodyTestPage() {
       fleshTexture, hip: hipProtrude, chest: chestProtrude,
       waist_ui_label: waistCombined, body_shape_hint: bodyShapeHint, // 额外保留两层数据，供后台/分析使用
     }))
-    // 气血 4 题结果单独存放，供色彩测试计算五行主辅百分比使用，不参与风格测试打分
-    localStorage.setItem(userScopedKey('aiffd_qixue_result', user), JSON.stringify({ qiXueState, q1, q2, q3, q4 }))
 
-    // 续测存档：标记为已完成（phase 字段这里借用 'qixue' 表示"最后一步已完成"，
-    // 完成态不再依赖这个字段做展示，只是满足存档结构需要）
+    // 续测存档：标记为已完成
     const snapshot: BodySnapshot = {
-      phase: 'qixue', method, bust, waist, hip,
+      phase: 'flesh', method, bust, waist, hip,
       heightRange, boneScale, boneRoundness, boneWidth, shoulderShape, waistType, waistLength,
       limbLength, handFootSize, bodyShape, hipProtrude, chestProtrude, fleshTexture,
-      q1, q2, q3, q4, skeletonIdx, fleshIdx, qixueIdx,
+      skeletonIdx, fleshIdx,
       waist_ui_label: waistType, body_shape_hint: bodyShapeHint,
     }
     if (token) {
@@ -244,12 +227,12 @@ export default function BodyTestPage() {
     navigate('/test/style')
   }
 
-  // 骨架(10) + 皮肉(3) + 气血态(4) = 17 题，跨环节统一计数，方便一屏一题的进度展示
-  const TOTAL_QUESTIONS = 17
+  // 骨架(10) + 身体轮廓(3) = 13 题，跨环节统一计数，方便一屏一题的进度展示
+  // （原本的气血态 4 题已经挪到面部测试之后的独立模块"整体风格复核"，不再计入这里）
+  const TOTAL_QUESTIONS = 13
   const currentQuestionNumber =
     phase === 'skeleton' ? skeletonIdx + 1 :
-    phase === 'flesh' ? 10 + fleshIdx + 1 :
-    phase === 'qixue' ? 10 + 3 + qixueIdx + 1 : 0
+    phase === 'flesh' ? 10 + fleshIdx + 1 : 0
 
   // 选完一题后延迟自动跳下一题，让用户先看到选中态再切换
   const AUTO_ADVANCE_DELAY = 260
@@ -263,19 +246,11 @@ export default function BodyTestPage() {
   }
   const goNextFlesh = () => {
     if (fleshIdx < 2) setFleshIdx(fleshIdx + 1)
-    else { setPhase('qixue'); setQixueIdx(0) }
+    else computeResult()
   }
   const goBackFlesh = () => {
     if (fleshIdx > 0) setFleshIdx(fleshIdx - 1)
     else { setPhase('skeleton'); setSkeletonIdx(9) }
-  }
-  const goNextQixue = () => {
-    if (qixueIdx < 3) setQixueIdx(qixueIdx + 1)
-    else computeResult()
-  }
-  const goBackQixue = () => {
-    if (qixueIdx > 0) setQixueIdx(qixueIdx - 1)
-    else { setPhase('flesh'); setFleshIdx(2) }
   }
 
   // ── 进度自动存档：只要用户已经开始答题（不在 method / report），且已经处理完续测提示，
@@ -288,7 +263,7 @@ export default function BodyTestPage() {
       phase, method, bust, waist, hip,
       heightRange, boneScale, boneRoundness, boneWidth, shoulderShape, waistType, waistLength,
       limbLength, handFootSize, bodyShape, hipProtrude, chestProtrude, fleshTexture,
-      q1, q2, q3, q4, skeletonIdx, fleshIdx, qixueIdx,
+      skeletonIdx, fleshIdx,
     }
     if (token) {
       testProgressAPI.save('body', 'in_progress', snapshot).catch(() => { /* 网络失败就先不管，下次答题会再存一次 */ })
@@ -296,9 +271,9 @@ export default function BodyTestPage() {
       localStorage.setItem(userScopedKey('aiffd_body_progress', user), JSON.stringify(snapshot))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, skeletonIdx, fleshIdx, qixueIdx, method, bust, waist, hip, heightRange, boneScale,
+  }, [phase, skeletonIdx, fleshIdx, method, bust, waist, hip, heightRange, boneScale,
       boneRoundness, boneWidth, shoulderShape, waistType, waistLength, limbLength, handFootSize, bodyShape,
-      hipProtrude, chestProtrude, fleshTexture, q1, q2, q3, q4, resumeChoice, token])
+      hipProtrude, chestProtrude, fleshTexture, resumeChoice, token])
 
   // 把存档快照里的所有字段恢复回各自的 state
   const applySnapshot = (s: BodySnapshot) => {
@@ -309,8 +284,7 @@ export default function BodyTestPage() {
     setLimbLength(s.limbLength ?? ''); setHandFootSize(s.handFootSize ?? '')
     setBodyShape(s.bodyShape ?? [])
     setHipProtrude(s.hipProtrude ?? []); setChestProtrude(s.chestProtrude ?? []); setFleshTexture(s.fleshTexture ?? [])
-    setQ1(s.q1 ?? ''); setQ2(s.q2 ?? ''); setQ3(s.q3 ?? ''); setQ4(s.q4 ?? '')
-    setSkeletonIdx(s.skeletonIdx ?? 0); setFleshIdx(s.fleshIdx ?? 0); setQixueIdx(s.qixueIdx ?? 0)
+    setSkeletonIdx(s.skeletonIdx ?? 0); setFleshIdx(s.fleshIdx ?? 0)
   }
 
   // "继续测试"：从存档里把所有答案和当前所在题目位置恢复回来
@@ -334,7 +308,6 @@ export default function BodyTestPage() {
     } else {
       localStorage.removeItem(userScopedKey('aiffd_body_progress', user))
       localStorage.removeItem(userScopedKey('aiffd_body_result', user))
-      localStorage.removeItem(userScopedKey('aiffd_qixue_result', user))
     }
     setResumeChoice('none')
   }
@@ -358,10 +331,10 @@ export default function BodyTestPage() {
         colorDone={!!localStorage.getItem(userScopedKey('aiffd_25season', user))}
         preferenceDone={false}
         currentLabel={
-          phase === 'skeleton' ? '骨架测试' : phase === 'flesh' ? '身体轮廓' : phase === 'qixue' ? '气血态' : undefined
+          phase === 'skeleton' ? '骨架测试' : phase === 'flesh' ? '身体轮廓' : undefined
         }
-        currentNum={(phase === 'skeleton' || phase === 'flesh' || phase === 'qixue') ? currentQuestionNumber : undefined}
-        currentTotal={(phase === 'skeleton' || phase === 'flesh' || phase === 'qixue') ? TOTAL_QUESTIONS : undefined}
+        currentNum={(phase === 'skeleton' || phase === 'flesh') ? currentQuestionNumber : undefined}
+        currentTotal={(phase === 'skeleton' || phase === 'flesh') ? TOTAL_QUESTIONS : undefined}
       />
       {/* 续测提醒弹窗：检测到本机存过体型测试的存档时显示 */}
       {resumeChoice !== 'none' && (
@@ -397,7 +370,7 @@ export default function BodyTestPage() {
       <div style={{ maxWidth: '680px', margin: '0 auto', padding: '48px 32px 80px' }}>
 
         {phase === 'data' && <ProgressBar current={1} total={4} label="BODY TEST" />}
-        {(phase === 'skeleton' || phase === 'flesh' || phase === 'qixue') && (
+        {(phase === 'skeleton' || phase === 'flesh') && (
           <ProgressBar current={currentQuestionNumber} total={TOTAL_QUESTIONS} label="BODY TEST" />
         )}
 
@@ -410,7 +383,7 @@ export default function BodyTestPage() {
                 了解你的<br />体型底色
               </h1>
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: C.muted, lineHeight: 1.8, margin: 0 }}>
-                通过骨架、身体轮廓和气血态三个维度，建立专属体型档案。
+                通过骨架和身体轮廓两个维度，建立专属体型档案。
               </p>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -950,65 +923,6 @@ export default function BodyTestPage() {
 
               <div style={{ display: 'flex', gap: '12px' }}>
                 <button onClick={goBackFlesh} style={btnOutline}>← 返回</button>
-              </div>
-            </div>
-          )
-        })()}
-
-        {/* ── Step 4: 气血态（4题，5态直选）── */}
-        {phase === 'qixue' && (() => {
-          const titles = [
-            '你的气质第一印象更接近？',
-            '你的皮肉 / 身形给人的感觉更接近？',
-            '你的面部线条更接近？',
-            '别人对你整体气场的评价更接近？',
-          ]
-          const values = [q1, q2, q3, q4]
-          const setters = [setQ1, setQ2, setQ3, setQ4]
-          const idx = qixueIdx
-          const options = [
-            { id: '阴', text: idx === 0 ? '温婉柔美，让人想亲近' : idx === 1 ? '柔软丰盈，曲线感强' : idx === 2 ? '圆润饱满，五官柔和' : '性感、有女人味' },
-            { id: '阴多阳少', text: idx === 0 ? '清新灵动，元气感强' : idx === 1 ? '紧致小巧，灵巧轻盈' : idx === 2 ? '小巧精致，略带俏皮' : '可爱、少女感' },
-            { id: '阴阳和谐', text: idx === 0 ? '优雅得体，落落大方' : idx === 1 ? '匀称适中，不软不硬' : idx === 2 ? '端正对称，比例均衡' : '优雅、精致' },
-            { id: '阴少阳多', text: idx === 0 ? '自然松弛，随性洒脱' : idx === 1 ? '自然松弛，不刻意雕琢' : idx === 2 ? '舒展自然，不做作' : '随性、休闲' },
-            { id: '阳', text: idx === 0 ? '干练飒爽，气场强烈' : idx === 1 ? '紧实健硕，线条分明' : idx === 2 ? '棱角分明，五官立体锐利' : '帅气、有力量感' },
-          ]
-
-          const selectAndAdvance = (val: string) => {
-            setters[idx](val)
-            setTimeout(goNextQixue, AUTO_ADVANCE_DELAY)
-          }
-
-          return (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-              <div>
-                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.gold, letterSpacing: '2px', marginBottom: '8px' }}>
-                  STEP 03 · 气血态 · {idx + 1} / 4
-                </p>
-                <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '26px', color: C.h2, fontWeight: 400, margin: 0 }}>
-                  Q{currentQuestionNumber} · {titles[idx]}
-                </h2>
-                {idx === 0 && (
-                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, marginTop: '8px' }}>
-                    气血态决定你的 13 型所属大类家族（浪漫 / 少年 / 经典 / 自然 / 戏剧）
-                  </p>
-                )}
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {options.map((o, i) => (
-                  <button key={o.id} onClick={() => selectAndAdvance(o.id)} style={{
-                    border: `1px solid ${values[idx] === o.id ? C.gold : C.border}`,
-                    background: values[idx] === o.id ? '#fdf8ee' : '#fff',
-                    padding: '14px 18px', textAlign: 'left', cursor: 'pointer', borderRadius: '6px',
-                  }}>
-                    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: values[idx] === o.id ? C.h2 : C.body }}>{letterOf(i)} · {o.text}</span>
-                  </button>
-                ))}
-              </div>
-
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <button onClick={goBackQixue} style={btnOutline}>← 返回</button>
               </div>
             </div>
           )
