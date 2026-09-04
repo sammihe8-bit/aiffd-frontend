@@ -872,9 +872,9 @@ export default function BodyTestPage() {
         {phase === 'flesh' && (() => {
           const questions: { title: string; value: string[]; set: (v: string[]) => void; options: { id: string; label: string; sub: string; img?: string }[] }[] = [
             { title: '从侧面看，你的臀部轮廓更接近哪一种？', value: hipProtrude, set: setHipProtrude, options: [
-              { id: '扁平', label: '扁平', sub: '臀部向后突出较少，侧面弧度不明显', img: '/hip-flat.png' },
-              { id: '适中', label: '适中', sub: '臀部有自然弧度，向后突出程度适中', img: '/hip-medium.png' },
-              { id: '圆翘', label: '圆翘', sub: '臀部向后突出明显，侧面弧度较饱满', img: '/hip-round.png' },
+              { id: '扁平', label: '臀部侧面线条平缓', sub: '臀部向后突出较少，侧面弧度不明显', img: '/hip-flat.png' },
+              { id: '适中', label: '臀部侧面线条适中', sub: '臀部有自然弧度，向后突出程度适中', img: '/hip-medium.png' },
+              { id: '圆翘', label: '臀部侧面线条饱满', sub: '臀部向后突出明显，侧面弧度较饱满', img: '/hip-round.png' },
             ]},
             { title: '从侧面看，你的胸部轮廓更接近哪一种？', value: chestProtrude, set: setChestProtrude, options: [
               { id: 'shallow', label: '较平缓', sub: '胸部向前延伸较少，侧面轮廓比较平缓' },
@@ -921,7 +921,7 @@ export default function BodyTestPage() {
 
               {fleshIdx === 0 ? (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
-                  {current.options.map((o) => {
+                  {current.options.map((o, i) => {
                     const active = current.value[0] === o.id
                     return (
                       <button key={o.id} onClick={() => selectAndAdvanceFlesh(current.set, o.id)} style={{
@@ -930,10 +930,13 @@ export default function BodyTestPage() {
                         borderRadius: '8px', padding: 0, cursor: 'pointer', overflow: 'hidden',
                         background: '#f8f4f1', transition: 'all 0.2s',
                       }}>
-                        {/* 图片本身已经画好了标题和说明文字，这里不再额外叠加文字，避免重复 */}
-                        <img src={o.img} alt={`${o.label}：${o.sub}`} style={{
+                        <img src={o.img} alt={o.label} style={{
                           width: '100%', height: 'auto', display: 'block',
                         }} />
+                        <p style={{
+                          fontFamily: 'Inter, sans-serif', fontSize: '13px', margin: 0, padding: '10px 12px',
+                          textAlign: 'center' as const, color: active ? C.gold : C.h2, background: '#fff',
+                        }}>{letterOf(i)}｜{o.label}</p>
                       </button>
                     )
                   })}
