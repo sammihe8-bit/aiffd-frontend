@@ -295,13 +295,15 @@ export default function FashionTestPage() {
                   </h2>
                   <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '8px' }}>请选择所有不喜欢的类型，不限数量。</p>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                  {STYLE_OPTIONS.map(o => (
-                    <StyleTagCard key={o.id} label={o.label} desc={o.desc}
-                      active={q3Selected.includes(o.id)}
-                      disabled={q3Selected.includes(NO_REJECTED_STYLE)}
-                      onClick={() => toggleQ3(o.id)} />
-                  ))}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+                    {STYLE_OPTIONS.map(o => (
+                      <StyleImageCard key={o.id} label={o.label} desc={o.desc} img={o.img}
+                        active={q3Selected.includes(o.id)}
+                        disabled={q3Selected.includes(NO_REJECTED_STYLE)}
+                        onClick={() => toggleQ3(o.id)} />
+                    ))}
+                  </div>
                   <StyleTagCard label="没有特别排斥的风格" desc="以上类型都还能接受"
                     active={q3Selected.includes(NO_REJECTED_STYLE)} onClick={() => toggleQ3(NO_REJECTED_STYLE)} />
                 </div>
