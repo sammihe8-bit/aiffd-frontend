@@ -40,6 +40,28 @@ function StyleTagCard({ label, desc, active, disabled, onClick }: {
   )
 }
 
+// Q1 专用的图文卡片：配图 + 标题 + 说明，右上角可以点星标记"最喜欢"
+// 12 张图尺寸完全一致（1024×1536），不需要裁切，直接完整显示
+function StyleImageCard({ label, desc, img, active, disabled, onClick }: {
+  label: string; desc: string; img: string; active: boolean; disabled?: boolean; onClick: () => void
+}) {
+  return (
+    <button onClick={onClick} disabled={disabled && !active} style={{
+      border: `1.5px solid ${active ? C.gold : C.border}`,
+      background: active ? '#fdf8ee' : '#fff',
+      padding: 0, textAlign: 'left', cursor: (disabled && !active) ? 'not-allowed' : 'pointer',
+      transition: 'all 0.2s', borderRadius: '8px', width: '100%', overflow: 'hidden',
+      opacity: (disabled && !active) ? 0.5 : 1,
+    }}>
+      <img src={img} alt={label} style={{ width: '100%', height: 'auto', display: 'block' }} />
+      <div style={{ padding: '12px 14px' }}>
+        <p style={{ fontFamily: 'Georgia, serif', fontSize: '16px', color: active ? C.gold : C.h2, margin: '0 0 4px' }}>{label}</p>
+        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, margin: 0 }}>{desc}</p>
+      </div>
+    </button>
+  )
+}
+
 export default function FashionTestPage() {
   const { user } = useAuth()
   const [phase, setPhase] = useState<Phase>('intro')
@@ -201,14 +223,16 @@ export default function FashionTestPage() {
                     const active = q1Selected.includes(o.id)
                     return (
                       <div key={o.id} style={{ position: 'relative' }}>
-                        <StyleTagCard label={o.label} desc={o.desc} active={active} disabled={q1Selected.length >= 5} onClick={() => toggleQ1(o.id)} />
+                        <StyleImageCard label={o.label} desc={o.desc} img={o.img} active={active} disabled={q1Selected.length >= 5} onClick={() => toggleQ1(o.id)} />
                         {active && (
                           <button
                             onClick={() => setQ1Primary(q1Primary === o.id ? null : o.id)}
                             style={{
                               position: 'absolute', top: '8px', right: '8px', border: 'none', cursor: 'pointer',
-                              background: 'none', fontSize: '18px', color: q1Primary === o.id ? C.gold : '#ddd',
-                              lineHeight: 1, padding: '4px',
+                              background: 'rgba(255,255,255,0.85)', borderRadius: '50%', width: '30px', height: '30px',
+                              fontSize: '16px', color: q1Primary === o.id ? C.gold : '#bbb',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+                              boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
                             }}
                             aria-label="设为最喜欢"
                           >★</button>
