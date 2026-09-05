@@ -204,6 +204,12 @@ export default function ProfilePage() {
   const generationPct = (styleResult && finalSeason25) ? 5 : 0 // 合·生成图谱：形+色都完整后，系统才算"生成了图谱"
   const completionPct = formPct + colorPct + preferencePct + generationPct
 
+  // 是否已订阅付费方案：风格档案图谱（品牌匹配 + 优惠券）是 AIFFD 商业化的核心，
+  // 免费用户点进来之前要先引导去订阅页，而不是直接看到完整图谱。
+  // TODO: subscriptionTier 是占位字段名，等后端接入真实订阅系统后替换成实际字段
+  // （比如 u?.plan === 'pro' / u?.plan === 'premium'）。
+  const isSubscribed = !!(u?.subscriptionTier && u.subscriptionTier !== 'free' && u.subscriptionTier !== 'newsletter')
+
   // "全部重新测试"：清空体型/风格/五官/色彩三层的存档，回到体型测试第一步重新开始
   const restartAllTests = () => {
     const keysToClear = [
@@ -595,20 +601,28 @@ export default function ProfilePage() {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
           {[
-            { to: '/test/body', label: '风格测试', desc: '体型 + 五官 · 13型判定', done: !!styleResult },
-            { to: '/test/color', label: '色彩测试', desc: '冷暖 → 五季 → 25季', done: !!finalSeason25 },
-            { to: '/test/fashion', label: '个人时尚选择', desc: '理想形象 · 第一部分', done: !!fashionResult },
-            { to: '/profile', label: '风格档案图谱', desc: '完整档案总览（本页）', done: false },
+            { to: '/test/body', label: '风格测试', desc: '体型 + 五官 · 13型判定', done: !!styleResult, locked: false },
+            { to: '/test/color', label: '色彩测试', desc: '冷暖 → 五季 → 25季', done: !!finalSeason25, locked: false },
+            { to: '/test/fashion', label: '个人时尚选择', desc: '理想形象 · 第一部分', done: !!fashionResult, locked: false },
+            {
+              // 未订阅时点这张卡先去订阅页，而不是直接进本页的完整图谱
+              to: isSubscribed ? '/profile' : '/subscribe',
+              label: '风格档案图谱',
+              desc: isSubscribed ? '完整档案总览（本页）' : '订阅解锁品牌匹配与专属优惠',
+              done: false,
+              locked: !isSubscribed,
+            },
           ].map(item => (
             <Link key={item.label} to={item.to} style={{
               display: 'block', padding: '20px',
-              background: '#fff', border: `1px solid ${item.done ? C.gold : C.border}`,
+              background: '#fff', border: `1px solid ${item.done || item.locked ? C.gold : C.border}`,
               borderRadius: '8px', textDecoration: 'none',
               transition: 'border-color .2s',
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
                 <p style={{ fontFamily: 'Georgia, serif', fontSize: '15px', color: C.h1, margin: 0 }}>{item.label}</p>
                 {item.done && <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '9px', color: C.gold, border: `1px solid ${C.gold}`, padding: '2px 6px', letterSpacing: '1px' }}>✓ 已完成</span>}
+                {item.locked && <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '9px', color: C.gold, border: `1px solid ${C.gold}`, padding: '2px 6px', letterSpacing: '1px' }}>🔒 需订阅</span>}
               </div>
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: C.muted, margin: 0 }}>{item.desc}</p>
             </Link>
