@@ -180,8 +180,11 @@ export default function ProfilePage() {
   } | null = fashionRaw ? (() => { try { return JSON.parse(fashionRaw) } catch { return null } })() : null
 
   // "最想成为的样子"（Q1 的最喜欢选项）对应的插画，用于个人时尚选择区块右侧的卡片展示
-  const aspiredStyleImg = fashionResult?.aspired_style_primary
-    ? STYLE_OPTIONS.find(o => o.id === fashionResult.aspired_style_primary)?.img
+  // "最想成为的样子"配图：优先用 Q1 星标的"最喜欢"；如果当时没有点星标（primary 为空），
+  // 退而求其次用选中的第一项兜底，避免用户只是忘了点星标，右边就完全没有图可看
+  const aspiredStyleId = fashionResult?.aspired_style_primary || fashionResult?.aspired_style_secondary?.[0]
+  const aspiredStyleImg = aspiredStyleId
+    ? STYLE_OPTIONS.find(o => o.id === aspiredStyleId)?.img
     : undefined
 
   // 完整度计算：按 AIFFD 产品架构文档 3.2 节的比例（形45% + 色30% + 意20% + 合5%），
@@ -524,10 +527,10 @@ export default function ProfilePage() {
 
               {aspiredStyleImg && (
                 <div style={{ border: `1px solid ${C.border}`, borderRadius: '8px', overflow: 'hidden' }}>
-                  <img src={aspiredStyleImg} alt={styleLabelOf(fashionResult.aspired_style_primary!)} style={{ width: '100%', height: 'auto', display: 'block' }} />
+                  <img src={aspiredStyleImg} alt={styleLabelOf(aspiredStyleId!)} style={{ width: '100%', height: 'auto', display: 'block' }} />
                   <div style={{ padding: '10px 12px', textAlign: 'center' as const }}>
                     <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '9px', letterSpacing: '1px', color: C.muted, margin: '0 0 3px' }}>最想成为的样子</p>
-                    <p style={{ fontFamily: 'Georgia, serif', fontSize: '15px', color: C.gold, margin: 0 }}>{styleLabelOf(fashionResult.aspired_style_primary!)}</p>
+                    <p style={{ fontFamily: 'Georgia, serif', fontSize: '15px', color: C.gold, margin: 0 }}>{styleLabelOf(aspiredStyleId!)}</p>
                   </div>
                 </div>
               )}
