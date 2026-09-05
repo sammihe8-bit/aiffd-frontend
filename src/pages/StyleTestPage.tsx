@@ -301,6 +301,10 @@ export default function StyleTestPage() {
   const [verifyQ4, setVerifyQ4] = useState('')
   // 报告页展示的结果：要么是这次刚测完当场算出来的，要么是一进页面就发现已经测过、直接读存档来的
   const [completedResult, setCompletedResult] = useState<StyleReportResult | null>(null)
+  // "重新测试"按钮点了之后，先弹窗问清楚要重测哪一部分，而不是直接默默重测面部+复核——
+  // 体型数据是独立的一页（/test/body），这里的"重新测试"如果不问清楚，容易让人以为
+  // 连体型也会一起重新测，实际上只会重测面部测试+整体风格复核，体型数据原样保留
+  const [showRestartChoice, setShowRestartChoice] = useState(false)
 
   useEffect(() => {
     const raw = localStorage.getItem(userScopedKey('aiffd_body_result', user))
@@ -405,6 +409,34 @@ export default function StyleTestPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#faf9f7' }}>
+      {/* "重新测试"选择弹窗：区分清楚"只重测面部+复核"和"连体型一起重测"，避免用户误以为体型数据也会被清空 */}
+      {showRestartChoice && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(15,15,13,0.5)', zIndex: 100,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px',
+        }}>
+          <div style={{ background: '#fff', borderRadius: '10px', padding: '32px', maxWidth: '420px', width: '100%' }}>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.gold, marginBottom: '10px' }}>重新测试</p>
+            <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h1, fontWeight: 400, margin: '0 0 12px' }}>要重新测哪一部分？</h2>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.body, lineHeight: 1.8, marginBottom: '24px' }}>
+              体型（骨架 + 身体轮廓）是单独一页测试，跟这里的面部测试、整体风格复核是分开的。如果只是想重新回答面部或复核题，体型数据会保留不变。
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <button onClick={() => { setShowRestartChoice(false); reset() }} style={btnGold}>
+                只重新测面部测试 + 整体风格复核
+              </button>
+              <Link to="/test/body" onClick={() => setShowRestartChoice(false)} style={{
+                ...btnOutline, textDecoration: 'none', textAlign: 'center' as const, display: 'block',
+              }}>
+                连体型一起重新测
+              </Link>
+              <button onClick={() => setShowRestartChoice(false)} style={{
+                background: 'none', border: 'none', padding: '8px', fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, cursor: 'pointer',
+              }}>取消</button>
+            </div>
+          </div>
+        </div>
+      )}
       <ThreeStageProgress
         activeStage="form"
         formDone={!!completedResult}
@@ -599,7 +631,7 @@ export default function StyleTestPage() {
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '12px' }}>
-              <button onClick={reset} style={btnOutline}>重新测试</button>
+              <button onClick={() => setShowRestartChoice(true)} style={btnOutline}>重新测试</button>
               <Link to="/onboarding" style={{ ...btnOutline, textDecoration: 'none', textAlign: 'center' as const, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>返回测试中心</Link>
               <Link to="/profile" style={{ ...btnGold, textDecoration: 'none', textAlign: 'center' as const, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>进入我的档案</Link>
             </div>
