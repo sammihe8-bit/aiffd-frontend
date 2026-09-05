@@ -262,13 +262,15 @@ export default function FashionTestPage() {
                   </h2>
                   <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '8px' }}>最多选择 3 项。</p>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                  {STYLE_OPTIONS.map(o => (
-                    <StyleTagCard key={o.id} label={o.label} desc={o.desc}
-                      active={q2Selected.includes(o.id)}
-                      disabled={q2Selected.length >= 3 || q2Selected.includes(NO_FIXED_STYLE)}
-                      onClick={() => toggleQ2(o.id)} />
-                  ))}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+                    {STYLE_OPTIONS.map(o => (
+                      <StyleImageCard key={o.id} label={o.label} desc={o.desc} img={o.img}
+                        active={q2Selected.includes(o.id)}
+                        disabled={q2Selected.length >= 3 || q2Selected.includes(NO_FIXED_STYLE)}
+                        onClick={() => toggleQ2(o.id)} />
+                    ))}
+                  </div>
                   <StyleTagCard label="没有固定风格" desc="穿搭比较随机，没有明显偏好方向"
                     active={q2Selected.includes(NO_FIXED_STYLE)} onClick={() => toggleQ2(NO_FIXED_STYLE)} />
                 </div>
