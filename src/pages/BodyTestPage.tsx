@@ -302,6 +302,12 @@ export default function BodyTestPage() {
   }
 
   // "重新测试"：清空存档和已完成结果，从头开始
+  // "重新测试"：清空体型测试自己的存档，同时也要清掉下游依赖体型数据算出来的结果——
+  // 风格测试的 13 型结论（aiffd_style_result）、五官详情（aiffd_face_result）、
+  // 整体风格复核（aiffd_qixue_result）都是拿这次体型数据算出来的，体型数据一变这些就过时了。
+  // 之前这里漏掉了这三个 key，导致重新测完体型后，StyleTestPage 一进来发现旧的
+  // aiffd_style_result 还在，就直接跳去旧结果页，完全跳过面部测试和整体风格复核——
+  // 2026-09-04 修复。
   const discardAndRestart = () => {
     if (token) {
       testProgressAPI.clear('body').catch(() => { /* 清不掉也不阻塞，反正下次答题会用新数据覆盖 */ })
@@ -309,6 +315,9 @@ export default function BodyTestPage() {
       localStorage.removeItem(userScopedKey('aiffd_body_progress', user))
       localStorage.removeItem(userScopedKey('aiffd_body_result', user))
     }
+    localStorage.removeItem(userScopedKey('aiffd_style_result', user))
+    localStorage.removeItem(userScopedKey('aiffd_face_result', user))
+    localStorage.removeItem(userScopedKey('aiffd_qixue_result', user))
     setResumeChoice('none')
   }
 
