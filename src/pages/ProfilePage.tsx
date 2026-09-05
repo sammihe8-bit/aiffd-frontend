@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth'
 import { userAPI } from '../utils/api'
 import { userScopedKey } from '../utils/userStorage'
 import { getStylePortraitSrc } from '../utils/styleImages'
-import { styleLabelOf } from '../utils/fashionStyleOptions'
+import { STYLE_OPTIONS, styleLabelOf } from '../utils/fashionStyleOptions'
 
 const C = {
   gold: '#B8973A', border: '#e8e8e4', muted: '#999999',
@@ -178,6 +178,11 @@ export default function ProfilePage() {
     current_aspired_style_gap: 'stable' | 'gap' | 'no_fixed_style'
     rejected_style_codes: string[]
   } | null = fashionRaw ? (() => { try { return JSON.parse(fashionRaw) } catch { return null } })() : null
+
+  // "最想成为的样子"（Q1 的最喜欢选项）对应的插画，用于个人时尚选择区块右侧的卡片展示
+  const aspiredStyleImg = fashionResult?.aspired_style_primary
+    ? STYLE_OPTIONS.find(o => o.id === fashionResult.aspired_style_primary)?.img
+    : undefined
 
   // 完整度计算：按 AIFFD 产品架构文档 3.2 节的比例（形45% + 色30% + 意20% + 合5%），
   // 不再是"5个字段各占20%"的平均分配——三大模块权重不同，"形"和"色"本身各自也是分层递进的。
@@ -471,49 +476,61 @@ export default function ProfilePage() {
         <div style={{ background: '#fff', border: `1px solid ${C.border}`, borderRadius: '8px', padding: '28px', marginBottom: '24px' }}>
           <SectionTitle label="个人时尚选择" />
           {fashionResult ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <div>
-                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '2px', color: C.muted, marginBottom: '10px' }}>最想成为的样子</p>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                  {fashionResult.aspired_style_primary && (
-                    <span style={{ border: `1.5px solid ${C.gold}`, background: '#fdf8ee', color: C.gold, padding: '5px 12px', borderRadius: '20px', fontFamily: 'Inter, sans-serif', fontSize: '12px' }}>
-                      ★ {styleLabelOf(fashionResult.aspired_style_primary)}
-                    </span>
-                  )}
-                  {fashionResult.aspired_style_secondary.map(id => (
-                    <span key={id} style={{ border: `1px solid ${C.border}`, color: C.body, padding: '5px 12px', borderRadius: '20px', fontFamily: 'Inter, sans-serif', fontSize: '12px' }}>
-                      {styleLabelOf(id)}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '2px', color: C.muted, marginBottom: '10px' }}>实际最常穿</p>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                  {fashionResult.current_aspired_style_gap === 'no_fixed_style' ? (
-                    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted }}>没有固定风格</span>
-                  ) : fashionResult.current_style.map(id => (
-                    <span key={id} style={{ border: `1px solid ${C.border}`, color: C.body, padding: '5px 12px', borderRadius: '20px', fontFamily: 'Inter, sans-serif', fontSize: '12px' }}>
-                      {styleLabelOf(id)}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              {fashionResult.rejected_style_codes.length > 0 && !fashionResult.rejected_style_codes.includes('no_rejected_style') && (
+            <div style={{ display: 'grid', gridTemplateColumns: aspiredStyleImg ? '1fr 180px' : '1fr', gap: '24px', alignItems: 'start' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 <div>
-                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '2px', color: C.muted, marginBottom: '10px' }}>明确不喜欢</p>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '2px', color: C.muted, marginBottom: '10px' }}>最想成为的样子</p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                    {fashionResult.rejected_style_codes.map(id => (
-                      <span key={id} style={{ background: '#f5f5f3', color: C.body, padding: '5px 12px', borderRadius: '20px', fontFamily: 'Inter, sans-serif', fontSize: '12px' }}>
+                    {fashionResult.aspired_style_primary && (
+                      <span style={{ border: `1.5px solid ${C.gold}`, background: '#fdf8ee', color: C.gold, padding: '5px 12px', borderRadius: '20px', fontFamily: 'Inter, sans-serif', fontSize: '12px' }}>
+                        ★ {styleLabelOf(fashionResult.aspired_style_primary)}
+                      </span>
+                    )}
+                    {fashionResult.aspired_style_secondary.map(id => (
+                      <span key={id} style={{ border: `1px solid ${C.border}`, color: C.body, padding: '5px 12px', borderRadius: '20px', fontFamily: 'Inter, sans-serif', fontSize: '12px' }}>
                         {styleLabelOf(id)}
                       </span>
                     ))}
                   </div>
                 </div>
+                <div>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '2px', color: C.muted, marginBottom: '10px' }}>实际最常穿</p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {fashionResult.current_aspired_style_gap === 'no_fixed_style' ? (
+                      <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted }}>没有固定风格</span>
+                    ) : fashionResult.current_style.map(id => (
+                      <span key={id} style={{ border: `1px solid ${C.border}`, color: C.body, padding: '5px 12px', borderRadius: '20px', fontFamily: 'Inter, sans-serif', fontSize: '12px' }}>
+                        {styleLabelOf(id)}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                {fashionResult.rejected_style_codes.length > 0 && !fashionResult.rejected_style_codes.includes('no_rejected_style') && (
+                  <div>
+                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '2px', color: C.muted, marginBottom: '10px' }}>明确不喜欢</p>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                      {fashionResult.rejected_style_codes.map(id => (
+                        <span key={id} style={{ background: '#f5f5f3', color: C.body, padding: '5px 12px', borderRadius: '20px', fontFamily: 'Inter, sans-serif', fontSize: '12px' }}>
+                          {styleLabelOf(id)}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, margin: 0 }}>
+                  商品款式、色彩选择等其余模块即将上线。
+                </p>
+              </div>
+
+              {aspiredStyleImg && (
+                <div style={{ border: `1px solid ${C.border}`, borderRadius: '8px', overflow: 'hidden' }}>
+                  <img src={aspiredStyleImg} alt={styleLabelOf(fashionResult.aspired_style_primary!)} style={{ width: '100%', height: 'auto', display: 'block' }} />
+                  <div style={{ padding: '10px 12px', textAlign: 'center' as const }}>
+                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '9px', letterSpacing: '1px', color: C.muted, margin: '0 0 3px' }}>最想成为的样子</p>
+                    <p style={{ fontFamily: 'Georgia, serif', fontSize: '15px', color: C.gold, margin: 0 }}>{styleLabelOf(fashionResult.aspired_style_primary!)}</p>
+                  </div>
+                </div>
               )}
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, margin: 0 }}>
-                商品款式、色彩选择等其余模块即将上线。
-              </p>
             </div>
           ) : (
             <div style={{ textAlign: 'center', padding: '24px 0' }}>
