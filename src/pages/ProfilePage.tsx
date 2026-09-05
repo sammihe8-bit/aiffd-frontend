@@ -182,10 +182,16 @@ export default function ProfilePage() {
   // "最想成为的样子"（Q1 的最喜欢选项）对应的插画，用于个人时尚选择区块右侧的卡片展示
   // "最想成为的样子"配图：优先用 Q1 星标的"最喜欢"；如果当时没有点星标（primary 为空），
   // 退而求其次用选中的第一项兜底，避免用户只是忘了点星标，右边就完全没有图可看
-  const aspiredStyleId = fashionResult?.aspired_style_primary || fashionResult?.aspired_style_secondary?.[0]
-  const aspiredStyleImg = aspiredStyleId
-    ? STYLE_OPTIONS.find(o => o.id === aspiredStyleId)?.img
-    : undefined
+  // "最想成为的样子"配图：Q1 选中的全部风格（primary + secondary 合起来就是当时选的 3-5 项），
+  // 每一项都配一张小卡片；星标"最喜欢"的那项（如果有）用金色边框突出显示
+  const aspiredStyleCards = fashionResult
+    ? [
+        ...(fashionResult.aspired_style_primary ? [fashionResult.aspired_style_primary] : []),
+        ...fashionResult.aspired_style_secondary,
+      ]
+        .map(id => ({ id, ...STYLE_OPTIONS.find(o => o.id === id) }))
+        .filter((o): o is { id: string; label: string; desc: string; img: string } => !!o.img)
+    : []
 
   // 完整度计算：按 AIFFD 产品架构文档 3.2 节的比例（形45% + 色30% + 意20% + 合5%），
   // 不再是"5个字段各占20%"的平均分配——三大模块权重不同，"形"和"色"本身各自也是分层递进的。
@@ -479,7 +485,7 @@ export default function ProfilePage() {
         <div style={{ background: '#fff', border: `1px solid ${C.border}`, borderRadius: '8px', padding: '28px', marginBottom: '24px' }}>
           <SectionTitle label="个人时尚选择" />
           {fashionResult ? (
-            <div style={{ display: 'grid', gridTemplateColumns: aspiredStyleImg ? '1fr 180px' : '1fr', gap: '24px', alignItems: 'start' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: aspiredStyleCards.length > 0 ? '1fr 340px' : '1fr', gap: '24px', alignItems: 'start' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 <div>
                   <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '2px', color: C.muted, marginBottom: '10px' }}>最想成为的样子</p>
@@ -525,12 +531,32 @@ export default function ProfilePage() {
                 </p>
               </div>
 
-              {aspiredStyleImg && (
-                <div style={{ border: `1px solid ${C.border}`, borderRadius: '8px', overflow: 'hidden' }}>
-                  <img src={aspiredStyleImg} alt={styleLabelOf(aspiredStyleId!)} style={{ width: '100%', height: 'auto', display: 'block' }} />
-                  <div style={{ padding: '10px 12px', textAlign: 'center' as const }}>
-                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '9px', letterSpacing: '1px', color: C.muted, margin: '0 0 3px' }}>最想成为的样子</p>
-                    <p style={{ fontFamily: 'Georgia, serif', fontSize: '15px', color: C.gold, margin: 0 }}>{styleLabelOf(aspiredStyleId!)}</p>
+              {aspiredStyleCards.length > 0 && (
+                <div>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '9px', letterSpacing: '1px', color: C.muted, marginBottom: '8px', textAlign: 'center' as const }}>最想成为的样子</p>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+                    {aspiredStyleCards.map(o => {
+                      const isPrimary = o.id === fashionResult.aspired_style_primary
+                      return (
+                        <div key={o.id} style={{
+                          border: `1px solid ${isPrimary ? C.gold : C.border}`,
+                          borderRadius: '8px', overflow: 'hidden', position: 'relative',
+                        }}>
+                          {isPrimary && (
+                            <span style={{
+                              position: 'absolute', top: '4px', right: '4px', fontSize: '13px', color: C.gold,
+                              background: 'rgba(255,255,255,0.85)', borderRadius: '50%', width: '20px', height: '20px',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            }}>★</span>
+                          )}
+                          <img src={o.img} alt={o.label} style={{ width: '100%', height: 'auto', display: 'block' }} />
+                          <p style={{
+                            fontFamily: 'Inter, sans-serif', fontSize: '11px', margin: 0, padding: '6px 4px',
+                            textAlign: 'center' as const, color: isPrimary ? C.gold : C.body,
+                          }}>{o.label}</p>
+                        </div>
+                      )
+                    })}
                   </div>
                 </div>
               )}
