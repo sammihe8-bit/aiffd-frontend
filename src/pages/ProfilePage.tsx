@@ -485,8 +485,10 @@ export default function ProfilePage() {
         <div style={{ background: '#fff', border: `1px solid ${C.border}`, borderRadius: '8px', padding: '28px', marginBottom: '24px' }}>
           <SectionTitle label="个人时尚选择" />
           {fashionResult ? (
-            <div style={{ display: 'grid', gridTemplateColumns: aspiredStyleCards.length > 0 ? '1fr 340px' : '1fr', gap: '24px', alignItems: 'start' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            // 两排布局：第一排三组文字标签横向并排，第二排是"最想成为的样子"对应的穿搭图，
+            // 不再是左文右图两栏——避免图片和文字要来回对照着看
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '24px' }}>
                 <div>
                   <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '2px', color: C.muted, marginBottom: '10px' }}>最想成为的样子</p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
@@ -526,15 +528,12 @@ export default function ProfilePage() {
                     </div>
                   </div>
                 )}
-                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, margin: 0 }}>
-                  商品款式、色彩选择等其余模块即将上线。
-                </p>
               </div>
 
               {aspiredStyleCards.length > 0 && (
-                <div>
-                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '9px', letterSpacing: '1px', color: C.muted, marginBottom: '8px', textAlign: 'center' as const }}>最想成为的样子</p>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+                <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: '20px' }}>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '2px', color: C.muted, marginBottom: '12px' }}>最想成为的样子 · 参考穿搭</p>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: '12px' }}>
                     {aspiredStyleCards.map(o => {
                       const isPrimary = o.id === fashionResult.aspired_style_primary
                       return (
@@ -560,6 +559,10 @@ export default function ProfilePage() {
                   </div>
                 </div>
               )}
+
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, margin: 0 }}>
+                商品款式、色彩选择等其余模块即将上线。
+              </p>
             </div>
           ) : (
             <div style={{ textAlign: 'center', padding: '24px 0' }}>
