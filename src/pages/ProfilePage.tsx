@@ -504,7 +504,8 @@ export default function ProfilePage() {
                     ))}
                   </div>
                 </div>
-                <div>
+                {/* 左边一条金色竖线，跟前一组区隔开 */}
+                <div style={{ borderLeft: `2px solid ${C.gold}`, paddingLeft: '24px' }}>
                   <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '2px', color: C.muted, marginBottom: '10px' }}>实际最常穿</p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                     {fashionResult.current_aspired_style_gap === 'no_fixed_style' ? (
@@ -517,7 +518,7 @@ export default function ProfilePage() {
                   </div>
                 </div>
                 {fashionResult.rejected_style_codes.length > 0 && !fashionResult.rejected_style_codes.includes('no_rejected_style') && (
-                  <div>
+                  <div style={{ borderLeft: `2px solid ${C.gold}`, paddingLeft: '24px' }}>
                     <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '2px', color: C.muted, marginBottom: '10px' }}>明确不喜欢</p>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                       {fashionResult.rejected_style_codes.map(id => (
