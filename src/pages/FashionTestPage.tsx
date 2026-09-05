@@ -218,7 +218,7 @@ export default function FashionTestPage() {
                   </h2>
                   <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, marginTop: '8px' }}>请选择最喜欢的 3 项，最多选择 5 项。选中后可以再点一次星标，标记其中最喜欢的 1 项。</p>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
                   {STYLE_OPTIONS.map(o => {
                     const active = q1Selected.includes(o.id)
                     return (
