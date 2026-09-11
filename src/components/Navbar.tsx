@@ -26,10 +26,12 @@ export default function Navbar() {
         maxWidth: '1200px', margin: '0 auto', padding: '0 32px',
         width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
-        {/* Logo：图标素材需要放进 public/ 目录，文件名 aiffd-logo.png */}
-        <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <img src="/aiffd-logo.png" alt="AIFFD" style={{ height: '32px', width: '32px', borderRadius: '8px', display: 'block' }} />
-          <span style={{ fontFamily: 'Georgia, serif', fontSize: '13px', color: '#B8973A', letterSpacing: '2px' }}>智搭</span>
+        {/* Logo：图1截图确认过，首页顶部这个 LOGO 就是这个 Navbar，不是 HomePage.tsx 里单独写的。
+            素材换成新给的 wordmark 图，裁掉了下面的英文 slogan（"Personal Style Intelligence"）只保留
+            "AIFFD 智搭"这一行——原图比例太宽、字太小，塞进 60px 高的导航栏放不下 slogan 还能看清楚。
+            文件需要放进 public/ 目录，文件名 aiffd-wordmark-compact.png */}
+        <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+          <img src="/aiffd-wordmark-compact.png" alt="AIFFD 智搭" style={{ height: '20px', width: 'auto', display: 'block' }} />
         </Link>
         {/* Nav links */}
         <nav style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
