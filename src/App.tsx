@@ -16,7 +16,7 @@ import SubscribePage from './pages/SubscribePage'
 import { useAuth } from './hooks/useAuth'
 import ColorElementPage from './pages/ColorElementPage'
 import FashionTestPage from './pages/FashionTestPage'
-
+import ResearchPage from './pages/ResearchPage'
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { token } = useAuth()
   const location = useLocation()
@@ -26,7 +26,6 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
     ? <>{children}</>
     : <Navigate to="/auth" replace state={{ reason: 'login_required', from: location.pathname }} />
 }
-
 export default function App() {
   return (
     <BrowserRouter>
@@ -41,7 +40,7 @@ export default function App() {
             <Route path="/column" element={<ColumnPage />} />
             <Route path="/virtual-fit" element={<VirtualFitPage />} />
             <Route path="/subscribe" element={<SubscribePage />} />  {/* ← 加在这里 */}
-
+            <Route path="/research" element={<ResearchPage />} />
             {/* 以下测试相关路由改为需要登录才能进入 */}
             <Route path="/test/body" element={
               <PrivateRoute><BodyTestPage /></PrivateRoute>
@@ -61,7 +60,6 @@ export default function App() {
             <Route path="/test/fashion" element={
               <PrivateRoute><FashionTestPage /></PrivateRoute>
             } />
-
             <Route path="/profile" element={
               <PrivateRoute><ProfilePage /></PrivateRoute>
             } />
