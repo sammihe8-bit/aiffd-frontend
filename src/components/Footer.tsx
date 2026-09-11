@@ -72,7 +72,6 @@ export default function Footer() {
               { label: '品牌故事', to: '/' },
               { label: '专栏', to: '/column' },
               { label: '订阅方案', to: '/subscribe' },
-              { label: '招聘', to: '/' },
             ]},
             { title: '支持', items: [
               { label: '帮助中心', to: '/' },
