@@ -84,6 +84,16 @@ const linkExternalOnDark: React.CSSProperties = {
   ...linkExternal, color: '#E4D9B8',
 }
 
+// 跟 Navbar.tsx 里 Logo 的 "AIFFD" 用同一套字体处理：Inter + 600 字重，
+// 页面里所有标题级别出现的 "AIFFD" 都套用这个，不要各处各写一套
+const aiffdWordmark: React.CSSProperties = {
+  fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '1px',
+}
+
+function Aiffd() {
+  return <span style={aiffdWordmark}>AIFFD</span>
+}
+
 function ExternalLink({ href, children, style }: { href: string; children: React.ReactNode; style: React.CSSProperties }) {
   return <a href={href} target="_blank" rel="noopener noreferrer" style={style}>{children}</a>
 }
@@ -198,8 +208,7 @@ export default function ResearchPage() {
         <div style={{ position: 'relative', maxWidth: '800px', margin: '0 auto', textAlign: 'center' as const }}>
           <p style={eyebrow}>Research &amp; Methodology</p>
           <h1 className="rp-hero-title" style={{ fontFamily: 'Georgia, serif', fontWeight: 400, color: P.ink, lineHeight: 1.25, margin: '0 0 14px' }}>
-            {/* 跟 Navbar.tsx 里 Logo 的 "AIFFD" 用同一套处理：Inter + 600 字重，只是字号更大，字距按比例收窄一些 */}
-            <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '1px' }}>AIFFD</span> 背后的研究与方法
+            <Aiffd /> 背后的研究与方法
           </h1>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '15px', color: P.muted, letterSpacing: '0.04em', margin: '0 0 32px' }}>
             Research-driven Personal Style Intelligence
@@ -267,7 +276,7 @@ export default function ResearchPage() {
               background: `radial-gradient(ellipse at 50% 0%, rgba(197,160,58,0.10), transparent 60%), ${P.dark}`,
             }}>
               <p style={{ fontFamily: 'Georgia, serif', fontSize: '24px', color: '#fff', margin: 0 }}>
-                AIFFD Personal Style Profile
+                <Aiffd /> <span style={{ color: '#fff' }}>Personal Style Profile</span>
               </p>
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: '#E4D9B8', margin: 0 }}>
                 Evolving Personal Style Intelligence
@@ -293,7 +302,7 @@ export default function ResearchPage() {
       <section id="framework" style={{ padding: '130px 32px', borderTop: `1px solid ${P.border}`, background: P.card }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <p style={eyebrow}>Research Framework</p>
-          <h2 className="rp-section-title" style={sectionTitle}>AIFFD 的研究框架</h2>
+          <h2 className="rp-section-title" style={sectionTitle}><Aiffd /> 的研究框架</h2>
 
           <div className="rp-framework-grid" style={{ marginTop: '56px' }}>
             {FRAMEWORK_CARDS.map(card => (
@@ -321,8 +330,8 @@ export default function ResearchPage() {
       <section className="rp-split" style={{ borderTop: `1px solid ${P.border}` }}>
         <div style={{ padding: '96px 48px', background: P.aiffdPanel, textAlign: 'center' as const }}>
           <p style={eyebrow}>Product × Research</p>
-          <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '28px', fontWeight: 400, color: P.ink, margin: '0 0 8px' }}>
-            AIFFD
+          <h2 style={{ fontSize: '28px', margin: '0 0 8px' }}>
+            <span style={{ ...aiffdWordmark, fontSize: '28px', color: P.ink }}>AIFFD</span>
           </h2>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: P.accentBrown, letterSpacing: '0.04em', margin: '0 0 24px' }}>
             Working Product &amp; Research Prototype
@@ -360,7 +369,7 @@ export default function ResearchPage() {
 
         <div style={{ gridColumn: '1 / -1', padding: '28px 48px', borderTop: `1px solid ${P.border}`, background: P.bg, textAlign: 'center' as const }}>
           <p style={{ fontFamily: 'Georgia, serif', fontSize: '15px', color: P.ink, margin: '0 0 4px' }}>
-            AIFFD 是正在运行的系统；OhSammi Research 记录这个系统背后的研究过程。
+            <Aiffd /> 是正在运行的系统；OhSammi Research 记录这个系统背后的研究过程。
           </p>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: P.muted, margin: 0 }}>
             AIFFD is the working system. OhSammi Research documents the thinking, methodology and ongoing development behind it.
@@ -377,7 +386,7 @@ export default function ResearchPage() {
             AIFFD 不把个人风格视为一个固定答案。
           </p>
           <p style={{ ...bodyText, margin: '0 auto 40px', textAlign: 'center' as const }}>
-            随着测试结果、个人偏好、穿搭反馈与未来的周期性校准不断增加，你的个人风格档案也可以持续更新。
+            随着测试结果、个人偏好、穿搭反馈与未来的周期性校准不断增加，你的个人风格档案将持续更新。
           </p>
 
           {/* Version timeline：V1.0 金色实心点 + 黑字（当前），后续版本灰色空心点 */}
