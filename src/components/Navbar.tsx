@@ -3,14 +3,17 @@ import { useAuth } from '../hooks/useAuth'
 export default function Navbar() {
   const { token, logout } = useAuth()
   const location = useLocation()
+  // "风格专栏"现在是外链（托管在 ohsammi.com），跟站内路由分开标记，
+  // 需要新窗口打开 + 显示 ↗；其余项都还是站内路由，用 <Link> 正常跳转
+  const STYLE_COLUMN_URL = 'https://www.ohsammi.com/'
   const navLinks = [
     { to: '/', label: '首页' },
-    { to: '/onboarding', label: '我的风格系统' },
+    { to: '/onboarding', label: '我的风格' },
     { to: '/virtual-fit', label: '虚拟试衣', highlight: true },
+    { external: true, href: STYLE_COLUMN_URL, label: '风格专栏 ↗' },
+    { to: '/research', label: '研究 Research' },
+    { to: '/subscribe', label: '会员' },
     { to: '/about', label: '关于' },
-    { to: '/column', label: '专栏' },
-    { to: '/research', label: 'Research' },
-    { to: '/subscribe', label: '订阅' },
   ]
   return (
     <header style={{
@@ -31,29 +34,32 @@ export default function Navbar() {
         {/* Nav links */}
         <nav style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
           {navLinks.map(link => {
-            const isActive = location.pathname === link.to
-            if (link.highlight) {
-              return (
-                <Link key={link.to} to={link.to} style={{
+            const isActive = !link.external && location.pathname === link.to
+            const linkStyle = link.highlight
+              ? {
                   fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '1.5px',
                   color: isActive ? '#fff' : '#B8973A',
                   background: isActive ? '#B8973A' : 'transparent',
                   border: '0.5px solid #B8973A',
                   padding: '5px 12px',
                   textDecoration: 'none', transition: 'all 0.2s',
-                }}>
+                }
+              : {
+                  fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '1.5px',
+                  color: isActive ? '#1a1a1a' : '#888',
+                  textDecoration: 'none', transition: 'color 0.2s',
+                  borderBottom: isActive ? '1px solid #1a1a1a' : 'none',
+                  paddingBottom: '2px',
+                }
+            if (link.external) {
+              return (
+                <a key={link.href} href={link.href} target="_blank" rel="noopener noreferrer" style={linkStyle}>
                   {link.label}
-                </Link>
+                </a>
               )
             }
             return (
-              <Link key={link.to} to={link.to} style={{
-                fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '1.5px',
-                color: isActive ? '#1a1a1a' : '#888',
-                textDecoration: 'none', transition: 'color 0.2s',
-                borderBottom: isActive ? '1px solid #1a1a1a' : 'none',
-                paddingBottom: '2px',
-              }}>
+              <Link key={link.to} to={link.to!} style={linkStyle}>
                 {link.label}
               </Link>
             )
