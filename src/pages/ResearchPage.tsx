@@ -324,7 +324,7 @@ export default function ResearchPage() {
 
       {/* ── 第四屏 · AIFFD × OhSammi（重新平衡为 50 / 50） ── */}
       <section className="rp-split" style={{ borderTop: `1px solid ${P.border}` }}>
-        <div style={{ padding: '96px 48px', background: P.aiffdPanel }}>
+        <div style={{ padding: '96px 48px', background: P.aiffdPanel, textAlign: 'center' as const }}>
           <p style={eyebrow}>Product × Research</p>
           <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '28px', fontWeight: 400, color: P.ink, margin: '0 0 8px' }}>
             AIFFD
@@ -332,7 +332,7 @@ export default function ResearchPage() {
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: P.accentBrown, letterSpacing: '0.04em', margin: '0 0 24px' }}>
             Working Product &amp; Research Prototype
           </p>
-          <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
             {['用户测试', 'Style Profile', 'AI 判断', '真实反馈', '产品验证'].map(t => (
               <li key={t} style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: P.body, display: 'flex', gap: '10px', alignItems: 'baseline' }}>
                 <span style={{ width: '4px', height: '4px', borderRadius: '50%', background: P.gold, display: 'inline-block' }} />
@@ -343,7 +343,7 @@ export default function ResearchPage() {
           <Link to={AIFFD_ENTRY_PATH} style={btnGoldFilled}>体验 AIFFD →</Link>
         </div>
 
-        <div style={{ padding: '96px 48px', background: P.dark }}>
+        <div style={{ padding: '96px 48px', background: P.dark, textAlign: 'center' as const }}>
           <p style={{ ...eyebrow, color: '#d9c68a' }}>Product × Research</p>
           <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '28px', fontWeight: 400, color: '#fff', margin: '0 0 8px' }}>
             OhSammi Research
@@ -351,7 +351,7 @@ export default function ResearchPage() {
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: P.darkMuted, letterSpacing: '0.04em', margin: '0 0 24px' }}>
             Founder Research Journal
           </p>
-          <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
             {['研究问题', '方法形成过程', 'AIFFD 系统迭代', '设计决策', 'AI 推荐、女性身份、信任与用户自主性相关研究'].map(t => (
               <li key={t} style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: '#d8d3c8', display: 'flex', gap: '10px', alignItems: 'baseline' }}>
                 <span style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#d9c68a', display: 'inline-block' }} />
