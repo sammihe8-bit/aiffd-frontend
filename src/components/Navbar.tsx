@@ -26,9 +26,9 @@ export default function Navbar() {
         maxWidth: '1200px', margin: '0 auto', padding: '0 32px',
         width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
-        {/* Logo */}
-        <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', fontWeight: 600, letterSpacing: '4px', color: '#1a1a1a' }}>AIFFD</span>
+        {/* Logo：图标素材需要放进 public/ 目录，文件名 aiffd-logo.png */}
+        <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <img src="/aiffd-logo.png" alt="AIFFD" style={{ height: '32px', width: '32px', borderRadius: '8px', display: 'block' }} />
           <span style={{ fontFamily: 'Georgia, serif', fontSize: '13px', color: '#B8973A', letterSpacing: '2px' }}>智搭</span>
         </Link>
         {/* Nav links */}
