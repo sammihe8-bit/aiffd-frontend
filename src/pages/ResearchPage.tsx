@@ -149,6 +149,11 @@ const VERSION_STEPS = [
 // 不需要额外裁图或做透明底。
 // 素材路径 /research-hero-bg.png 需要放进 public/ 目录（随这次交付一起给了这个文件）。
 function HeroStructureBackdrop() {
+  // 蒙版：中间圆形区域（大致对应图里 "PERSONAL STYLE PROFILE" 那个圆环）显示度压到 30%，
+  // 圆形以外维持 50%——用 mask-image 做一个圆形渐变蒙版叠在图片上，而不是简单调一个全局透明度。
+  // 圆心位置和半径是按这张素材的构图目测估的，如果以后换素材，这两个百分比可能要跟着微调。
+  const maskGradient =
+    'radial-gradient(circle at 62% 45%, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.3) 16%, rgba(0,0,0,0.5) 26%, rgba(0,0,0,0.5) 100%)'
   return (
     <img
       src="/research-hero-bg.png"
@@ -157,7 +162,9 @@ function HeroStructureBackdrop() {
       style={{
         position: 'absolute', left: '50%', bottom: '-30px', transform: 'translateX(-50%)',
         width: '100%', maxWidth: '1400px', height: 'auto',
-        mixBlendMode: 'multiply' as const, opacity: 0.5, pointerEvents: 'none',
+        mixBlendMode: 'multiply' as const, pointerEvents: 'none',
+        WebkitMaskImage: maskGradient,
+        maskImage: maskGradient,
       }}
     />
   )
