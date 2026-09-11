@@ -1,19 +1,17 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-
 export default function Navbar() {
   const { token, logout } = useAuth()
   const location = useLocation()
-
   const navLinks = [
     { to: '/', label: '首页' },
     { to: '/onboarding', label: '我的风格系统' },
     { to: '/virtual-fit', label: '虚拟试衣', highlight: true },
     { to: '/about', label: '关于' },
     { to: '/column', label: '专栏' },
+    { to: '/research', label: 'Research' },
     { to: '/subscribe', label: '订阅' },
   ]
-
   return (
     <header style={{
       position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
@@ -25,13 +23,11 @@ export default function Navbar() {
         maxWidth: '1200px', margin: '0 auto', padding: '0 32px',
         width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
-
         {/* Logo */}
         <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'baseline', gap: '8px' }}>
           <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', fontWeight: 600, letterSpacing: '4px', color: '#1a1a1a' }}>AIFFD</span>
           <span style={{ fontFamily: 'Georgia, serif', fontSize: '13px', color: '#B8973A', letterSpacing: '2px' }}>智搭</span>
         </Link>
-
         {/* Nav links */}
         <nav style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
           {navLinks.map(link => {
@@ -63,7 +59,6 @@ export default function Navbar() {
             )
           })}
         </nav>
-
         {/* Auth */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           {token ? (
@@ -83,7 +78,6 @@ export default function Navbar() {
             </>
           )}
         </div>
-
       </div>
     </header>
   )
