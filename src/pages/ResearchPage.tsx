@@ -198,7 +198,8 @@ export default function ResearchPage() {
         <div style={{ position: 'relative', maxWidth: '800px', margin: '0 auto', textAlign: 'center' as const }}>
           <p style={eyebrow}>Research &amp; Methodology</p>
           <h1 className="rp-hero-title" style={{ fontFamily: 'Georgia, serif', fontWeight: 400, color: P.ink, lineHeight: 1.25, margin: '0 0 14px' }}>
-            <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700 }}>AIFFD</span> 背后的研究与方法
+            {/* 跟 Navbar.tsx 里 Logo 的 "AIFFD" 用同一套处理：Inter + 600 字重，只是字号更大，字距按比例收窄一些 */}
+            <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '1px' }}>AIFFD</span> 背后的研究与方法
           </h1>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '15px', color: P.muted, letterSpacing: '0.04em', margin: '0 0 32px' }}>
             Research-driven Personal Style Intelligence
