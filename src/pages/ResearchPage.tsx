@@ -157,7 +157,7 @@ function HeroStructureBackdrop() {
       style={{
         position: 'absolute', left: '50%', bottom: '-30px', transform: 'translateX(-50%)',
         width: '100%', maxWidth: '1400px', height: 'auto',
-        mixBlendMode: 'multiply' as const, opacity: 0.9, pointerEvents: 'none',
+        mixBlendMode: 'multiply' as const, opacity: 0.5, pointerEvents: 'none',
       }}
     />
   )
