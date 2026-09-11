@@ -144,35 +144,22 @@ const VERSION_STEPS = [
   { label: 'V2.0…', current: false },
 ]
 
-// Hero 背景里那道极淡的结构线示意图：Body/Face/Color/Preference/Feedback → Profile，
-// opacity 控制在 5% 左右，第一眼几乎看不见，是"第二眼才发现"的那种轻量装饰
+// Hero 背景装饰图：Body/Face/Color/Preference/Feedback → Personal Style Profile 的线描结构图。
+// 图片本身是白底，用 mix-blend-mode: multiply 让白色部分融进页面的米白背景，只留下线条和节点，
+// 不需要额外裁图或做透明底。
+// 素材路径 /research-hero-bg.png 需要放进 public/ 目录（随这次交付一起给了这个文件）。
 function HeroStructureBackdrop() {
-  const nodes = 5
-  const width = 1000
-  const spacing = width / (nodes + 1)
   return (
-    <svg
+    <img
+      src="/research-hero-bg.png"
+      alt=""
       aria-hidden="true"
-      viewBox={`0 0 ${width} 160`}
       style={{
-        position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)',
-        width: '100%', maxWidth: '1100px', height: 'auto', opacity: 0.05, pointerEvents: 'none',
+        position: 'absolute', left: '50%', bottom: '-30px', transform: 'translateX(-50%)',
+        width: '100%', maxWidth: '1400px', height: 'auto',
+        mixBlendMode: 'multiply' as const, opacity: 0.9, pointerEvents: 'none',
       }}
-    >
-      {Array.from({ length: nodes }).map((_, i) => {
-        const x = spacing * (i + 1)
-        return (
-          <g key={i}>
-            {i < nodes - 1 && (
-              <line x1={x} y1={40} x2={x + spacing} y2={40} stroke={P.gold} strokeWidth={1} />
-            )}
-            <circle cx={x} cy={40} r={4} fill={P.gold} />
-            <line x1={x} y1={44} x2={width / 2} y2={120} stroke={P.gold} strokeWidth={1} />
-          </g>
-        )
-      })}
-      <circle cx={width / 2} cy={120} r={5} fill={P.gold} />
-    </svg>
+    />
   )
 }
 
