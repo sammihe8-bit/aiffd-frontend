@@ -84,8 +84,9 @@ const linkExternalOnDark: React.CSSProperties = {
   ...linkExternal, color: '#E4D9B8',
 }
 
-// 跟 Navbar.tsx 里 Logo 的 "AIFFD" 用同一套字体处理：Inter + 600 字重，
-// 页面里所有标题级别出现的 "AIFFD" 都套用这个，不要各处各写一套
+// 页面标题里出现的 "AIFFD" 统一用这套 wordmark 样式（Inter + 600 字重）。
+// 注：Navbar.tsx 的 Logo 现在已经换成图片 logo（aiffd-logo.png），不再是文字，
+// 这里的样式是独立维护的一套文字版处理，不会因为 Navbar 换图而跟着变
 const aiffdWordmark: React.CSSProperties = {
   fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '1px',
 }
@@ -386,7 +387,7 @@ export default function ResearchPage() {
             AIFFD 不把个人风格视为一个固定答案。
           </p>
           <p style={{ ...bodyText, margin: '0 auto 40px', textAlign: 'center' as const }}>
-            随着测试结果、个人偏好、穿搭反馈与未来的周期性校准不断增加，你的个人风格档案将持续更新。
+            随着测试结果、个人偏好、穿搭反馈与未来的周期性校准不断增加，你的个人风格档案也可以持续更新。
           </p>
 
           {/* Version timeline：V1.0 金色实心点 + 黑字（当前），后续版本灰色空心点 */}
