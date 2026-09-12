@@ -11,12 +11,12 @@ export default function Footer() {
   }
 
   return (
-    <footer style={{ background: '#1C1612', padding: '80px 64px 48px' }}>
+    <footer style={{ background: '#370d47', padding: '80px 64px 48px' }}>
       <style>{`
         .footer-input:-webkit-autofill,
         .footer-input:-webkit-autofill:hover,
         .footer-input:-webkit-autofill:focus {
-          -webkit-box-shadow: 0 0 0 1000px #1C1612 inset !important;
+          -webkit-box-shadow: 0 0 0 1000px #370d47 inset !important;
           -webkit-text-fill-color: #fafaf8 !important;
           caret-color: #fafaf8;
         }
