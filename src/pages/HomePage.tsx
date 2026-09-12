@@ -113,7 +113,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section style={{ background: C.deepPurple, padding: '80px 64px' }}>
+      <section style={{ background: '#370d47', padding: '80px 64px' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '3px', color: 'rgba(255,255,255,0.35)', marginBottom: '32px' }}>— AIFFD · 主编手记</p>
           <blockquote style={{ fontFamily: 'Georgia, serif', fontSize: '32px', fontWeight: 400, lineHeight: 1.5, color: '#fafaf8', fontStyle: 'italic', margin: 0, maxWidth: '860px' }}>
