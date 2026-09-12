@@ -105,6 +105,21 @@ export default function BodyTestPage() {
   const [phase, setPhase] = useState<Phase>('method')
   const [method, setMethod] = useState<'manual' | 'ai' | ''>('')
 
+  // 2026-09-12 新增：是否显示"AI 拍照识别"选项，取决于用户在 /onboarding 同意页勾选的 photoConsent。
+  // 规则（产品侧已确认）：找不到同意记录时默认显示（不阻断没走过 onboarding、直接进测试的用户）；
+  // 只有明确读到 photoConsent === false 才隐藏这个选项。
+  const photoConsentAllowed = (() => {
+    if (typeof window === 'undefined') return true
+    try {
+      const raw = localStorage.getItem(userScopedKey('aiffd_consent', user))
+      if (!raw) return true
+      const consent = JSON.parse(raw)
+      return consent.photoConsent !== false
+    } catch {
+      return true
+    }
+  })()
+
   // 2026-08-27 新增：进度存档与续测提醒。
   // 已登录用户：初始不弹窗，等下面的 useEffect 真正查到数据库结果后再决定弹不弹（避免被本机残留的旧 localStorage 记录误导）
   // 访客（没有 token）：直接用 localStorage 判断，本来就没有"查数据库"这一步可等
@@ -396,7 +411,9 @@ export default function BodyTestPage() {
               </p>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <OptionCard label="AI 拍照识别" sub="上传正面照片，AI 自动识别骨架特征，可手动修正" active={method === 'ai'} onClick={() => setMethod('ai')} />
+              {photoConsentAllowed && (
+                <OptionCard label="AI 拍照识别" sub="上传正面照片，AI 自动识别骨架特征，可手动修正" active={method === 'ai'} onClick={() => setMethod('ai')} />
+              )}
               <OptionCard label="手动填写数据" sub="输入胸围、腰围、臀围，辅助后续骨架判断" active={method === 'manual'} onClick={() => setMethod('manual')} />
             </div>
             <button onClick={() => setPhase('data')} disabled={!method}
