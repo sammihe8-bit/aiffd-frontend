@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { isFullProfileComplete } from '../utils/userStorage'
+import Footer from '../components/Footer'
 
 const MODULES = [
   {
@@ -331,6 +332,8 @@ function ArchivePage() {
           <Link to="/test/color" style={{ color: '#B8973A', textDecoration: 'none' }}>色彩测试</Link>
         </p>
       </div>
+
+      <Footer />
 
     </div>
   )
