@@ -52,7 +52,7 @@ export default function Footer() {
                 style={{
                   background: 'none', border: 'none', cursor: 'pointer',
                   fontFamily: 'Inter, sans-serif', fontSize: '12px',
-                  letterSpacing: '2px', color: '#B8973A', padding: '10px 0', flexShrink: 0,
+                  letterSpacing: '2px', color: '#FF8000', padding: '10px 0', flexShrink: 0,
                 }}
               >
                 订阅
