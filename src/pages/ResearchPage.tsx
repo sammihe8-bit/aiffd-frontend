@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import Footer from '../components/Footer'
 
 // AIFFD Research Landing Page —— 5 屏。
 // 2026-09 视觉修订版：按设计反馈锁定了色值系统、字号层级、三类按钮规范，
@@ -426,6 +427,8 @@ export default function ResearchPage() {
           </div>
         </div>
       </section>
+
+      <Footer />
     </div>
   )
 }
