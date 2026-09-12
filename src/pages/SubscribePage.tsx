@@ -42,7 +42,7 @@ const PLANS = [
       '每月搭配方案推荐 × 3',
       '邮件优先客服支持',
     ],
-    cta: '开始 Pro',
+    cta: '预约 Pro 内测',
     ctaStyle: 'gold',
   },
   {
@@ -61,7 +61,7 @@ const PLANS = [
       'AI 购物清单智能生成',
       '优先体验新功能 Beta',
     ],
-    cta: '开始 Premium',
+    cta: '预约 Premium 内测',
     ctaStyle: 'dark',
   },
   {
@@ -100,6 +100,12 @@ export default function SubscribePage() {
   const [subscribed, setSubscribed] = useState(fromFooter)
   const [billingAnnual, setBillingAnnual] = useState(false)
   const [hoveredPlan, setHoveredPlan] = useState<string | null>(null)
+  // 付费方案现在还没真正开放——点击按钮不是下单，是登记内测意向。
+  // 用一个 Set 记下点过哪些方案，按钮点完之后换成"已登记"状态，而不是像之前那样点了没反应。
+  const [registeredPlans, setRegisteredPlans] = useState<Set<string>>(new Set())
+  const handleReserveInterest = (planId: string) => {
+    setRegisteredPlans(prev => new Set(prev).add(planId))
+  }
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg }}>
@@ -119,7 +125,7 @@ export default function SubscribePage() {
       </div>
 
       {/* ── Newsletter 免费订阅 ── */}
-      <div style={{ background: C.goldLight, borderBottom: `1px solid ${C.border}`, padding: '64px 24px' }}>
+      <div id="newsletter" style={{ background: C.goldLight, borderBottom: `1px solid ${C.border}`, padding: '64px 24px' }}>
         <div style={{ maxWidth: '900px', margin: '0 auto', display: 'flex', gap: '64px', alignItems: 'center', flexWrap: 'wrap' as const }}>
 
           {/* 左侧插画 */}
@@ -220,6 +226,16 @@ export default function SubscribePage() {
           </div>
         </div>
 
+        {/* 内测阶段说明：付费方案还没真正开放，先别让用户以为点了就是真实下单 */}
+        <div style={{
+          maxWidth: '640px', margin: '0 auto 40px', padding: '16px 24px',
+          background: '#FFF3E0', border: '1px solid #FFD9A8', borderRadius: '8px',
+        }}>
+          <p style={{ fontFamily: 'Inter,sans-serif', fontSize: '13px', color: '#9A5B00', lineHeight: 1.7, margin: 0, textAlign: 'center' as const }}>
+            以下会员方案目前均为内测预约阶段，暂未开放实际付费。点击"预约"即完成意向登记，功能正式上线后我们会通过邮箱通知你，不会产生任何扣费。
+          </p>
+        </div>
+
         {/* 方案卡片 */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1px', background: C.border }}>
           {PLANS.map(plan => {
@@ -281,33 +297,49 @@ export default function SubscribePage() {
                   ))}
                 </div>
 
-                <button style={{
-                  width: '100%', padding: '14px',
-                  fontFamily: 'Inter,sans-serif', fontSize: '12px', letterSpacing: '2px',
-                  cursor: 'pointer', border: 'none',
-                  background: plan.ctaStyle === 'gold' || plan.ctaStyle === 'gold-fill'
-                    ? C.gold
-                    : plan.ctaStyle === 'dark'
-                    ? '#fff'
-                    : 'transparent',
-                  color: plan.ctaStyle === 'outline'
-                    ? (isPro ? '#fff' : C.h1)
-                    : plan.ctaStyle === 'dark'
-                    ? C.h1
-                    : '#fff',
-                  outline: plan.ctaStyle === 'outline' ? `1px solid ${isPro ? 'rgba(255,255,255,.3)' : C.border}` : 'none',
-                  transition: 'opacity .2s',
-                  fontWeight: plan.ctaStyle === 'dark' ? 500 : 400,
-                }}>
-                  {plan.cta}
-                </button>
+                {plan.id === 'newsletter' ? (
+                  <a href="#newsletter" style={{
+                    display: 'block', width: '100%', padding: '14px', textAlign: 'center' as const,
+                    fontFamily: 'Inter,sans-serif', fontSize: '12px', letterSpacing: '2px',
+                    cursor: 'pointer', border: `1px solid ${isPro ? 'rgba(255,255,255,.3)' : C.border}`,
+                    background: 'transparent', color: isPro ? '#fff' : C.h1, textDecoration: 'none',
+                    boxSizing: 'border-box' as const,
+                  }}>
+                    {plan.cta}
+                  </a>
+                ) : registeredPlans.has(plan.id) ? (
+                  <div style={{
+                    width: '100%', padding: '14px', textAlign: 'center' as const, boxSizing: 'border-box' as const,
+                    fontFamily: 'Inter,sans-serif', fontSize: '12px', letterSpacing: '1px',
+                    border: `1px solid ${isPro ? 'rgba(255,255,255,.3)' : C.gold}`,
+                    color: isPro ? '#fff' : C.gold,
+                  }}>
+                    ✓ 已登记内测意向
+                  </div>
+                ) : (
+                  <button onClick={() => handleReserveInterest(plan.id)} style={{
+                    width: '100%', padding: '14px',
+                    fontFamily: 'Inter,sans-serif', fontSize: '12px', letterSpacing: '2px',
+                    cursor: 'pointer', border: 'none',
+                    background: plan.ctaStyle === 'gold' || plan.ctaStyle === 'gold-fill'
+                      ? C.gold
+                      : plan.ctaStyle === 'dark'
+                      ? '#fff'
+                      : 'transparent',
+                    color: plan.ctaStyle === 'dark' ? C.h1 : '#fff',
+                    transition: 'opacity .2s',
+                    fontWeight: plan.ctaStyle === 'dark' ? 500 : 400,
+                  }}>
+                    {plan.cta}
+                  </button>
+                )}
               </div>
             )
           })}
         </div>
 
         <p style={{ textAlign: 'center', fontFamily: 'Inter,sans-serif', fontSize: '12px', color: C.muted, marginTop: '24px' }}>
-          所有付费方案均支持 7 天无理由退款 · 随时取消 · 无隐藏费用
+          以上均为内测预约，非实际扣费 · 记得先在上方留下邮箱，方案正式上线时我们会第一时间通知你
         </p>
       </div>
 
@@ -385,7 +417,7 @@ export default function SubscribePage() {
             display: 'inline-block', padding: '14px 36px',
             background: C.gold, color: '#fff',
             fontFamily: 'Inter,sans-serif', fontSize: '13px', letterSpacing: '2px', textDecoration: 'none',
-          }}>立即开始 Premium →</Link>
+          }}>登录，抢先体验现有功能 →</Link>
         </div>
       </div>
 
