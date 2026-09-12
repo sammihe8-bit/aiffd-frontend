@@ -115,8 +115,8 @@ export default function HomePage() {
 
       <section style={{ background: '#370d47', padding: '80px 64px' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '3px', color: 'rgba(255,255,255,0.35)', marginBottom: '32px' }}>— AIFFD · 主编手记</p>
-          <blockquote style={{ fontFamily: 'Georgia, serif', fontSize: '32px', fontWeight: 400, lineHeight: 1.5, color: '#fafaf8', fontStyle: 'italic', margin: 0, maxWidth: '860px' }}>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '3px', color: 'rgba(230,205,240,0.45)', marginBottom: '32px' }}>— AIFFD · 主编手记</p>
+          <blockquote style={{ fontFamily: 'Georgia, serif', fontSize: '32px', fontWeight: 400, lineHeight: 1.5, color: '#E9D9F0', fontStyle: 'italic', margin: 0, maxWidth: '860px' }}>
             "我们不卖衣服。我们卖的是 — 在你按下购买前，先看见自己穿上它的那一刻。"
           </blockquote>
         </div>
