@@ -146,7 +146,7 @@ function ConsentScreen({ onAgree }: { onAgree: () => void }) {
           </ConsentCheckbox>
           <ConsentCheckbox id="consent-privacy" checked={privacyAck} onChange={() => setPrivacyAck(v => !v)}>
             我已阅读并同意{' '}
-            <strong style={{ color: '#B8973A' }}>《AIFFD 用户隐私政策与数据使用协议》</strong>
+            <strong style={{ color: '#B8973A' }}>《AIFFD隐私政策与研究测试数据说明》</strong>
             。我同意 AIFFD 收集和使用我的
             <strong style={{ color: '#111' }}>账号基本信息、问卷答案及系统生成的风格档案</strong>
             ，用于完成测试、生成结果并保存我的个人档案。
