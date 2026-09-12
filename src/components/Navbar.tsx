@@ -91,7 +91,7 @@ export default function Navbar() {
               <Link to="/auth" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '1px', color: '#666', textDecoration: 'none' }}>登录</Link>
               <Link to="/onboarding" style={{
                 fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '1.5px',
-                color: '#fff', background: '#1a1a1a', padding: '8px 18px', textDecoration: 'none',
+                color: '#fff', background: '#370d47', padding: '8px 18px', textDecoration: 'none',
               }}>
                 开始测试
               </Link>
