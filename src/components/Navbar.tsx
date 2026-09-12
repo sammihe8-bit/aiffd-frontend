@@ -39,9 +39,9 @@ export default function Navbar() {
             const linkStyle = link.highlight
               ? {
                   fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '1.5px',
-                  color: isActive ? '#fff' : '#B8973A',
-                  background: isActive ? '#B8973A' : 'transparent',
-                  border: '0.5px solid #B8973A',
+                  color: isActive ? '#fff' : '#FF8000',
+                  background: isActive ? '#FF8000' : 'transparent',
+                  border: '0.5px solid #FF8000',
                   padding: '5px 12px',
                   textDecoration: 'none', transition: 'all 0.2s',
                 }
