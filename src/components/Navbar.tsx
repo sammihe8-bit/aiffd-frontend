@@ -16,12 +16,25 @@ export default function Navbar() {
     { to: '/about', label: '关于' },
   ]
   return (
-    <header style={{
-      position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-      background: 'rgba(250,249,247,0.96)', backdropFilter: 'blur(8px)',
-      borderBottom: '0.5px solid #e8e2d8',
-      height: '60px', display: 'flex', alignItems: 'center',
-    }}>
+    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100 }}>
+      {/* 内测提示横幅：网站已经在对外分享，但付费/服务都还没做完，
+          这条横幅让所有页面都能第一眼看到"现在还在测试阶段"，不用点进订阅页才知道 */}
+      <div style={{
+        height: '34px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: '#FFF3E0', borderBottom: '0.5px solid #FFD9A8',
+      }}>
+        <p style={{
+          fontFamily: 'Inter, sans-serif', fontSize: '12px', color: '#9A5B00', margin: 0,
+          textAlign: 'center' as const, padding: '0 16px',
+        }}>
+          AIFFD 目前处于内测开发阶段，部分功能仍在完善中 —— 页面内的"订阅"仅用于预约测试名额，暂不会产生实际扣费
+        </p>
+      </div>
+      <header style={{
+        position: 'relative', background: 'rgba(250,249,247,0.96)', backdropFilter: 'blur(8px)',
+        borderBottom: '0.5px solid #e8e2d8',
+        height: '60px', display: 'flex', alignItems: 'center',
+      }}>
       <div style={{
         maxWidth: '1200px', margin: '0 auto', padding: '0 32px',
         width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -87,5 +100,6 @@ export default function Navbar() {
         </div>
       </div>
     </header>
+    </div>
   )
 }
