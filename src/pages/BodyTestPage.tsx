@@ -101,7 +101,11 @@ function ProgressBar({ current, total, label }: { current: number; total: number
 // ── 主页面
 export default function BodyTestPage() {
   const navigate = useNavigate()
-  const { token, user } = useAuth() // 登录用户走数据库存档；token 为空则是访客，走 localStorage
+  // 2026-09-12 清理：/test/body 现在被 App.tsx 的 PrivateRoute 强制要求登录才能进入（产品侧已确认这是有意的
+  // 合规决策），访客身份不再可能出现在这个组件里，原来"token 为空就走 localStorage"的一整套分支已经是死代码，
+  // 本轮全部移除，统一走数据库存档。checkLocalFallback() 保留——它现在的用途是迁移"强制登录之前，
+  // 以访客身份测过一半"遗留在本机的旧数据，这个场景依然真实存在。
+  const { user } = useAuth()
   const [phase, setPhase] = useState<Phase>('method')
   const [method, setMethod] = useState<'manual' | 'ai' | ''>('')
 
@@ -121,15 +125,9 @@ export default function BodyTestPage() {
   })()
 
   // 2026-08-27 新增：进度存档与续测提醒。
-  // 已登录用户：初始不弹窗，等下面的 useEffect 真正查到数据库结果后再决定弹不弹（避免被本机残留的旧 localStorage 记录误导）
-  // 访客（没有 token）：直接用 localStorage 判断，本来就没有"查数据库"这一步可等
-  const [resumeChoice, setResumeChoice] = useState<'none' | 'completed' | 'inprogress'>(() => {
-    if (typeof window === 'undefined') return 'none'
-    if (token) return 'none'
-    if (localStorage.getItem(userScopedKey('aiffd_body_progress', user))) return 'inprogress'
-    if (localStorage.getItem(userScopedKey('aiffd_body_result', user))) return 'completed'
-    return 'none'
-  })
+  // 现在这个页面必然是已登录用户（PrivateRoute 保证），初始值统一是 'none'，不弹窗，
+  // 等下面的 useEffect 真正查到数据库结果后再决定弹不弹（避免被本机残留的旧 localStorage 记录误导）
+  const [resumeChoice, setResumeChoice] = useState<'none' | 'completed' | 'inprogress'>('none')
   // 已登录用户的存档内容从数据库读回来后放这里；restoreProgress / loadCompletedResult 会优先用这个，而不是 localStorage
   const [remoteSnapshot, setRemoteSnapshot] = useState<BodySnapshot | null>(null)
 
@@ -142,7 +140,6 @@ export default function BodyTestPage() {
   }
 
   useEffect(() => {
-    if (!token) return // 访客：沿用上面 localStorage 算出的初始值，不用查数据库
     let cancelled = false
     testProgressAPI.get('body')
       .then(res => {
@@ -157,7 +154,8 @@ export default function BodyTestPage() {
       })
       .catch(() => { if (!cancelled) checkLocalFallback() /* 查询失败就退回本机记录，而不是什么都不做 */ })
     return () => { cancelled = true }
-  }, [token])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // 测量数据（AI / 手动 共用，用于辅助预填）
   const [bust, setBust] = useState('')
@@ -232,11 +230,7 @@ export default function BodyTestPage() {
       skeletonIdx, fleshIdx,
       waist_ui_label: waistType, body_shape_hint: bodyShapeHint,
     }
-    if (token) {
-      testProgressAPI.save('body', 'completed', snapshot).catch(() => {})
-    } else {
-      localStorage.removeItem(userScopedKey('aiffd_body_progress', user)) // 测试已完整做完，清掉中途存档
-    }
+    testProgressAPI.save('body', 'completed', snapshot).catch(() => {})
     // 2026-08-31 调整：不再展示单独的体型档案报告页，测完直接进风格测试的面部测试，
     // 结果统一在 ProfilePage 里查看
     navigate('/test/style')
@@ -270,7 +264,7 @@ export default function BodyTestPage() {
 
   // ── 进度自动存档：只要用户已经开始答题（不在 method / report），且已经处理完续测提示，
   // 每次答案或页面位置变化就把完整快照写进去，方便中途退出后能真正"继续测试"
-  // 已登录 → 存进数据库（跨设备都能续）；访客 → 存 localStorage（仅本机本浏览器有效）
+  // 现在必然是已登录用户，统一存进数据库（跨设备都能续）
   useEffect(() => {
     if (resumeChoice !== 'none') return
     if (phase === 'method') return
@@ -280,15 +274,11 @@ export default function BodyTestPage() {
       limbLength, handFootSize, bodyShape, hipProtrude, chestProtrude, fleshTexture,
       skeletonIdx, fleshIdx,
     }
-    if (token) {
-      testProgressAPI.save('body', 'in_progress', snapshot).catch(() => { /* 网络失败就先不管，下次答题会再存一次 */ })
-    } else {
-      localStorage.setItem(userScopedKey('aiffd_body_progress', user), JSON.stringify(snapshot))
-    }
+    testProgressAPI.save('body', 'in_progress', snapshot).catch(() => { /* 网络失败就先不管，下次答题会再存一次 */ })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, skeletonIdx, fleshIdx, method, bust, waist, hip, heightRange, boneScale,
       boneRoundness, boneWidth, shoulderShape, waistType, waistLength, limbLength, handFootSize, bodyShape,
-      hipProtrude, chestProtrude, fleshTexture, resumeChoice, token])
+      hipProtrude, chestProtrude, fleshTexture, resumeChoice])
 
   // 把存档快照里的所有字段恢复回各自的 state
   const applySnapshot = (s: BodySnapshot) => {
@@ -323,13 +313,12 @@ export default function BodyTestPage() {
   // 之前这里漏掉了这三个 key，导致重新测完体型后，StyleTestPage 一进来发现旧的
   // aiffd_style_result 还在，就直接跳去旧结果页，完全跳过面部测试和整体风格复核——
   // 2026-09-04 修复。
+  // 2026-09-12 又修复一处：aiffd_body_result（体型原始数据，computeResult() 里无条件写入，
+  // 不区分登录状态）之前只在"访客"那条分支里被清空，已登录用户点"重新测试"时这个 key 从来没清过，
+  // 是个和这次清理无关、但顺手一起修的既有 bug。现在无条件清空，跟它的写入方式保持一致。
   const discardAndRestart = () => {
-    if (token) {
-      testProgressAPI.clear('body').catch(() => { /* 清不掉也不阻塞，反正下次答题会用新数据覆盖 */ })
-    } else {
-      localStorage.removeItem(userScopedKey('aiffd_body_progress', user))
-      localStorage.removeItem(userScopedKey('aiffd_body_result', user))
-    }
+    testProgressAPI.clear('body').catch(() => { /* 清不掉也不阻塞，反正下次答题会用新数据覆盖 */ })
+    localStorage.removeItem(userScopedKey('aiffd_body_result', user))
     localStorage.removeItem(userScopedKey('aiffd_style_result', user))
     localStorage.removeItem(userScopedKey('aiffd_face_result', user))
     localStorage.removeItem(userScopedKey('aiffd_qixue_result', user))
