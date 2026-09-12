@@ -1,112 +1,79 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-
-export default function Footer() {
-  const [email, setEmail] = useState('')
-  const navigate = useNavigate()
-
-  const handleSubscribe = () => {
-    if (!email) return
-    navigate(`/subscribe?email=${encodeURIComponent(email)}&subscribed=true`)
-  }
-
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import Navbar from './components/Navbar'
+import HomePage from './pages/HomePage'
+import AuthPage from './pages/AuthPage'
+import ProfilePage from './pages/ProfilePage'
+import OnboardingPage from './pages/OnboardingPage'
+import PlaceholderPage from './pages/PlaceholderPage'
+import PrivacyPage from './pages/PrivacyPage'
+import BodyTestPage from './pages/BodyTestPage'
+import ColumnPage from './pages/ColumnPage'
+import ColorTestPage from './pages/ColorTestPage'
+import ColorSeasonPage from './pages/ColorSeasonPage'
+import StyleTestPage from './pages/StyleTestPage'
+import VirtualFitPage from './pages/VirtualFitPage'
+import SubscribePage from './pages/SubscribePage'
+import { useAuth } from './hooks/useAuth'
+import ColorElementPage from './pages/ColorElementPage'
+import FashionTestPage from './pages/FashionTestPage'
+import ResearchPage from './pages/ResearchPage'
+function PrivateRoute({ children }: { children: React.ReactNode }) {
+  const { token } = useAuth()
+  const location = useLocation()
+  // 未登录：带上 reason 和来源路径跳去登录页，AuthPage 可以用 location.state 显示对应提示文案
+  // reason: 'login_required' → 提示"请先登录"；AuthPage 自己再判断这个账号是否已注册过
+  return token
+    ? <>{children}</>
+    : <Navigate to="/auth" replace state={{ reason: 'login_required', from: location.pathname }} />
+}
+export default function App() {
   return (
-    <footer style={{ background: '#1C1612', padding: '80px 64px 48px' }}>
-      <style>{`
-        .footer-input:-webkit-autofill,
-        .footer-input:-webkit-autofill:hover,
-        .footer-input:-webkit-autofill:focus {
-          -webkit-box-shadow: 0 0 0 1000px #1C1612 inset !important;
-          -webkit-text-fill-color: #fafaf8 !important;
-          caret-color: #fafaf8;
-        }
-      `}</style>
-
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 1fr', gap: '64px', marginBottom: '72px' }}>
-
-          {/* Newsletter */}
-          <div>
-            <h3 style={{ fontFamily: 'Georgia, serif', fontSize: '20px', fontWeight: 400, color: '#fafaf8', marginBottom: '16px' }}>
-              订阅我们的 Newsletter
-            </h3>
-            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: 'rgba(255,255,255,0.45)', lineHeight: '1.8', marginBottom: '28px' }}>
-              每月一封 — 一组当季搭配、一篇专栏、一段穿衣的私想。
-            </p>
-            <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.2)' }}>
-              <input
-                className="footer-input"
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleSubscribe()}
-                placeholder="your@email.com"
-                style={{
-                  flex: 1, background: 'transparent', border: 'none', outline: 'none',
-                  fontFamily: 'Inter, sans-serif', fontSize: '13px',
-                  color: '#fafaf8', padding: '10px 0',
-                }}
-              />
-              <button
-                onClick={handleSubscribe}
-                style={{
-                  background: 'none', border: 'none', cursor: 'pointer',
-                  fontFamily: 'Inter, sans-serif', fontSize: '12px',
-                  letterSpacing: '2px', color: '#FF8000', padding: '10px 0', flexShrink: 0,
-                }}
-              >
-                订阅
-              </button>
-            </div>
-          </div>
-
-          {/* 链接列 */}
-          {[
-            { title: '产品', items: [
-              { label: '系列', to: '/' },
-              { label: '虚拟试衣', to: '/virtual-fit' },
-              { label: '风格测试', to: '/onboarding' },
-              { label: '我的档案', to: '/profile' },
-            ]},
-            { title: '关于', items: [
-              { label: '品牌故事', to: '/' },
-              { label: '专栏', to: '/column' },
-              { label: '订阅方案', to: '/subscribe' },
-            ]},
-            { title: '支持', items: [
-              { label: '帮助中心', to: '/' },
-              { label: '联系我们', to: '/' },
-              { label: '尺码指引', to: '/' },
-              { label: '隐私政策', to: '/privacy' },
-            ]},
-          ].map(col => (
-            <div key={col.title}>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '3px', color: 'rgba(255,255,255,0.35)', marginBottom: '24px' }}>
-                {col.title}
-              </p>
-              {col.items.map(item => (
-                <Link key={item.label} to={item.to} style={{
-                  display: 'block', fontFamily: 'Inter, sans-serif', fontSize: '14px',
-                  color: 'rgba(255,255,255,0.55)', marginBottom: '16px',
-                  textDecoration: 'none',
-                }}>
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-          ))}
-        </div>
-
-        {/* 底栏 */}
-        <div style={{ borderTop: '0.5px solid rgba(255,255,255,0.1)', paddingTop: '28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: 'rgba(255,255,255,0.3)', letterSpacing: '1px' }}>
-            © 2026 AIFFD 智搭 · contact@aiffd.com
-          </p>
-          <p style={{ fontFamily: 'Georgia, serif', fontSize: '12px', fontStyle: 'italic', color: 'rgba(255,255,255,0.3)' }}>
-            Los Angeles · Shanghai · Online
-          </p>
-        </div>
+    <BrowserRouter>
+      <div className="min-h-screen bg-cream font-serif">
+        <Navbar />
+        {/* 顶部固定区域现在是 34px 内测横幅 + 60px 导航栏 = 94px，这里要跟着加高，
+            不然页面内容会被挡住一截 */}
+        <main className="pt-[94px]">
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/auth" element={<AuthPage />} />
+            <Route path="/onboarding" element={<OnboardingPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/column" element={<ColumnPage />} />
+            <Route path="/virtual-fit" element={<VirtualFitPage />} />
+            <Route path="/subscribe" element={<SubscribePage />} />  {/* ← 加在这里 */}
+            <Route path="/research" element={<ResearchPage />} />
+            {/* 以下测试相关路由改为需要登录才能进入 */}
+            <Route path="/test/body" element={
+              <PrivateRoute><BodyTestPage /></PrivateRoute>
+            } />
+            <Route path="/test/color" element={
+              <PrivateRoute><ColorTestPage /></PrivateRoute>
+            } />
+            <Route path="/test/color/season" element={
+              <PrivateRoute><ColorSeasonPage /></PrivateRoute>
+            } />
+            <Route path="/test/color/element" element={
+              <PrivateRoute><ColorElementPage /></PrivateRoute>
+            } />
+            <Route path="/test/style" element={
+              <PrivateRoute><StyleTestPage /></PrivateRoute>
+            } />
+            <Route path="/test/fashion" element={
+              <PrivateRoute><FashionTestPage /></PrivateRoute>
+            } />
+            <Route path="/profile" element={
+              <PrivateRoute><ProfilePage /></PrivateRoute>
+            } />
+            <Route path="/diagnosis" element={
+              <PrivateRoute>
+                <PlaceholderPage title="商品分析" description="上传商品图片或链接，AI 为你判断是否值得购买" />
+              </PrivateRoute>
+            } />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </main>
       </div>
-    </footer>
+    </BrowserRouter>
   )
 }
