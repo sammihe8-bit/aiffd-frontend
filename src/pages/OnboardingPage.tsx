@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import { isFullProfileComplete } from '../utils/userStorage'
+import { isFullProfileComplete, userScopedKey } from '../utils/userStorage'
 import Footer from '../components/Footer'
 
 const MODULES = [
@@ -69,40 +69,109 @@ const ARCHIVE_NOTES = [
   },
 ]
 
+// 隐私政策/知情同意书的版本号——以后协议文案有实质性修改，就把这个版本号往上加一位，
+// 这样每条同意记录里存的 policyVersion 才能对应到当时用户实际看到、同意的是哪一版文案
+const CONSENT_POLICY_VERSION = 'v1.0-2026-09'
+
+// 单个同意勾选项，抽成一个小组件方便必选/可选两组复用同一套样式，
+// accent 控制勾选后的强调色（必选用金色，可选也用金色，视觉上不刻意区分，靠分组标题和"可选："前缀区分）
+function ConsentCheckbox({ id, checked, onChange, children }: {
+  id: string; checked: boolean; onChange: () => void; children: React.ReactNode
+}) {
+  return (
+    <label htmlFor={id} style={{
+      display: 'flex', gap: '16px', alignItems: 'flex-start', cursor: 'pointer',
+      padding: '20px 24px', border: `1.5px solid ${checked ? '#B8973A' : '#e8e8e4'}`,
+      background: checked ? '#fdf8ee' : '#fff', borderRadius: '4px', transition: 'all 0.2s',
+    }}>
+      <input id={id} type="checkbox" checked={checked} onChange={onChange}
+        style={{ marginTop: '4px', accentColor: '#B8973A', flexShrink: 0, width: '16px', height: '16px', cursor: 'pointer' }} />
+      <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: '#666', lineHeight: '1.9' }}>
+        {children}
+      </span>
+    </label>
+  )
+}
+
 function ConsentScreen({ onAgree }: { onAgree: () => void }) {
-  const [agreed, setAgreed] = useState(false)
+  const { user } = useAuth()
+  // 四个选项默认全部不勾选，这是硬性要求，不能有任何一个默认 true
+  const [ageAndResearchAck, setAgeAndResearchAck] = useState(false)
+  const [privacyAck, setPrivacyAck] = useState(false)
+  const [photoConsent, setPhotoConsent] = useState(false)
+  const [researchDataConsent, setResearchDataConsent] = useState(false)
+
+  const requiredChecked = ageAndResearchAck && privacyAck
+
+  const handleSubmit = () => {
+    if (!requiredChecked) return
+    // 分别记录四个选项的选择结果、时间戳、当时生效的协议版本——
+    // 之后不管是排查纠纷还是协议改版都需要能查到"用户当时同意的到底是哪一版、选了什么"
+    const record = {
+      ageAndResearchAck, privacyAck, photoConsent, researchDataConsent,
+      timestamp: new Date().toISOString(),
+      policyVersion: CONSENT_POLICY_VERSION,
+    }
+    try {
+      localStorage.setItem(userScopedKey('aiffd_consent', user), JSON.stringify(record))
+    } catch { /* 存储失败也不阻塞用户往下走，只是这条同意记录没留档 */ }
+    onAgree()
+  }
+
   return (
     <div style={{ minHeight: '100vh', background: '#faf9f7' }}>
       <div style={{ maxWidth: '680px', margin: '0 auto', padding: '64px 24px 96px' }}>
         <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '4px', color: '#B8973A', marginBottom: '12px' }}>AIFFD 智搭</p>
         <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '28px', fontWeight: 400, color: '#111', marginBottom: '8px' }}>数据使用授权</h1>
         <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: '#999', marginBottom: '40px' }}>开始建立你的风格档案前，请确认以下授权</p>
-        <div style={{ background: '#f7f4ef', padding: '20px 24px', borderLeft: '3px solid #B8973A', marginBottom: '32px' }}>
+
+        <div style={{ background: '#f7f4ef', padding: '20px 24px', borderLeft: '3px solid #B8973A', marginBottom: '40px' }}>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: '#444', lineHeight: '1.9', marginBottom: '12px' }}>
-            本平台依据《个人信息保护法》收集你的风格档案数据，用于生成专属 Style Profile、AI 商品分析，以及在你授权后共享给第三方造型师提供服务。
+            AIFFD 目前处于研究原型测试阶段，本轮测试不收取费用，仅面向 18 岁以上参与者。
           </p>
-          <Link to="/privacy" target="_blank" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: '#B8973A', letterSpacing: '1px' }}>查看完整隐私政策 →</Link>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: '#444', lineHeight: '1.9', marginBottom: '16px' }}>
+            为生成测试结果和个人风格档案，AIFFD 需要处理你的基本账号信息、问卷答案及系统生成的测试结果。照片分析和研究用途由你自主选择，平台不会自动将你的数据分享给第三方。
+          </p>
+          <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' as const }}>
+            <Link to="/privacy" target="_blank" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: '#B8973A', letterSpacing: '1px' }}>查看完整隐私政策 →</Link>
+            <Link to="/about" target="_blank" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: '#B8973A', letterSpacing: '1px' }}>查看在线测试说明 →</Link>
+          </div>
         </div>
-        <label htmlFor="agree-all" style={{
-          display: 'flex', gap: '16px', alignItems: 'flex-start', cursor: 'pointer',
-          padding: '20px 24px', border: `1.5px solid ${agreed ? '#B8973A' : '#e8e8e4'}`,
-          background: agreed ? '#fdf8ee' : '#fff', borderRadius: '4px', transition: 'all 0.2s', marginBottom: '32px',
-        }}>
-          <input id="agree-all" type="checkbox" checked={agreed} onChange={() => setAgreed(a => !a)}
-            style={{ marginTop: '4px', accentColor: '#B8973A', flexShrink: 0, width: '16px', height: '16px', cursor: 'pointer' }} />
-          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: '#666', lineHeight: '1.9' }}>
+
+        {/* 必选：这两项不勾选就没法开始测试 */}
+        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '2px', color: '#B8973A', marginBottom: '14px' }}>完成测试所必需</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+          <ConsentCheckbox id="consent-age" checked={ageAndResearchAck} onChange={() => setAgeAndResearchAck(v => !v)}>
+            我确认自己已满 18 岁，并了解 AIFFD 目前处于研究原型测试阶段。
+          </ConsentCheckbox>
+          <ConsentCheckbox id="consent-privacy" checked={privacyAck} onChange={() => setPrivacyAck(v => !v)}>
             我已阅读并同意{' '}
             <strong style={{ color: '#B8973A' }}>《AIFFD 用户隐私政策与数据使用协议》</strong>
-            ，同意 AIFFD 收集和使用我的
-            <strong style={{ color: '#111' }}>个人信息、上传照片及风格档案数据</strong>。
-          </span>
-        </label>
-        <button onClick={() => agreed && onAgree()} style={{
-          width: '100%', padding: '16px', background: agreed ? '#1a1a1a' : '#ccc',
-          color: '#fff', border: 'none', cursor: agreed ? 'pointer' : 'not-allowed',
+            。我同意 AIFFD 收集和使用我的
+            <strong style={{ color: '#111' }}>账号基本信息、问卷答案及系统生成的风格档案</strong>
+            ，用于完成测试、生成结果并保存我的个人档案。
+          </ConsentCheckbox>
+        </div>
+
+        {/* 可选：不勾选也能正常完成测试，只是拿不到对应的增值体验 */}
+        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '2px', color: '#999', marginBottom: '14px' }}>自主选择</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+          <ConsentCheckbox id="consent-photo" checked={photoConsent} onChange={() => setPhotoConsent(v => !v)}>
+            <strong style={{ color: '#111' }}>可选：允许上传和分析我的照片。</strong>
+            {' '}用于辅助分析身体结构、面部特征和个人色彩。照片分析不是完成基础问卷测试的必要条件；不选择时，仍可通过文字和图片选项完成测试。
+          </ConsentCheckbox>
+          <ConsentCheckbox id="consent-research" checked={researchDataConsent} onChange={() => setResearchDataConsent(v => !v)}>
+            <strong style={{ color: '#111' }}>可选：允许将去标识化数据用于研究和系统改进。</strong>
+            {' '}我同意 AIFFD 将我的问卷答案、反馈及测试结果进行去标识化处理后，用于研究分析、测试方法验证和系统改进。不选择不会影响测试结果或基本功能，并且以后可以撤回授权。
+          </ConsentCheckbox>
+        </div>
+
+        <button onClick={handleSubmit} disabled={!requiredChecked} style={{
+          width: '100%', padding: '16px', background: requiredChecked ? '#1a1a1a' : '#ccc',
+          color: '#fff', border: 'none', cursor: requiredChecked ? 'pointer' : 'not-allowed',
           fontFamily: 'Inter, sans-serif', fontSize: '13px', letterSpacing: '2px',
         }}>
-          同意并开始建立档案
+          {requiredChecked ? '同意必选项并开始测试' : '请先确认必选授权'}
         </button>
       </div>
     </div>
