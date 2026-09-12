@@ -408,8 +408,16 @@ function ArchivePage() {
   )
 }
 
+// 2026-09-12 修复：之前 agreed 恒定初始化为 false，导致哪怕 localStorage 里已经存过完整的
+// aiffd_consent 同意记录，用户只要刷新页面或重新进入 /onboarding，同意页依然会重新弹出。
+// 现在改成惰性初始化：先查一次本机是否已经有这个用户（或访客 'guest' 桶）的同意记录，
+// 有就直接跳过同意页，直接展示 ArchivePage。
 export default function OnboardingPage() {
-  const [agreed, setAgreed] = useState(false)
+  const { user } = useAuth()
+  const [agreed, setAgreed] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return !!localStorage.getItem(userScopedKey('aiffd_consent', user))
+  })
   if (!agreed) return <ConsentScreen onAgree={() => setAgreed(true)} />
   return <ArchivePage />
 }
