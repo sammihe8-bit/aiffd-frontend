@@ -5,6 +5,8 @@ const C = {
   h1: '#111111', h2: '#222222', sub: '#444444',
   body: '#666666', muted: '#999999', gold: '#B8973A', border: '#e8e8e4',
   bg: '#fafaf8', cream: '#fafaf8', accent: '#7A4A3C',
+  // 从新 LOGO 渐变里取的最深紫色，用来换掉原本纯黑色的按钮
+  deepPurple: '#6A0B85',
 }
 
 const ITEMS = [
@@ -44,7 +46,7 @@ export default function HomePage() {
             AIFFD智搭是一个为衣橱而生的 AI 工作室 — 虚拟试穿你已经拥有的、想象你尚未穿过的。
           </p>
           <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-            <Link to='/onboarding' style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', letterSpacing: '2px', color: '#fff', background: C.h1, padding: '14px 32px', textDecoration: 'none' }}>开始试衣</Link>
+            <Link to='/onboarding' style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', letterSpacing: '2px', color: '#fff', background: C.deepPurple, padding: '14px 32px', textDecoration: 'none' }}>开始试衣</Link>
             <Link to='/onboarding' style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: C.sub, textDecoration: 'none' }}>了解AIFFD →</Link>
           </div>
         </div>
@@ -111,7 +113,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section style={{ background: '#1C1612', padding: '80px 64px' }}>
+      <section style={{ background: C.deepPurple, padding: '80px 64px' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '3px', color: 'rgba(255,255,255,0.35)', marginBottom: '32px' }}>— AIFFD · 主编手记</p>
           <blockquote style={{ fontFamily: 'Georgia, serif', fontSize: '32px', fontWeight: 400, lineHeight: 1.5, color: '#fafaf8', fontStyle: 'italic', margin: 0, maxWidth: '860px' }}>
@@ -128,7 +130,7 @@ export default function HomePage() {
             <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '17px', color: C.sub, lineHeight: '1.9', marginBottom: '32px' }}>
               体型 · 色彩 · 风格 · 时尚个性，四项测试构成你的专属风格档案，让每一次购买都成为精准决策。
             </p>
-            <Link to='/onboarding' style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', letterSpacing: '2px', color: '#fff', background: C.h1, padding: '14px 28px', textDecoration: 'none', display: 'inline-block' }}>建立我的风格档案</Link>
+            <Link to='/onboarding' style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', letterSpacing: '2px', color: '#fff', background: C.deepPurple, padding: '14px 28px', textDecoration: 'none', display: 'inline-block' }}>建立我的风格档案</Link>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1px', background: border }}>
             {[
