@@ -32,7 +32,12 @@ export default function App() {
     <BrowserRouter>
       <div className="min-h-screen bg-cream font-serif">
         <Navbar />
-        <main className="pt-[60px]">
+        {/* 2026-09-14 修复：原来是 pt-[60px]，只对应旧的纯导航栏高度。
+            Navbar 后来加了 34px 高的内测提示横幅（横幅+导航栏 fixed 总高度 = 94px），
+            但这里的顶部留白一直没跟着更新，导致全站所有页面正文顶部都被固定定位的横幅+导航栏遮住一截。
+            现在改成 94px，和 Navbar.tsx 里横幅(34px) + 导航栏(60px) 的实际总高度对齐。
+            以后如果横幅或导航栏高度再变，这里也要同步改，两处高度必须保持一致。 */}
+        <main className="pt-[94px]">
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/auth" element={<AuthPage />} />
