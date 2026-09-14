@@ -81,11 +81,11 @@ function ConsentCheckbox({ id, checked, onChange, children }: {
   return (
     <label htmlFor={id} style={{
       display: 'flex', gap: '16px', alignItems: 'flex-start', cursor: 'pointer',
-      padding: '20px 24px', border: `1.5px solid ${checked ? '#B8973A' : '#e8e8e4'}`,
+      padding: '20px 24px', border: `1.5px solid ${checked ? '#FF8000' : '#e8e8e4'}`,
       background: checked ? '#fdf8ee' : '#fff', borderRadius: '4px', transition: 'all 0.2s',
     }}>
       <input id={id} type="checkbox" checked={checked} onChange={onChange}
-        style={{ marginTop: '4px', accentColor: '#B8973A', flexShrink: 0, width: '16px', height: '16px', cursor: 'pointer' }} />
+        style={{ marginTop: '4px', accentColor: '#FF8000', flexShrink: 0, width: '16px', height: '16px', cursor: 'pointer' }} />
       <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: '#666', lineHeight: '1.9' }}>
         {children}
       </span>
@@ -121,11 +121,11 @@ function ConsentScreen({ onAgree }: { onAgree: () => void }) {
   return (
     <div style={{ minHeight: '100vh', background: '#faf9f7' }}>
       <div style={{ maxWidth: '680px', margin: '0 auto', padding: '64px 24px 96px' }}>
-        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '4px', color: '#B8973A', marginBottom: '12px' }}>AIFFD 智搭</p>
+        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '4px', color: '#FF8000', marginBottom: '12px' }}>AIFFD 智搭</p>
         <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '28px', fontWeight: 400, color: '#111', marginBottom: '8px' }}>数据使用授权</h1>
         <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: '#999', marginBottom: '40px' }}>开始建立你的风格档案前，请确认以下授权</p>
 
-        <div style={{ background: '#f7f4ef', padding: '20px 24px', borderLeft: '3px solid #B8973A', marginBottom: '40px' }}>
+        <div style={{ background: '#f7f4ef', padding: '20px 24px', borderLeft: '3px solid #FF8000', marginBottom: '40px' }}>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: '#444', lineHeight: '1.9', marginBottom: '12px' }}>
             AIFFD 目前处于研究原型测试阶段，本轮测试不收取费用，仅面向 18 岁以上参与者。
           </p>
@@ -133,20 +133,20 @@ function ConsentScreen({ onAgree }: { onAgree: () => void }) {
             为生成测试结果和个人风格档案，AIFFD 需要处理你的基本账号信息、问卷答案及系统生成的测试结果。照片分析和研究用途由你自主选择，平台不会自动将你的数据分享给第三方。
           </p>
           <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' as const }}>
-            <Link to="/privacy" target="_blank" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: '#B8973A', letterSpacing: '1px' }}>查看完整隐私政策 →</Link>
-            <Link to="/about" target="_blank" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: '#B8973A', letterSpacing: '1px' }}>查看在线测试说明 →</Link>
+            <Link to="/privacy" target="_blank" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: '#FF8000', letterSpacing: '1px' }}>查看完整隐私政策 →</Link>
+            <Link to="/about" target="_blank" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: '#FF8000', letterSpacing: '1px' }}>查看在线测试说明 →</Link>
           </div>
         </div>
 
         {/* 必选：这两项不勾选就没法开始测试 */}
-        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '2px', color: '#B8973A', marginBottom: '14px' }}>完成测试所必需</p>
+        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '2px', color: '#FF8000', marginBottom: '14px' }}>完成测试所必需</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
           <ConsentCheckbox id="consent-age" checked={ageAndResearchAck} onChange={() => setAgeAndResearchAck(v => !v)}>
             我确认自己已满 18 岁，并了解 AIFFD 目前处于研究原型测试阶段。
           </ConsentCheckbox>
           <ConsentCheckbox id="consent-privacy" checked={privacyAck} onChange={() => setPrivacyAck(v => !v)}>
             我已阅读并同意{' '}
-            <strong style={{ color: '#B8973A' }}>《AIFFD隐私政策与研究测试数据说明》</strong>
+            <strong style={{ color: '#FF8000' }}>《AIFFD隐私政策与研究测试数据说明》</strong>
             。我同意 AIFFD 收集和使用我的
             <strong style={{ color: '#111' }}>账号基本信息、问卷答案及系统生成的风格档案</strong>
             ，用于完成测试、生成结果并保存我的个人档案。
@@ -167,7 +167,7 @@ function ConsentScreen({ onAgree }: { onAgree: () => void }) {
         </div>
 
         <button onClick={handleSubmit} disabled={!requiredChecked} style={{
-          width: '100%', padding: '16px', background: requiredChecked ? '#1a1a1a' : '#ccc',
+          width: '100%', padding: '16px', background: requiredChecked ? '#370d47' : '#ccc',
           color: '#fff', border: 'none', cursor: requiredChecked ? 'pointer' : 'not-allowed',
           fontFamily: 'Inter, sans-serif', fontSize: '13px', letterSpacing: '2px',
         }}>
