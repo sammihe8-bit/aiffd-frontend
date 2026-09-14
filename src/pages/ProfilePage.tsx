@@ -180,10 +180,6 @@ export default function ProfilePage() {
   } | null = fashionRaw ? (() => { try { return JSON.parse(fashionRaw) } catch { return null } })() : null
 
   // "最想成为的样子"（Q1 的最喜欢选项）对应的插画，用于个人时尚选择区块右侧的卡片展示
-  // "最想成为的样子"配图：优先用 Q1 星标的"最喜欢"；如果当时没有点星标（primary 为空），
-  // 退而求其次用选中的第一项兜底，避免用户只是忘了点星标，右边就完全没有图可看
-  // "最想成为的样子"配图：Q1 选中的全部风格（primary + secondary 合起来就是当时选的 3-5 项），
-  // 每一项都配一张小卡片；星标"最喜欢"的那项（如果有）用金色边框突出显示
   const aspiredStyleCards = fashionResult
     ? [
         ...(fashionResult.aspired_style_primary ? [fashionResult.aspired_style_primary] : []),
@@ -193,22 +189,21 @@ export default function ProfilePage() {
         .filter((o): o is { id: string; label: string; desc: string; img: string } => !!o.img)
     : []
 
-  // 完整度计算：按 AIFFD 产品架构文档 3.2 节的比例（形45% + 色30% + 意20% + 合5%），
-  // 不再是"5个字段各占20%"的平均分配——三大模块权重不同，"形"和"色"本身各自也是分层递进的。
-  // "意"（个人时尚选择）按文档"测试题的页面分组"表格里的子模块权重累加：
-  // 理想形象4 + 商品款式6 + 色彩选择4 + 图案材质2 + 场景边界3 + 表达目标1 = 20。
-  // 目前只有"理想形象"上线，所以现阶段最多只能拿到 4 分，其余等对应模块上线后再累加。
-  const formPct = styleResult ? 45 : bodyResult ? 22 : 0 // 形·风格基础：体型测试算一半，风格测试（含面部）才算完整
-  const colorPct = (warmCool ? 10 : 0) + (seasonName ? 10 : 0) + (finalSeason25 ? 10 : 0) // 色·天生色彩：三层各占10%
+  // 完整度计算：按 AIFFD 产品架构文档 3.2 节的比例（形45% + 色30% + 意20% + 合5%）
+  const formPct = styleResult ? 45 : bodyResult ? 22 : 0
+  const colorPct = (warmCool ? 10 : 0) + (seasonName ? 10 : 0) + (finalSeason25 ? 10 : 0)
   const preferencePct = fashionResult ? 4 : 0
-  const generationPct = (styleResult && finalSeason25) ? 5 : 0 // 合·生成图谱：形+色都完整后，系统才算"生成了图谱"
+  const generationPct = (styleResult && finalSeason25) ? 5 : 0
   const completionPct = formPct + colorPct + preferencePct + generationPct
 
   // 是否已订阅付费方案：风格档案图谱（品牌匹配 + 优惠券）是 AIFFD 商业化的核心，
   // 免费用户点进来之前要先引导去订阅页，而不是直接看到完整图谱。
-  // TODO: subscriptionTier 是占位字段名，等后端接入真实订阅系统后替换成实际字段
-  // （比如 u?.plan === 'pro' / u?.plan === 'premium'）。
-  const isSubscribed = !!(u?.subscriptionTier && u.subscriptionTier !== 'free' && u.subscriptionTier !== 'newsletter')
+  // 2026-09-13 修复：原来用的 u?.subscriptionTier 是占位字段名，后端从未真正返回过这个字段。
+  // 已确认后端 routes/auth.ts 的 /register 和 /login 接口返回的用户对象上真实字段叫
+  // membershipTier，注册时默认值是 "free"。原判断里额外排除的 'newsletter' 这个值
+  // 没有任何后端依据（当初是照着占位字段瞎猜的），这次一并去掉；如果实际存在"订阅了免费
+  // newsletter 但不算真正付费会员"这种中间状态，需要看过 routes/subscription.ts 后再补上对应真实值。
+  const isSubscribed = !!(u?.membershipTier && u.membershipTier !== 'free')
 
   // "全部重新测试"：清空体型/风格/五官/色彩三层的存档，回到体型测试第一步重新开始
   const restartAllTests = () => {
@@ -491,8 +486,6 @@ export default function ProfilePage() {
         <div style={{ background: '#fff', border: `1px solid ${C.border}`, borderRadius: '8px', padding: '28px', marginBottom: '24px' }}>
           <SectionTitle label="个人时尚选择" />
           {fashionResult ? (
-            // 两排布局：第一排三组文字标签横向并排，第二排是"最想成为的样子"对应的穿搭图，
-            // 不再是左文右图两栏——避免图片和文字要来回对照着看
             <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '24px' }}>
                 <div>
@@ -510,7 +503,6 @@ export default function ProfilePage() {
                     ))}
                   </div>
                 </div>
-                {/* 左边一条细灰线，跟"色彩档案"区块的分隔线样式保持一致 */}
                 <div style={{ borderLeft: `1px solid ${C.border}`, paddingLeft: '24px' }}>
                   <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '2px', color: C.muted, marginBottom: '10px' }}>实际最常穿</p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
@@ -605,7 +597,6 @@ export default function ProfilePage() {
             { to: '/test/color', label: '色彩测试', desc: '冷暖 → 五季 → 25季', done: !!finalSeason25, locked: false },
             { to: '/test/fashion', label: '个人时尚选择', desc: '理想形象 · 第一部分', done: !!fashionResult, locked: false },
             {
-              // 未订阅时点这张卡先去订阅页，而不是直接进本页的完整图谱
               to: isSubscribed ? '/profile' : '/subscribe',
               label: '风格档案图谱',
               desc: isSubscribed ? '完整档案总览（本页）' : '订阅解锁品牌匹配与专属优惠',
