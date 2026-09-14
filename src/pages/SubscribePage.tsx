@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import Footer from '../components/Footer'
 
@@ -103,8 +103,19 @@ export default function SubscribePage() {
   // 付费方案现在还没真正开放——点击按钮不是下单，是登记内测意向。
   // 用一个 Set 记下点过哪些方案，按钮点完之后换成"已登记"状态，而不是像之前那样点了没反应。
   const [registeredPlans, setRegisteredPlans] = useState<Set<string>>(new Set())
+  // 2026-09-14 新增：Newsletter 邮箱输入框的 ref，用来在用户点了某个付费方案的"预约"按钮后，
+  // 把它滚动到可见位置并自动聚焦——因为目前唯一能真正收集到的联系方式就是这个邮箱，
+  // 用户点了 Pro/Premium/年度顾问的预约按钮，只是登记了意向，还需要引导他们顺手把邮箱也留下。
+  const emailInputRef = useRef<HTMLInputElement>(null)
   const handleReserveInterest = (planId: string) => {
     setRegisteredPlans(prev => new Set(prev).add(planId))
+    // 回到页面第一屏（Newsletter 邮箱收集区），而不是让用户停留在方案卡片区域自己往上翻
+    document.getElementById('newsletter')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    // 如果还没订阅 Newsletter，滚动到位后自动聚焦输入框，方便直接开始输入邮箱
+    // （已经订阅过的话，这里会展示"订阅成功"提示卡片，没有输入框，不需要聚焦）
+    if (!subscribed) {
+      window.setTimeout(() => emailInputRef.current?.focus(), 500)
+    }
   }
 
   return (
@@ -174,6 +185,7 @@ export default function SubscribePage() {
           ) : (
             <div style={{ display: 'flex', maxWidth: '420px', margin: '0 auto', border: `1px solid ${C.border}`, background: '#fff' }}>
               <input
+                ref={emailInputRef}
                 type="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
