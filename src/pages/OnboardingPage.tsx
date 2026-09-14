@@ -202,12 +202,12 @@ function ArchivePage() {
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', minHeight: '480px', alignItems: 'stretch' }}>
           {/* 左侧文字 */}
           <div style={{ padding: '80px 40px 64px 32px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '4px', color: '#B8973A', marginBottom: '24px' }}>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '4px', color: '#FF8000', marginBottom: '24px' }}>
               AIFFD · 个人风格档案
             </p>
             <h1 style={{ fontFamily: 'Georgia, serif', fontSize: 'clamp(32px, 4vw, 48px)', fontWeight: 400, color: '#1a1a1a', lineHeight: 1.2, margin: '0 0 24px' }}>
               建立你的<br />
-              <em style={{ color: '#B8973A', fontStyle: 'normal' }}>完整风格档案</em>
+              <em style={{ color: '#FF8000', fontStyle: 'normal' }}>完整风格档案</em>
             </h1>
             <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '15px', color: '#888', lineHeight: 1.9, margin: '0 0 40px', maxWidth: '420px' }}>
               三项测试，从先天底色到后天个性。档案不是一次成型——它会在每一次交互中持续完善，最终为你匹配一对一的造型师服务。
@@ -218,19 +218,19 @@ function ArchivePage() {
                 <div key={m.id} style={{ display: 'flex', alignItems: 'center' }}>
                   <div style={{
                     padding: '8px 16px',
-                    border: `0.5px solid ${m.available ? '#B8973A' : '#e8e2d8'}`,
+                    border: `0.5px solid ${m.available ? '#FF8000' : '#e8e2d8'}`,
                     background: m.available ? '#fdf8ee' : 'transparent',
                   }}>
-                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '9px', color: '#B8973A', letterSpacing: '2px', margin: '0 0 2px' }}>{m.num}</p>
+                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '9px', color: '#FF8000', letterSpacing: '2px', margin: '0 0 2px' }}>{m.num}</p>
                     <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: m.available ? '#1a1a1a' : '#bbb', margin: 0 }}>{m.title}</p>
                   </div>
                   {i < MODULES.length - 1 && <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: '#ddd', padding: '0 10px' }}>→</span>}
                 </div>
               ))}
               <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: '#ddd', padding: '0 10px' }}>→</span>
-              <div style={{ padding: '8px 16px', border: '0.5px solid #B8973A', background: '#fdf8ee' }}>
-                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '9px', color: '#B8973A', letterSpacing: '2px', margin: '0 0 2px' }}>完成</p>
-                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: '#B8973A', margin: 0 }}>风格档案</p>
+              <div style={{ padding: '8px 16px', border: '0.5px solid #FF8000', background: '#fdf8ee' }}>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '9px', color: '#FF8000', letterSpacing: '2px', margin: '0 0 2px' }}>完成</p>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: '#FF8000', margin: 0 }}>风格档案</p>
               </div>
             </div>
           </div>
@@ -250,10 +250,10 @@ function ArchivePage() {
       {/* 从风格测试开始提示 */}
       <div style={{ background: '#fff', borderBottom: '0.5px solid #e8e2d8', padding: '20px 32px' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
-          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '1px', color: '#B8973A' }}>建议从这里开始 →</span>
+          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '1px', color: '#FF8000' }}>建议从这里开始 →</span>
           <button onClick={handleStartClick} style={{
             fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '2px',
-            color: '#fff', background: '#1a1a1a', padding: '10px 24px', textDecoration: 'none',
+            color: '#fff', background: '#370d47', padding: '10px 24px', textDecoration: 'none',
             border: 'none', cursor: 'pointer',
           }}>
             开始风格测试
@@ -266,7 +266,7 @@ function ArchivePage() {
 
       {/* 三大模块 */}
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '72px 32px' }}>
-        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '4px', color: '#B8973A', marginBottom: '12px' }}>测 试 模 块</p>
+        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '4px', color: '#FF8000', marginBottom: '12px' }}>测 试 模 块</p>
         <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '32px', fontWeight: 400, color: '#1a1a1a', marginBottom: '8px' }}>按顺序完成，档案最完整</h2>
         <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: '#999', marginBottom: '48px', lineHeight: 1.8 }}>
           也可以单独完成任意一项，随时回来继续。
@@ -286,10 +286,10 @@ function ArchivePage() {
                   onClick={() => module.available && setExpandedModule(isExpanded ? null : module.id)}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '28px' }}>
-                    <p style={{ fontFamily: 'Georgia, serif', fontSize: '36px', color: isExpanded ? '#B8973A' : '#ddd', margin: 0, fontWeight: 400, lineHeight: 1 }}>{module.num}</p>
+                    <p style={{ fontFamily: 'Georgia, serif', fontSize: '36px', color: isExpanded ? '#FF8000' : '#ddd', margin: 0, fontWeight: 400, lineHeight: 1 }}>{module.num}</p>
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
-                        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: '#B8973A', margin: 0 }}>{module.tag}</p>
+                        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: '#FF8000', margin: 0 }}>{module.tag}</p>
                         {!module.available && <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', color: '#ccc', border: '0.5px solid #e8e2d8', padding: '2px 8px' }}>即将上线</span>}
                       </div>
                       <p style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: module.available ? '#1a1a1a' : '#ccc', fontWeight: 400, margin: '0 0 4px' }}>{module.title}</p>
@@ -303,7 +303,7 @@ function ArchivePage() {
                         onClick={e => e.stopPropagation()}
                         style={{
                           fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '2px',
-                          color: '#1a1a1a', border: '0.5px solid #1a1a1a',
+                          color: '#370d47', border: '0.5px solid #370d47',
                           padding: '10px 20px', textDecoration: 'none', transition: 'all 0.2s',
                         }}
                       >
@@ -321,33 +321,33 @@ function ArchivePage() {
                     <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: '#666', lineHeight: 1.9, padding: '28px 0', borderBottom: '0.5px solid #e8e2d8', margin: 0 }}>{module.desc}</p>
                     {module.subTests.length > 0 && (
                       <div style={{ paddingTop: '32px' }}>
-                        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', color: '#B8973A', letterSpacing: '3px', marginBottom: '24px' }}>包含两项子测试</p>
+                        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', color: '#FF8000', letterSpacing: '3px', marginBottom: '24px' }}>包含两项子测试</p>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
                           {module.subTests.map((sub, si) => (
                             <div key={sub.num} style={{ border: '0.5px solid #e8e2d8', padding: '28px' }}>
                               <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', marginBottom: '12px' }}>
-                                <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', color: '#B8973A', letterSpacing: '2px' }}>{sub.num}</span>
+                                <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', color: '#FF8000', letterSpacing: '2px' }}>{sub.num}</span>
                                 <p style={{ fontFamily: 'Georgia, serif', fontSize: '18px', color: '#1a1a1a', fontWeight: 400, margin: 0 }}>{sub.title}</p>
                               </div>
                               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: '#888', lineHeight: 1.8, marginBottom: '20px' }}>{sub.desc}</p>
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
                                 {sub.steps.map((s, j) => (
                                   <div key={j} style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                                    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', color: '#B8973A', flexShrink: 0 }}>0{j + 1}</span>
+                                    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', color: '#FF8000', flexShrink: 0 }}>0{j + 1}</span>
                                     <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: '#bbb', letterSpacing: '0.5px' }}>{s}</span>
                                   </div>
                                 ))}
                               </div>
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '16px', borderTop: '0.5px solid #e8e2d8' }}>
                                 <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: '#ccc' }}>{sub.time}</span>
-                                <Link to={sub.to} style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: '#B8973A', textDecoration: 'none', letterSpacing: '1px' }}>
+                                <Link to={sub.to} style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: '#FF8000', textDecoration: 'none', letterSpacing: '1px' }}>
                                   {si === 0 ? '先做这项 →' : '完成后做这项 →'}
                                 </Link>
                               </div>
                             </div>
                           ))}
                         </div>
-                        <div style={{ marginTop: '24px', padding: '16px 20px', background: '#fdf8ee', borderLeft: '3px solid #B8973A' }}>
+                        <div style={{ marginTop: '24px', padding: '16px 20px', background: '#fdf8ee', borderLeft: '3px solid #FF8000' }}>
                           <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: '#666' }}>
                             💡 建议先完成 <strong style={{ color: '#1a1a1a' }}>{module.subTests[0].title}</strong>，再进行 <strong style={{ color: '#1a1a1a' }}>{module.subTests[1].title}</strong>，两项完成后风格测试结论最准确。
                           </span>
@@ -365,14 +365,14 @@ function ArchivePage() {
       {/* 档案说明 — 浅色风格 */}
       <div style={{ background: '#f7f4ef', borderTop: '0.5px solid #e8e2d8', borderBottom: '0.5px solid #e8e2d8', padding: '72px 32px' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '4px', color: '#B8973A', marginBottom: '16px' }}>关 于 你 的 档 案</p>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '4px', color: '#FF8000', marginBottom: '16px' }}>关 于 你 的 档 案</p>
           <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '32px', fontWeight: 400, color: '#1a1a1a', marginBottom: '48px' }}>
             档案是一段持续的关系，不是一次性的测试
           </h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '48px' }}>
             {ARCHIVE_NOTES.map(note => (
               <div key={note.title}>
-                <p style={{ fontFamily: 'Georgia, serif', fontSize: '28px', color: '#B8973A', marginBottom: '16px' }}>{note.icon}</p>
+                <p style={{ fontFamily: 'Georgia, serif', fontSize: '28px', color: '#FF8000', marginBottom: '16px' }}>{note.icon}</p>
                 <p style={{ fontFamily: 'Georgia, serif', fontSize: '17px', color: '#1a1a1a', fontWeight: 400, marginBottom: '12px', lineHeight: 1.4 }}>{note.title}</p>
                 <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: '#888', lineHeight: 1.9, margin: 0 }}>{note.desc}</p>
               </div>
@@ -389,16 +389,16 @@ function ArchivePage() {
         </p>
         <button onClick={handleStartClick} style={{
           display: 'inline-block', fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '2px',
-          color: '#fff', background: '#1a1a1a', padding: '16px 56px', textDecoration: 'none',
+          color: '#fff', background: '#370d47', padding: '16px 56px', textDecoration: 'none',
           border: 'none', cursor: 'pointer',
         }}>
           开始风格测试 →
         </button>
         <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: '#bbb', marginTop: '20px' }}>
           也可以直接进入{' '}
-          <Link to="/test/body" style={{ color: '#B8973A', textDecoration: 'none' }}>体型测试</Link>
+          <Link to="/test/body" style={{ color: '#FF8000', textDecoration: 'none' }}>体型测试</Link>
           {' '}或{' '}
-          <Link to="/test/color" style={{ color: '#B8973A', textDecoration: 'none' }}>色彩测试</Link>
+          <Link to="/test/color" style={{ color: '#FF8000', textDecoration: 'none' }}>色彩测试</Link>
         </p>
       </div>
 
