@@ -10,11 +10,11 @@ import Footer from '../components/Footer'
 // 三处需要你确认/替换的地方（已在对应位置加注释）：
 // 1. RESEARCH_JOURNAL_URL —— Founder Research Journal 外链
 // 2. AIFFD_ENTRY_PATH —— 内部 CTA 跳转路由，暂按 '/onboarding' 假设
-// 3. Research Framework 卡片里 "Color" 那张的圆点颜色——设计稿里两处描述互相矛盾
-//    （色值表给了专门的"Color 辅助紫 #88739A"，但卡片小节的文字又写"Color: 金"）。
-//    考虑到"金色只负责强调/连接/CTA，不要大面积使用"这条总原则，这里选了色值表里
-//    专门指定的紫色，把金色留给按钮和连接符。如果你确认当时就是想要金色，
-//    改 FRAMEWORK_CARDS 里 Color Intelligence 那条的 dot 值就行。
+// 3. [2026-09-14 已拍板] Research Framework 卡片里 "Color" 那张的圆点颜色，
+//    之前设计稿里两处描述互相矛盾（色值表给了专门的"Color 辅助紫 #88739A"，
+//    但卡片小节的文字又写"Color: 金"），当时先临时选了色值表的专用紫色 #88739A。
+//    现在已确认最终方案：直接用全站统一的紫色 #370d47（与 Navbar/Footer/Onboarding/
+//    HomePage 保持一致），不再是那个专门为这张卡片定的独立紫色值。
 
 const RESEARCH_JOURNAL_URL = 'https://en.ohsammi.com'
 const AIFFD_ENTRY_PATH = '/onboarding'
@@ -33,7 +33,7 @@ const P = {
   aiffdPanel: '#F7F2E7',   // Product×Research 左侧 AIFFD 卡专用的浅暖金背景
   accentBrown: '#987B55',  // Body / Style 辅助色
   accentGreen: '#6F7E5E',  // Preference 辅助色
-  accentPurple: '#88739A', // Color 辅助色
+  accentPurple: '#370d47', // Color 辅助色（2026-09-14 由 #88739A 改为全站统一紫色）
   // 暖黑模块内部用到的次级色阶（原稿没给具体值，按暖黑基调派生）
   darkBorder: 'rgba(255,255,255,0.14)',
   darkMuted: '#9C968C',
