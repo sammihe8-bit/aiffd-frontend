@@ -3,10 +3,13 @@ import Footer from '../components/Footer'
 
 const C = {
   h1: '#111111', h2: '#222222', sub: '#444444',
-  body: '#666666', muted: '#999999', gold: '#B8973A', border: '#e8e8e4',
+  body: '#666666', muted: '#999999', gold: '#FF8000', border: '#e8e8e4',
   bg: '#fafaf8', cream: '#fafaf8', accent: '#7A4A3C',
-  // 从新 LOGO 渐变里取的最深紫色，用来换掉原本纯黑色的按钮
-  deepPurple: '#6A0B85',
+  // 2026-09-14 统一：原来是从旧 LOGO 渐变取的 #6A0B85，跟 Navbar/Footer/OnboardingPage
+  // 用的 #370d47 不一致（这是之前记录在案的"两个紫色待统一"问题）。
+  // 现在统一成 #370d47，和下面"主编手记" section 写死的背景色保持一致——
+  // 这个 section 之前就已经是 #370d47 了，说明这两个按钮才是那个"没跟上"的地方。
+  deepPurple: '#370d47',
 }
 
 const ITEMS = [
