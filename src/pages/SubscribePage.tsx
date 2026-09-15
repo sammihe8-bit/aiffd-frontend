@@ -310,13 +310,24 @@ export default function SubscribePage() {
                 </div>
 
                 {plan.id === 'newsletter' ? (
-                  <a href="#newsletter" style={{
-                    display: 'block', width: '100%', padding: '14px', textAlign: 'center' as const,
-                    fontFamily: 'Inter,sans-serif', fontSize: '12px', letterSpacing: '2px',
-                    cursor: 'pointer', border: `1px solid ${isPro ? 'rgba(255,255,255,.3)' : C.border}`,
-                    background: 'transparent', color: isPro ? '#fff' : C.h1, textDecoration: 'none',
-                    boxSizing: 'border-box' as const,
-                  }}>
+                  <a
+                    href="#newsletter"
+                    onClick={e => {
+                      // 2026-09-14 调整：原来是浏览器原生锚点跳转（瞬间跳转，没有动画），
+                      // 跟 Pro/Premium/年度顾问三个方案按钮点击后的平滑滚动效果不一致——这里统一改成同款平滑滚动
+                      e.preventDefault()
+                      document.getElementById('newsletter')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                      if (!subscribed) {
+                        window.setTimeout(() => emailInputRef.current?.focus(), 500)
+                      }
+                    }}
+                    style={{
+                      display: 'block', width: '100%', padding: '14px', textAlign: 'center' as const,
+                      fontFamily: 'Inter,sans-serif', fontSize: '12px', letterSpacing: '2px',
+                      cursor: 'pointer', border: `1px solid ${isPro ? 'rgba(255,255,255,.3)' : C.border}`,
+                      background: 'transparent', color: isPro ? '#fff' : C.h1, textDecoration: 'none',
+                      boxSizing: 'border-box' as const,
+                    }}>
                     {plan.cta}
                   </a>
                 ) : registeredPlans.has(plan.id) ? (
