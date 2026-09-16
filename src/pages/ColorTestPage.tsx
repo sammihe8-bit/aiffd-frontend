@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { userScopedKey } from '../utils/userStorage'
+import { humanProfileAPI } from '../utils/api'
 import ThreeStageProgress from '../components/ThreeStageProgress'
 
 const C = {
@@ -243,6 +244,15 @@ function ColorReport({ result, onReset }: { result: WarmCoolResult; onReset: () 
         <button onClick={() => {
           localStorage.setItem(userScopedKey('aiffd_warmcool', user), result)
           localStorage.setItem(userScopedKey('aiffd_color_result', user), JSON.stringify({ experience: ['done'], colorGroup: result }))
+          // 2026-09-16 新增：双写进 Human Profile DB，跟上面两行 localStorage 存档并行，不影响现有流程。
+          // 这里的 result 来自真实问卷答案算出的 computeWarmCool()，不是 AI_MOCK_RESULT——
+          // 后者是写死的模拟数据，明确不应该写入 Human Profile DB（见数据字典 Color 模块 E 小节）。
+          // 肤色/发色/虹膜三个原始信号这次先不发：现有 q0 题问的是"偏白/偏黄"，混合了明度和底调
+          // 两个概念，跟字典里重新设计的 skin_tone 枚举（很白皙/白皙/偏深…纯明度量表）不是一回事，
+          // 强行映射会往数据库里塞进不准确的数据，需要等题库按数据字典重新设计后再接上。
+          humanProfileAPI.patchMe({ warmCool: result }, 'color_test', '冷暖测试完成（问卷）').catch(() => {
+            // 静默失败：不影响用户继续下一步测试
+          })
           navigate('/test/color/season')
         }} style={{ background: C.gold, color: '#fff', border: 'none', borderRadius: '6px', padding: '13px 28px', fontFamily: 'Inter, sans-serif', fontSize: '13px', letterSpacing: '1px', cursor: 'pointer' }}>
           {profile.next} →
@@ -706,6 +716,9 @@ export default function ColorTestPage() {
                 继续完成五季测试，进一步锁定你的精准色彩类型。
               </p>
               <button onClick={() => {
+                // 2026-09-16 说明：这里的 AI_MOCK_RESULT 是写死的模拟数据，不是真实图像识别，
+                // 按数据字典 Color 模块 E 小节的决定，不写入 Human Profile DB，只存本机 localStorage
+                // 供前端下游页面（ColorSeasonPage 等）继续使用，跟原有行为保持一致。
                 localStorage.setItem(userScopedKey('aiffd_warmcool', user), AI_MOCK_RESULT.warmCool)
                 navigate('/test/color/season')
               }} style={{ background: C.gold, color: '#fff', border: 'none', borderRadius: '6px', padding: '13px 28px', fontFamily: 'Inter, sans-serif', fontSize: '14px', letterSpacing: '1px', cursor: 'pointer', width: '100%' }}>
