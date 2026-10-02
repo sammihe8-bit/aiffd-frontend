@@ -84,8 +84,9 @@ export const humanProfileAPI = {
     api.get('/human-profile/me/history'),
 
   // 整体替换 13 型风格概率分布（风格测试算完一次性提交全部 13 项）
-  saveStyleScores: (scores: { styleCode: string; probability: number; isPrimary?: boolean; isSecondary?: boolean }[]) =>
-    api.post('/human-profile/me/style-scores', { scores }),
+  // engineVersion 写入 profile_style_scores.engine_version，取 styleScoring.ts 的 STYLE_ENGINE_VERSION
+  saveStyleScores: (scores: { styleCode: string; probability: number; isPrimary?: boolean; isSecondary?: boolean }[], engineVersion?: string) =>
+    api.post('/human-profile/me/style-scores', { scores, engineVersion }),
 
   // 整体替换生活场景权重（Lifestyle Q1+Q2 答完后按字典公式算好权重一次性提交）
   saveLifestyleScenarios: (scenarios: {
