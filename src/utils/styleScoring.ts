@@ -114,6 +114,25 @@ export interface StyleScoreResult {
   verifyFamilyApplied?: string
 }
 
+// 复核加成的绝对值（与维度权重同一量纲），computeStyleScore 和 computeStyleProbabilities 共用
+function verifyBonusWeight(): number {
+  const totalDimWeight = DIMENSIONS.reduce((sum, d) => sum + d.weight, 0)
+  return totalDimWeight * (VERIFY_WEIGHT_RATIO / (1 - VERIFY_WEIGHT_RATIO))
+}
+
+// 变体层精匹配分：该风格所有已填格子里，用户精匹配命中的权重占比（0~1）
+function strictScoreOf(style: (typeof STYLES)[number], answers: StyleAnswers): number {
+  let matchedWeight = 0
+  let totalWeight = 0
+  for (const dim of DIMENSIONS) {
+    const cell = dim.valuesByStyle[style.cn]
+    if (!isCellFilled(cell)) continue
+    totalWeight += dim.weight
+    if (matchDimension(dim, answers[dim.id], cell, false)) matchedWeight += dim.weight
+  }
+  return totalWeight > 0 ? matchedWeight / totalWeight : 0
+}
+
 // qiXueState：整体风格复核 4 题算出的五态之一（阴/阴多阳少/阴阳和谐/阴少阳多/阳），可选参数。
 // 不传的话行为跟改造前完全一样，只由体型+面部两层引擎决定家族——用于兼容还没做完整体风格复核就要看结果的场景。
 export function computeStyleScore(answers: StyleAnswers, qiXueState?: string): StyleScoreResult {
@@ -142,9 +161,7 @@ export function computeStyleScore(answers: StyleAnswers, qiXueState?: string): S
   if (qiXueState) {
     const verifyFamily = QIXUE_FAMILY_MAP[qiXueState]
     if (verifyFamily && looseScoreByFamily[verifyFamily] !== undefined) {
-      const totalDimWeight = DIMENSIONS.reduce((sum, d) => sum + d.weight, 0)
-      const verifyBonus = totalDimWeight * (VERIFY_WEIGHT_RATIO / (1 - VERIFY_WEIGHT_RATIO))
-      looseScoreByFamily[verifyFamily] += verifyBonus
+      looseScoreByFamily[verifyFamily] += verifyBonusWeight()
       verifyFamilyApplied = verifyFamily
     }
   }
@@ -155,16 +172,7 @@ export function computeStyleScore(answers: StyleAnswers, qiXueState?: string): S
   const familyStyles = STYLES.filter(s => s.family === winningFamily)
   const strictScoreByVariant: Record<string, number> = {}
   for (const style of familyStyles) {
-    let matchedWeight = 0
-    let totalWeight = 0
-    for (const dim of DIMENSIONS) {
-      const cell = dim.valuesByStyle[style.cn]
-      if (!isCellFilled(cell)) continue
-      totalWeight += dim.weight
-      const userValue = answers[dim.id]
-      if (matchDimension(dim, userValue, cell, false)) matchedWeight += dim.weight
-    }
-    strictScoreByVariant[style.cn] = totalWeight > 0 ? matchedWeight / totalWeight : 0
+    strictScoreByVariant[style.cn] = strictScoreOf(style, answers)
   }
   const winningVariant = Object.entries(strictScoreByVariant).sort((a, b) => b[1] - a[1])[0][0]
   const winningStyleInfo = STYLES.find(s => s.cn === winningVariant)!
@@ -179,5 +187,89 @@ export function computeStyleScore(answers: StyleAnswers, qiXueState?: string): S
     looseScoreByStyle, looseScoreByFamily, winningFamily,
     strictScoreByVariant, winningVariant, winningStyleInfo, matchedDimensions,
     verifyFamilyApplied,
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// 13 型概率分布（2026-10-02，Style 数据缺口修复）
+// 写入后端 profile_style_scores 子表，对齐 01B 第四节：
+//   每型 0~1；主型 = 概率最高项；次型 = 概率第二高项（可为空）；13 项不要求合计为 1。
+//
+// 计算方式（门控式）：
+//   家族分 F = 家族粗匹配分（含复核加成）÷ 理论满分（16 维权重和 + 本次实际施加的复核加成）
+//   变体系数 = 该型精匹配分 ÷ 本家族内最高精匹配分（本家族全为 0 时取 1）
+//   概率 = F × 变体系数，保留 3 位小数（与数据库 decimal(4,3) 一致）
+// 这样每个家族里最好的变体概率恰好等于家族分，获胜家族的家族分最高，
+// 所以概率最高的一定是 computeStyleScore 判定的 winningVariant，主型与报告页结论永远一致。
+// 并列时：winningVariant 优先，其余按 STYLES 顺序（与 computeStyleScore 的并列处理一致）。
+// ══════════════════════════════════════════════════════════════════
+
+// 本概率算法的版本号，写入 profile_style_scores.engine_version；算法或权重改动时一起改
+export const STYLE_ENGINE_VERSION = 'style_engine_v2.1'
+
+// 13 型中文名 → 风格代码（与后端 STYLE_CODES、商品侧 primary_style 同一套）
+export const STYLE_CODE_BY_CN: Record<string, string> = {
+  '浪漫型风格': 'R', '戏剧浪漫型': 'TR',
+  '柔软少年型': 'SG', '少年型': 'G', '戏剧少年型': 'FG',
+  '柔软经典型': 'SC', '经典型': 'C', '戏剧经典型': 'DC',
+  '浪漫自然型': 'SN', '自然型': 'N', '戏剧自然型': 'FN',
+  '浪漫戏剧型': 'SD', '戏剧型': 'D',
+}
+
+export interface StyleProbability {
+  styleCode: string
+  probability: number
+  isPrimary: boolean
+  isSecondary: boolean
+}
+
+export interface StyleProbabilityResult {
+  scores: StyleProbability[]   // 固定 13 项，按 STYLES 顺序
+  primaryCode: string
+  secondaryCode: string | null
+}
+
+const round3 = (n: number) => Math.round(n * 1000) / 1000
+
+// result 必须是同一份 answers / qiXueState 调用 computeStyleScore 的返回值
+export function computeStyleProbabilities(answers: StyleAnswers, result: StyleScoreResult): StyleProbabilityResult {
+  const totalDimWeight = DIMENSIONS.reduce((sum, d) => sum + d.weight, 0)
+  const denom = totalDimWeight + (result.verifyFamilyApplied ? verifyBonusWeight() : 0)
+
+  const strict: Record<string, number> = {}
+  for (const style of STYLES) strict[style.cn] = strictScoreOf(style, answers)
+
+  const maxStrictByFamily: Record<string, number> = {}
+  for (const style of STYLES) {
+    maxStrictByFamily[style.family] = Math.max(maxStrictByFamily[style.family] ?? 0, strict[style.cn])
+  }
+
+  const raw = STYLES.map((style, index) => {
+    const familyScore = denom > 0 ? (result.looseScoreByFamily[style.family] ?? 0) / denom : 0
+    const maxV = maxStrictByFamily[style.family]
+    const ratio = maxV > 0 ? strict[style.cn] / maxV : 1
+    const p = Math.min(1, Math.max(0, round3(familyScore * ratio)))
+    return { cn: style.cn, index, p }
+  })
+
+  const primaryCn = result.winningVariant
+  const primary = raw.find(r => r.cn === primaryCn)!
+  // 理论上不会发生；一旦发生说明公式或 computeStyleScore 被改动过，直接报错而不是写入自相矛盾的数据
+  if (raw.some(r => r.p > primary.p)) throw new Error('STYLE_PROBABILITY_INCONSISTENT')
+
+  const others = raw.filter(r => r.cn !== primaryCn && r.p > 0)
+    .sort((a, b) => b.p - a.p || a.index - b.index)
+  const secondaryCn = others.length > 0 ? others[0].cn : null
+
+  const scores = raw.map(r => ({
+    styleCode: STYLE_CODE_BY_CN[r.cn],
+    probability: r.p,
+    isPrimary: r.cn === primaryCn,
+    isSecondary: r.cn === secondaryCn,
+  }))
+  return {
+    scores,
+    primaryCode: STYLE_CODE_BY_CN[primaryCn],
+    secondaryCode: secondaryCn ? STYLE_CODE_BY_CN[secondaryCn] : null,
   }
 }
