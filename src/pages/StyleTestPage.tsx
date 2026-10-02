@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { computeStyleScore, type StyleAnswers } from '../utils/styleScoring'
+import { computeStyleScore, computeStyleProbabilities, STYLE_ENGINE_VERSION, type StyleAnswers } from '../utils/styleScoring'
 import { useAuth } from '../hooks/useAuth'
 import { userScopedKey } from '../utils/userStorage'
 import { getStylePortraitSrc } from '../utils/styleImages'
@@ -396,11 +396,28 @@ export default function StyleTestPage() {
     if (noseSel?.size) humanProfilePatch.noseSize = noseSel.size
     if (noseSel?.tip) humanProfilePatch.noseShape = noseSel.tip
     if (noseSel?.projection) humanProfilePatch.noseProjection = noseSel.projection
-    if (payload.variant) humanProfilePatch.primaryStyle = payload.variant
+    // 2026-10-02：主型 / 次型改为写 13 型代码（R / TR / … / D），与商品侧 primary_style 同一套，
+    // 供 Style Fit 规则比较；之前写的是中文名（如"浪漫型风格"），商品侧对不上。
+    // 13 型概率分布同时写入 profile_style_scores 子表（01B 第四节），主型 = 概率最高项。
+    let styleProbs: ReturnType<typeof computeStyleProbabilities> | null = null
+    try {
+      styleProbs = computeStyleProbabilities(finalAnswers, scoreResult)
+    } catch {
+      styleProbs = null // 概率与主型不一致时不写分布、不写主次型，避免写入自相矛盾的数据
+    }
+    if (styleProbs) {
+      humanProfilePatch.primaryStyle = styleProbs.primaryCode
+      humanProfilePatch.secondaryStyle = styleProbs.secondaryCode
+    }
     if (payload.styleInfo?.element) humanProfilePatch.styleElement = payload.styleInfo.element
 
     if (Object.keys(humanProfilePatch).length > 0) {
       humanProfileAPI.patchMe(humanProfilePatch, 'face_test', '面部测试 + 风格判定完成').catch(() => {
+        // 静默失败：不影响用户查看结果的主流程
+      })
+    }
+    if (styleProbs) {
+      humanProfileAPI.saveStyleScores(styleProbs.scores, STYLE_ENGINE_VERSION).catch(() => {
         // 静默失败：不影响用户查看结果的主流程
       })
     }
