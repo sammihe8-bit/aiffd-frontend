@@ -26,7 +26,7 @@ const P = {
   ink: '#171717',          // 主标题黑
   body: '#67645F',         // 二级正文
   muted: '#A4A09A',        // 辅助文字
-  gold: '#C5A03A',         // AIFFD 主金 —— 只用于强调 / 连接符 / CTA
+  gold: '#8A6A2F',         // AIFFD 统一金色 —— 只用于强调 / 连接符 / CTA
   goldLight: '#F5EFE1',    // 浅金背景（system tag 用）
   border: '#E8E4DC',       // 通用边框
   dark: '#151412',         // 暖黑模块（Profile 卡 / OhSammi 卡）
@@ -85,15 +85,21 @@ const linkExternalOnDark: React.CSSProperties = {
   ...linkExternal, color: '#E4D9B8',
 }
 
-// 页面标题里出现的 "AIFFD" 统一用这套 wordmark 样式（Inter + 600 字重）。
-// 注：Navbar.tsx 的 Logo 现在已经换成图片 logo（aiffd-logo.png），不再是文字，
-// 这里的样式是独立维护的一套文字版处理，不会因为 Navbar 换图而跟着变
-const aiffdWordmark: React.CSSProperties = {
-  fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '1px',
-}
-
-function Aiffd() {
-  return <span style={aiffdWordmark}>AIFFD</span>
+// 页面品牌标识统一调用新的黑色图片 LOGO。
+// 黑底区域反转为白色；混合模式消除图片白底（反转后为黑底）。
+function Aiffd({ inverse = false }: { inverse?: boolean }) {
+  return (
+    <img
+      src="/aiffd-logo-black.png"
+      alt="AIFFD"
+      style={{
+        display: 'inline-block', height: '1em', width: 'auto',
+        maxWidth: '100%', objectFit: 'contain', verticalAlign: 'middle',
+        filter: inverse ? 'invert(1)' : 'none',
+        mixBlendMode: inverse ? 'screen' : 'multiply',
+      }}
+    />
+  )
 }
 
 function ExternalLink({ href, children, style }: { href: string; children: React.ReactNode; style: React.CSSProperties }) {
@@ -104,7 +110,7 @@ function ExternalLink({ href, children, style }: { href: string; children: React
 function SystemTag({ children }: { children: React.ReactNode }) {
   return (
     <span style={{
-      display: 'inline-block', background: P.goldLight, color: '#8a6d24',
+      display: 'inline-block', background: P.goldLight, color: P.gold,
       fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '0.02em',
       padding: '6px 14px', borderRadius: '999px', width: 'fit-content',
     }}>{children}</span>
@@ -253,9 +259,9 @@ export default function ResearchPage() {
                 {i < STUDY_INPUTS.length - 1 && (
                   // 细金色垂直线 + 小圆点，替代原来的文字 "+"
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', padding: '8px 0' }}>
-                    <span style={{ width: '1px', height: '9px', background: 'rgba(197,160,58,0.4)' }} />
+                    <span style={{ width: '1px', height: '9px', background: 'rgba(138,106,47,0.4)' }} />
                     <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: P.gold }} />
-                    <span style={{ width: '1px', height: '9px', background: 'rgba(197,160,58,0.4)' }} />
+                    <span style={{ width: '1px', height: '9px', background: 'rgba(138,106,47,0.4)' }} />
                   </div>
                 )}
               </div>
@@ -263,7 +269,7 @@ export default function ResearchPage() {
 
             {/* 汇入 Profile 的连接线：约 60px 细金线 + 小箭头 */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '4px 0' }}>
-              <span style={{ width: '1px', height: '60px', background: 'rgba(197,160,58,0.5)' }} />
+              <span style={{ width: '1px', height: '60px', background: 'rgba(138,106,47,0.5)' }} />
               <span style={{
                 width: 0, height: 0, borderLeft: '5px solid transparent', borderRight: '5px solid transparent',
                 borderTop: `7px solid ${P.gold}`,
@@ -275,10 +281,10 @@ export default function ResearchPage() {
               width: '100%', textAlign: 'center' as const, borderRadius: '16px', minHeight: '170px',
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px',
               padding: '32px 24px',
-              background: `radial-gradient(ellipse at 50% 0%, rgba(197,160,58,0.10), transparent 60%), ${P.dark}`,
+              background: `radial-gradient(ellipse at 50% 0%, rgba(138,106,47,0.10), transparent 60%), ${P.dark}`,
             }}>
               <p style={{ fontFamily: 'Georgia, serif', fontSize: '24px', color: '#fff', margin: 0 }}>
-                <Aiffd /> <span style={{ color: '#fff' }}>Personal Style Profile</span>
+                <Aiffd inverse /> <span style={{ color: '#fff' }}>Personal Style Profile</span>
               </p>
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: '#E4D9B8', margin: 0 }}>
                 Evolving Personal Style Intelligence
@@ -333,7 +339,7 @@ export default function ResearchPage() {
         <div style={{ padding: '96px 48px', background: P.aiffdPanel, textAlign: 'center' as const }}>
           <p style={eyebrow}>Product × Research</p>
           <h2 style={{ fontSize: '28px', margin: '0 0 8px' }}>
-            <span style={{ ...aiffdWordmark, fontSize: '28px', color: P.ink }}>AIFFD</span>
+            <Aiffd />
           </h2>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: P.accentBrown, letterSpacing: '0.04em', margin: '0 0 24px' }}>
             Working Product &amp; Research Prototype
@@ -350,7 +356,7 @@ export default function ResearchPage() {
         </div>
 
         <div style={{ padding: '96px 48px', background: P.dark, textAlign: 'center' as const }}>
-          <p style={{ ...eyebrow, color: '#d9c68a' }}>Product × Research</p>
+          <p style={{ ...eyebrow, color: P.gold }}>Product × Research</p>
           <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '28px', fontWeight: 400, color: '#fff', margin: '0 0 8px' }}>
             OhSammi Research
           </h2>
@@ -360,7 +366,7 @@ export default function ResearchPage() {
           <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
             {['研究问题', '方法形成过程', 'AIFFD 系统迭代', '设计决策', 'AI 推荐、女性身份、信任与用户自主性相关研究'].map(t => (
               <li key={t} style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: '#d8d3c8', display: 'flex', gap: '10px', alignItems: 'baseline' }}>
-                <span style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#d9c68a', display: 'inline-block' }} />
+                <span style={{ width: '4px', height: '4px', borderRadius: '50%', background: P.gold, display: 'inline-block' }} />
                 {t}
               </li>
             ))}
