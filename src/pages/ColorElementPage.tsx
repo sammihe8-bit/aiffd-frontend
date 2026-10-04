@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { userScopedKey } from '../utils/userStorage'
+import { humanProfileAPI } from '../utils/api'
+import { toProfileSeason, isValidFinalSeason25, warmCoolIsFromQuestionnaire } from '../utils/colorProfile'
 import ThreeStageProgress from '../components/ThreeStageProgress'
 
 const C = {
@@ -204,6 +206,26 @@ export default function ColorElementPage() {
         localStorage.setItem(userScopedKey('aiffd_element_result', user), finalElement)
         localStorage.setItem(userScopedKey('aiffd_element_name', user), ELEMENT_META[finalElement].name)
         localStorage.setItem(userScopedKey('aiffd_25season', user), resolveProfile(season, finalElement).finalType)
+        // 2026-10-04 新增：双写进 Human Profile DB（Color Fit 依赖），跟上面 localStorage 存档并行，不影响现有流程。
+        // 季型、季节五行、副气、25 型四个字段一起写，保证库里是同一次测试的结果。
+        // 只有五季结果真的存在（不是本页兜底的 changxia）、且冷暖来自问卷时才写。
+        const seasonFromTest = location.state?.season || localStorage.getItem(userScopedKey('aiffd_season_result', user))
+        const profileSeason = toProfileSeason(seasonFromTest)
+        const finalSeason25 = resolveProfile(season, finalElement).finalType
+        const fromQuestionnaire = warmCoolIsFromQuestionnaire(
+          localStorage.getItem(userScopedKey('aiffd_color_result', user)),
+          localStorage.getItem(userScopedKey('aiffd_warmcool', user)),
+        )
+        if (user && profileSeason && fromQuestionnaire && isValidFinalSeason25(finalSeason25)
+            && finalSeason25.startsWith(profileSeason.seasonName)) {
+          humanProfileAPI.patchMe({
+            ...profileSeason,
+            elementName: ELEMENT_META[finalElement].name,
+            finalSeason25,
+          }, 'color_test', '五行副气测试完成（问卷）').catch(() => {
+            // 静默失败：不影响用户查看报告
+          })
+        }
       }
       setStep('report')
     } else {
