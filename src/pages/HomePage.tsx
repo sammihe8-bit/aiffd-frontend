@@ -1,16 +1,15 @@
 import { Link } from 'react-router-dom'
 import Footer from '../components/Footer'
 
+// AIFFD 黑白灰品牌色；真实服装图片和色彩测试内容保留原色。
 const C = {
   h1: '#111111', h2: '#222222', sub: '#444444',
-  body: '#666666', muted: '#999999', gold: '#FF8000', border: '#e8e8e4',
-  bg: '#fafaf8', cream: '#fafaf8', accent: '#7A4A3C',
-  // 2026-09-14 统一：原来是从旧 LOGO 渐变取的 #6A0B85，跟 Navbar/Footer/OnboardingPage
-  // 用的 #370d47 不一致（这是之前记录在案的"两个紫色待统一"问题）。
-  // 现在统一成 #370d47，和下面"主编手记" section 写死的背景色保持一致——
-  // 这个 section 之前就已经是 #370d47 了，说明这两个按钮才是那个"没跟上"的地方。
-  deepPurple: '#370d47',
+  body: '#666666', muted: '#737373', border: '#E5E5E5',
+  bg: '#FFFFFF', surface: '#F5F5F5', accent: '#111111',
+  primary: '#111111', onPrimary: '#FFFFFF',
+  inverseMuted: '#BDBDBD', inverseText: '#F5F5F5',
 }
+
 
 const ITEMS = [
   { no: '02', name: '米色风衣', en: 'Camel Trench' },
@@ -21,14 +20,14 @@ const ITEMS = [
   { no: '17', name: '真皮手袋', en: 'Leather Tote' },
 ]
 
-const PLACEHOLDER_COLORS = ['#E8E0D5','#D4C8B8','#C8B8A8','#DDD0C0','#E4D8C8','#D8CCB8']
+const PLACEHOLDER_COLORS = ['#F2F2F2','#E8E8E8','#DEDEDE','#EEEEEE','#E4E4E4','#D8D8D8']
 
 function PlaceholderImg({ color, no, label }: { color: string; no: string; label: string }) {
   return (
     <div style={{ width: '100%', paddingBottom: '125%', position: 'relative', background: color }}>
       <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-        <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: 'rgba(0,0,0,0.3)' }}>NO. {no}</span>
-        <span style={{ fontFamily: 'Georgia, serif', fontSize: '14px', color: 'rgba(0,0,0,0.4)' }}>{label}</span>
+        <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '3px', color: C.muted }}>NO. {no}</span>
+        <span style={{ fontFamily: 'Georgia, serif', fontSize: '14px', color: C.body }}>{label}</span>
       </div>
     </div>
   )
@@ -41,7 +40,7 @@ export default function HomePage() {
 
       <section style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', minHeight: '100vh' }}>
         <div style={{ padding: '0 32px 0 160px', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: C.bg }}>
-          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.gold, marginBottom: '28px' }}>NO. 01 — 春日 SS26</p>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.accent, marginBottom: '28px' }}>NO. 01 — 春日 SS26</p>
           <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '42px', fontWeight: 400, lineHeight: 1.2, color: C.h1, marginBottom: '20px' }}>
             为今天<br /><em style={{ color: C.accent, fontStyle: 'italic' }}>试一件。</em>
           </h1>
@@ -49,11 +48,11 @@ export default function HomePage() {
             AIFFD智搭是一个为衣橱而生的 AI 工作室 — 虚拟试穿你已经拥有的、想象你尚未穿过的。
           </p>
           <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-            <Link to='/onboarding' style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', letterSpacing: '2px', color: '#fff', background: C.deepPurple, padding: '14px 32px', textDecoration: 'none' }}>开始试衣</Link>
+            <Link to='/onboarding' style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', letterSpacing: '2px', color: C.onPrimary, background: C.primary, padding: '14px 32px', textDecoration: 'none' }}>开始试衣</Link>
             <Link to='/onboarding' style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: C.sub, textDecoration: 'none' }}>了解AIFFD →</Link>
           </div>
         </div>
-        <div style={{ position: 'relative', overflow: 'hidden', minHeight: '600px', background: '#EAE4DC' }}>
+        <div style={{ position: 'relative', overflow: 'hidden', minHeight: '600px', background: C.surface }}>
           <img src='/hero-wardrobe.jpeg' alt='春日衣架' style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block', position: 'absolute', inset: 0 }} />
           <div style={{ position: 'absolute', bottom: '48px', right: '24px' }}>
             <p style={{ fontFamily: 'Georgia, serif', fontSize: '11px', color: 'rgba(255,255,255,0.7)', letterSpacing: '1px' }}>春日 SS26</p>
@@ -64,10 +63,10 @@ export default function HomePage() {
 
       <div style={{ height: '1px', background: border }} />
 
-      <section style={{ padding: '80px 64px', background: C.cream }}>
+      <section style={{ padding: '80px 64px', background: C.surface }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <div style={{ marginBottom: '56px' }}>
-            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.gold, marginBottom: '12px' }}>三件事</p>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.accent, marginBottom: '12px' }}>三件事</p>
             <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '32px', fontWeight: 400, lineHeight: 1.3, color: C.h1 }}>
               拥有你的<em style={{ color: C.accent, fontStyle: 'italic' }}>风格系统。</em>
             </h2>
@@ -79,7 +78,7 @@ export default function HomePage() {
               { num: '03', title: '衣橱', en: 'WARDROBE', desc: '将你的衣物收入数字衣橱。按色温、材质、季节自动归档。重新发现你已经拥有的。' },
             ].map((item, i) => (
               <div key={item.num} style={{ padding: '40px 36px', borderRight: i < 2 ? '1px solid ' + border : 'none' }}>
-                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.gold, marginBottom: '16px' }}>{item.num}</p>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.accent, marginBottom: '16px' }}>{item.num}</p>
                 <h3 style={{ fontFamily: 'Georgia, serif', fontSize: '20px', fontWeight: 400, color: C.h2, marginBottom: '4px' }}>{item.title}</h3>
                 <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '2px', color: C.muted, marginBottom: '16px' }}>{item.en}</p>
                 <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '16px', color: C.body, lineHeight: '1.8' }}>{item.desc}</p>
@@ -95,7 +94,7 @@ export default function HomePage() {
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '40px' }}>
             <div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.gold, marginBottom: '10px' }}>本季精选</p>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.accent, marginBottom: '10px' }}>本季精选</p>
               <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '32px', fontWeight: 400, color: C.h1, lineHeight: 1.3 }}>当下的二十件</h2>
             </div>
             <Link to='/onboarding' style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.muted, textDecoration: 'none' }}>查看全部 →</Link>
@@ -116,24 +115,24 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section style={{ background: '#370d47', padding: '80px 64px' }}>
+      <section style={{ background: C.primary, padding: '80px 64px' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '3px', color: 'rgba(230,205,240,0.45)', marginBottom: '32px' }}>— AIFFD · 主编手记</p>
-          <blockquote style={{ fontFamily: 'Georgia, serif', fontSize: '32px', fontWeight: 400, lineHeight: 1.5, color: '#E9D9F0', fontStyle: 'italic', margin: 0, maxWidth: '860px' }}>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '3px', color: C.inverseMuted, marginBottom: '32px' }}>— AIFFD · 主编手记</p>
+          <blockquote style={{ fontFamily: 'Georgia, serif', fontSize: '32px', fontWeight: 400, lineHeight: 1.5, color: C.inverseText, fontStyle: 'italic', margin: 0, maxWidth: '860px' }}>
             "我们不卖衣服。我们卖的是 — 在你按下购买前，先看见自己穿上它的那一刻。"
           </blockquote>
         </div>
       </section>
 
-      <section style={{ background: C.cream, padding: '80px 64px' }}>
+      <section style={{ background: C.surface, padding: '80px 64px' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '64px', alignItems: 'center' }}>
           <div>
-            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.gold, marginBottom: '16px' }}>我的风格系统</p>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.accent, marginBottom: '16px' }}>我的风格系统</p>
             <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '32px', fontWeight: 400, color: C.h1, lineHeight: 1.3, marginBottom: '16px' }}>先了解自己，<br />再购买任何一件。</h2>
             <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '17px', color: C.sub, lineHeight: '1.9', marginBottom: '32px' }}>
               体型 · 色彩 · 风格 · 时尚个性，四项测试构成你的专属风格档案，让每一次购买都成为精准决策。
             </p>
-            <Link to='/onboarding' style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', letterSpacing: '2px', color: '#fff', background: C.deepPurple, padding: '14px 28px', textDecoration: 'none', display: 'inline-block' }}>建立我的风格档案</Link>
+            <Link to='/onboarding' style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', letterSpacing: '2px', color: C.onPrimary, background: C.primary, padding: '14px 28px', textDecoration: 'none', display: 'inline-block' }}>建立我的风格档案</Link>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1px', background: border }}>
             {[
@@ -142,8 +141,8 @@ export default function HomePage() {
               { num: '03', label: '风格测试', sub: 'STYLE' },
               { num: '04', label: '时尚个性', sub: 'FASHION' },
             ].map(t => (
-              <div key={t.num} style={{ background: C.cream, padding: '28px 24px' }}>
-                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.gold, marginBottom: '10px' }}>{t.num}</p>
+              <div key={t.num} style={{ background: C.surface, padding: '28px 24px' }}>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '4px', color: C.accent, marginBottom: '10px' }}>{t.num}</p>
                 <p style={{ fontFamily: 'Georgia, serif', fontSize: '20px', fontWeight: 400, color: C.h2, marginBottom: '4px' }}>{t.label}</p>
                 <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '3px', color: C.muted }}>{t.sub}</p>
               </div>
