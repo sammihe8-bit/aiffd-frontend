@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import Footer from '../components/Footer'
 
 const C = {
-  gold: '#B8973A', goldLight: '#fdf8ee', border: '#e8e8e4',
+  gold: '#8A6A2F', goldLight: '#fdf8ee', border: '#e8e8e4',
   dark: '#0f0f0d', muted: '#999999', body: '#666666', h1: '#111111',
   bg: '#faf9f7',
 }
@@ -87,7 +87,7 @@ const PLANS = [
 
 const TESTIMONIALS = [
   { name: 'Vivian L.', role: '品牌总监 · 上海', text: '体型测试之后我才意识到自己一直在买错版型。现在买衣服像开了天眼。', initials: 'V', color: '#C9A87A' },
-  { name: 'Rachel M.', role: '自由撰稿人 · 洛杉矶', text: '虚拟试衣帮我退掉了三件本来要买的裙子，也让我果断入了两件犹豫很久的。值。', initials: 'R', color: '#B8973A' },
+  { name: 'Rachel M.', role: '自由撰稿人 · 洛杉矶', text: '虚拟试衣帮我退掉了三件本来要买的裙子，也让我果断入了两件犹豫很久的。值。', initials: 'R', color: C.gold },
   { name: '陈小姐', role: '企业主 · 北京', text: '年度顾问服务是我送给自己 45 岁生日的礼物。比买包更值得。', initials: '陈', color: '#8B7355' },
 ]
 
@@ -241,9 +241,9 @@ export default function SubscribePage() {
         {/* 内测阶段说明：付费方案还没真正开放，先别让用户以为点了就是真实下单 */}
         <div style={{
           maxWidth: '640px', margin: '0 auto 40px', padding: '16px 24px',
-          background: '#FFF3E0', border: '1px solid #FFD9A8', borderRadius: '8px',
+          background: C.goldLight, border: `1px solid ${C.gold}`, borderRadius: '8px',
         }}>
-          <p style={{ fontFamily: 'Inter,sans-serif', fontSize: '13px', color: '#9A5B00', lineHeight: 1.7, margin: 0, textAlign: 'center' as const }}>
+          <p style={{ fontFamily: 'Inter,sans-serif', fontSize: '13px', color: C.gold, lineHeight: 1.7, margin: 0, textAlign: 'center' as const }}>
             以下会员方案目前均为内测预约阶段，暂未开放实际付费。点击"预约"即完成意向登记，功能正式上线后我们会通过邮箱通知你，不会产生任何扣费。
           </p>
         </div>
@@ -271,7 +271,7 @@ export default function SubscribePage() {
                   <div style={{
                     position: 'absolute', top: '20px', right: '20px',
                     fontFamily: 'Inter,sans-serif', fontSize: '10px', letterSpacing: '2px',
-                    color: isPro ? C.dark : C.gold,
+                    color: isPro ? '#fff' : C.gold,
                     background: isPro ? C.gold : C.goldLight,
                     padding: '3px 10px', borderRadius: '2px',
                   }}>{plan.tag}</div>
