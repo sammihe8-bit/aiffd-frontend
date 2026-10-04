@@ -53,7 +53,7 @@ export default function HomePage() {
           </div>
         </div>
         <div style={{ position: 'relative', overflow: 'hidden', minHeight: '600px', background: C.surface }}>
-          <img src='/hero-wardrobe.jpeg' alt='春日衣架' style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block', position: 'absolute', inset: 0 }} />
+          <img src='/hero-wardrobe.jpeg' alt='春日衣架' style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'center', display: 'block', position: 'absolute', inset: 0 }} />
           <div style={{ position: 'absolute', bottom: '48px', right: '24px' }}>
             <p style={{ fontFamily: 'Georgia, serif', fontSize: '11px', color: 'rgba(255,255,255,0.7)', letterSpacing: '1px' }}>春日 SS26</p>
             <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', color: 'rgba(255,255,255,0.5)', letterSpacing: '2px', marginTop: '2px' }}>NO. 14</p>
