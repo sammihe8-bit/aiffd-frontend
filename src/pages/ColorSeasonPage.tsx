@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { userScopedKey } from '../utils/userStorage'
+import { humanProfileAPI } from '../utils/api'
+import { toProfileSeason, warmCoolIsFromQuestionnaire } from '../utils/colorProfile'
 import ThreeStageProgress from '../components/ThreeStageProgress'
 
 const C = {
@@ -571,11 +573,30 @@ export default function ColorSeasonPage() {
       else if (path === 'C') r = computeC(cAnswers, warmCool)
       else r = computeD(dAnswers)
       setResult(r)
+      // 覆盖本机存档之前，先记下上一次的五季结果（下面判断季型是否变化要用）
+      const prevSeason = toProfileSeason(localStorage.getItem(userScopedKey('aiffd_season_result', user)))
       // 立即存入 localStorage
       const meta = SEASON_META[r]
       localStorage.setItem(userScopedKey('aiffd_season_result', user), r)
       localStorage.setItem(userScopedKey('aiffd_season_name', user), meta.name)
       localStorage.setItem(userScopedKey('aiffd_season_element', user), meta.element)
+      // 2026-10-04 新增：双写进 Human Profile DB（Color Fit 依赖），跟上面 localStorage 存档并行，不影响现有流程。
+      // - 库里 season_name 只有 春/夏/长夏/秋/冬，长夏三个子型统一写"长夏"（toProfileSeason 换算）
+      // - 冷暖来自 AI 模拟结果时不写（题目路径由冷暖决定，见 colorProfile.ts）
+      // - 季型变了，旧的 25 型就跟新季型对不上了，一起清空，等五行副气测完再写；
+      //   element_name 是独立测出来的，不清
+      const profileSeason = toProfileSeason(r)
+      const fromQuestionnaire = warmCoolIsFromQuestionnaire(
+        localStorage.getItem(userScopedKey('aiffd_color_result', user)),
+        localStorage.getItem(userScopedKey('aiffd_warmcool', user)),
+      )
+      if (user && profileSeason && fromQuestionnaire) {
+        const patch: Record<string, unknown> = { ...profileSeason }
+        if (!prevSeason || prevSeason.seasonName !== profileSeason.seasonName) patch.finalSeason25 = null
+        humanProfileAPI.patchMe(patch, 'color_test', '五季测试完成（问卷）').catch(() => {
+          // 静默失败：不影响用户继续下一步测试
+        })
+      }
     }
     setStep(nextStep)
   }
