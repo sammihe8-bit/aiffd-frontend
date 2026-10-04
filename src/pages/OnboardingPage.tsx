@@ -234,12 +234,22 @@ function ArchivePage() {
               </div>
             </div>
           </div>
-          {/* 右侧配图 */}
-          <div style={{ position: 'relative', overflow: 'hidden', minHeight: '480px' }}>
+          {/* 右侧配图：四周蒙版融入首屏背景 */}
+          <div style={{ position: 'relative', overflow: 'hidden', minHeight: '480px', background: '#F5F5F5' }}>
             <img
               src="/hero-profile.jpg"
               alt="AIFFD 风格档案"
-              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top', display: 'block' }}
+              style={{
+                position: 'absolute', inset: 0, width: '100%', height: '100%',
+                objectFit: 'cover', objectPosition: 'center top', display: 'block',
+                // 四周渐隐；中间区域保持清晰，继续铺满图片容器。
+                maskImage: 'linear-gradient(to right, transparent 0%, #000 24%, #000 88%, transparent 100%), linear-gradient(to bottom, transparent 0%, #000 5%, #000 86%, transparent 100%)',
+                WebkitMaskImage: 'linear-gradient(to right, transparent 0%, #000 24%, #000 88%, transparent 100%), linear-gradient(to bottom, transparent 0%, #000 5%, #000 86%, transparent 100%)',
+                maskComposite: 'intersect',
+                WebkitMaskComposite: 'source-in',
+                maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat',
+                maskSize: '100% 100%', WebkitMaskSize: '100% 100%',
+              }}
             />
 
 
