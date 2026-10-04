@@ -52,8 +52,19 @@ export default function HomePage() {
             <Link to='/onboarding' style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: C.sub, textDecoration: 'none' }}>了解AIFFD →</Link>
           </div>
         </div>
-        <div style={{ position: 'relative', overflow: 'hidden', minHeight: '600px', background: C.surface }}>
-          <img src='/hero-wardrobe.jpeg' alt='春日衣架' style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'center', display: 'block', position: 'absolute', inset: 0 }} />
+        {/* 背景图铺满右侧区域，保持比例并裁切超出部分。 */}
+        <div
+          role='img'
+          aria-label='春日衣架'
+          style={{
+            position: 'relative', overflow: 'hidden', minHeight: '600px',
+            alignSelf: 'stretch', width: '100%',
+            backgroundColor: C.surface,
+            backgroundImage: 'url(/hero-wardrobe.jpeg)',
+            backgroundSize: 'cover', backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+          }}
+        >
           <div style={{ position: 'absolute', bottom: '48px', right: '24px' }}>
             <p style={{ fontFamily: 'Georgia, serif', fontSize: '11px', color: 'rgba(255,255,255,0.7)', letterSpacing: '1px' }}>春日 SS26</p>
             <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', color: 'rgba(255,255,255,0.5)', letterSpacing: '2px', marginTop: '2px' }}>NO. 14</p>
