@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { userScopedKey } from '../utils/userStorage'
+import { humanProfileAPI } from '../utils/api'
 import ThreeStageProgress from '../components/ThreeStageProgress'
 import { STYLE_OPTIONS, NO_FIXED_STYLE, NO_REJECTED_STYLE, styleLabelOf } from '../utils/fashionStyleOptions'
 
@@ -92,6 +93,11 @@ export default function FashionTestPage() {
   const [q3Selected, setQ3Selected] = useState<string[]>([])
 
   const toggleQ1 = (id: string) => {
+    // 2026-10-05：Q1 新选中的标签如果在 Q3 里被标为"不喜欢"，从 Q3 取消（同一形象不能既理想又排斥）。
+    // 用户回到 Q3 时能直接看到这个变化
+    if (!q1Selected.includes(id) && q1Selected.length < 5) {
+      setQ3Selected(prev => prev.filter(v => v !== id))
+    }
     setQ1Selected(prev => {
       if (prev.includes(id)) {
         if (q1Primary === id) setQ1Primary(null)
@@ -113,6 +119,7 @@ export default function FashionTestPage() {
   }
 
   const toggleQ3 = (id: string) => {
+    if (q1Selected.includes(id)) return   // 已选为理想形象的标签不能同时排斥（卡片已禁用，这里再兜底一次）
     setQ3Selected(prev => {
       if (id === NO_REJECTED_STYLE) return prev.includes(id) ? [] : [NO_REJECTED_STYLE]
       const withoutExclusive = prev.filter(v => v !== NO_REJECTED_STYLE)
@@ -139,6 +146,29 @@ export default function FashionTestPage() {
       current_aspired_style_gap: gap,
       rejected_style_codes: q3Selected,
     }))
+    // 2026-10-05 新增：双写进 Human Profile DB（Preference Fit 依赖），跟上面 localStorage 存档并行，不影响现有流程。
+    // 后端字段与校验见后端 api/routes/image-tags.ts：
+    // - aspiredImageTags：Q1 的 3～5 个标签；aspiredImageTagFavorite：标星的那个，可以没有
+    // - Q2 选"没有固定风格" → currentImageTags 为 []、currentImageStatus 为 no_fixed_style；否则为选中的 1～3 个、selected
+    // - Q3 选"没有特别排斥的" → rejectedImageTags 为 []；否则为选中的标签（Q3 已禁止选 Q1 的标签，不会重叠）
+    // - currentAspiredStyleGap：上面算出的派生信息，只用于解释，不代表"需要升级"
+    // "没有固定风格""没有特别排斥的"是前端哨兵值，不写进标签数组
+    if (user) {
+      const tagIds = new Set<string>(STYLE_OPTIONS.map(o => o.id))
+      const onlyTags = (ids: string[]) => ids.filter(id => tagIds.has(id))
+      const noFixed = q2Selected.includes(NO_FIXED_STYLE)
+      const noRejected = q3Selected.includes(NO_REJECTED_STYLE)
+      humanProfileAPI.patchMe({
+        aspiredImageTags: onlyTags(q1Selected),
+        aspiredImageTagFavorite: q1Primary && q1Selected.includes(q1Primary) ? q1Primary : null,
+        currentImageTags: noFixed ? [] : onlyTags(q2Selected),
+        currentImageStatus: noFixed ? 'no_fixed_style' : 'selected',
+        rejectedImageTags: noRejected ? [] : onlyTags(q3Selected),
+        currentAspiredStyleGap: gap,
+      }, 'fashion_preference_test', '偏好测试完成').catch(() => {
+        // 静默失败：不影响用户查看报告
+      })
+    }
     setPhase('report')
   }
 
@@ -297,12 +327,16 @@ export default function FashionTestPage() {
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
-                    {STYLE_OPTIONS.map(o => (
-                      <StyleImageCard key={o.id} label={o.label} desc={o.desc} img={o.img}
-                        active={q3Selected.includes(o.id)}
-                        disabled={q3Selected.includes(NO_REJECTED_STYLE)}
-                        onClick={() => toggleQ3(o.id)} />
-                    ))}
+                    {STYLE_OPTIONS.map(o => {
+                      // Q1 已选为理想形象的标签在这里不可选
+                      const inQ1 = q1Selected.includes(o.id)
+                      return (
+                        <StyleImageCard key={o.id} label={o.label} desc={inQ1 ? '已选为理想形象' : o.desc} img={o.img}
+                          active={q3Selected.includes(o.id)}
+                          disabled={inQ1 || q3Selected.includes(NO_REJECTED_STYLE)}
+                          onClick={() => toggleQ3(o.id)} />
+                      )
+                    })}
                   </div>
                   <StyleTagCard label="没有特别排斥的风格" desc="以上类型都还能接受"
                     active={q3Selected.includes(NO_REJECTED_STYLE)} onClick={() => toggleQ3(NO_REJECTED_STYLE)} />
