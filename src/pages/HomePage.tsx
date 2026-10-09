@@ -30,14 +30,14 @@ function ProductImg({ color, no, label, img }: { color: string; no: string; labe
   const [failed, setFailed] = useState(false)
   const showImg = img && !failed
   return (
-    <div style={{ width: '100%', paddingBottom: '125%', position: 'relative', background: color, overflow: 'hidden' }}>
+    <div style={{ width: '100%', paddingBottom: '125%', position: 'relative', background: showImg ? '#FFFFFF' : color, border: '1px solid ' + C.border, boxSizing: 'border-box', overflow: 'hidden' }}>
       {showImg ? (
         <img
           src={img}
           alt={label}
           loading='lazy'
           onError={() => setFailed(true)}
-          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }}
+          style={{ position: 'absolute', top: '8%', left: '8%', width: '84%', height: '84%', objectFit: 'contain', objectPosition: 'center' }}
         />
       ) : (
         <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
@@ -132,7 +132,7 @@ export default function HomePage() {
                 <div style={{ marginBottom: '12px' }}>
                   <ProductImg color={PLACEHOLDER_COLORS[i % PLACEHOLDER_COLORS.length]} no={item.no} label={item.name} img={item.img} />
                 </div>
-                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', textAlign: 'center' }}>
                   <span style={{ fontFamily: 'Georgia, serif', fontSize: '16px', color: C.h2 }}>{item.name}</span>
                   <span style={{ fontFamily: 'Georgia, serif', fontSize: '13px', fontStyle: 'italic', color: C.muted }}>{item.en}</span>
                 </div>
