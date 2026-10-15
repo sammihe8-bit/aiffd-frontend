@@ -20,7 +20,13 @@ const bodyText: React.CSSProperties = {
   fontFamily: 'Inter, sans-serif', fontSize: '17px', color: C.sub, lineHeight: 1.9, margin: '0 0 20px',
 }
 
+// 首屏强调色（标签、01 序号）
+const GOLD = '#8C6A3B'
+
 // ── 可编辑内容 ─────────────────────────────────────────────
+
+// 首屏大图：上传到 public/ 后填文件名，大小写需一致
+const HERO_IMG = '/about-hero.jpg'
 
 // 创始人手记：草稿，请按你自己的经历和口吻改写。
 const FOUNDER_NOTE = [
@@ -49,26 +55,47 @@ export default function AboutPage() {
   return (
     <div style={{ background: C.bg, minHeight: '100vh' }}>
 
-      {/* 开篇 */}
-      <section style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', minHeight: '80vh' }}>
-        <div style={{ padding: '80px 32px 80px 160px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-          <p style={{ ...label, marginBottom: '28px' }}>关于 AIFFD · ABOUT</p>
-          <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '42px', fontWeight: 400, lineHeight: 1.25, color: C.h1, margin: '0 0 24px' }}>
-            在按下购买之前，<br /><em style={{ fontStyle: 'italic' }}>先看见自己。</em>
-          </h1>
-          <p style={{ ...bodyText, maxWidth: '400px', marginBottom: 0 }}>
-            AIFFD 智搭是一个购买前的风格决策系统。我们把色彩、体型、风格与个性整合成一份属于你的风格档案，让每一次穿衣与购买都更确定。
-          </p>
+      {/* 首屏：居中标题 + 通栏大图 */}
+      <section style={{ padding: '56px 0 0', textAlign: 'center' }}>
+        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '5px', color: GOLD, margin: '0 0 28px' }}>
+          关于 AIFFD　·　OUR PHILOSOPHY
+        </p>
+        <h1 style={{ fontFamily: 'Georgia, "Songti SC", "STSong", serif', fontSize: '60px', fontWeight: 400, lineHeight: 1.3, color: C.h1, margin: '0 0 20px', letterSpacing: '2px' }}>
+          在按下购买之前，<br /><em style={{ fontStyle: 'italic' }}>先看见自己。</em>
+        </h1>
+        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '18px', color: C.sub, letterSpacing: '1px', margin: '0 0 20px' }}>
+          让每一次选择，都更接近你自己。
+        </p>
+        <div style={{ padding: '0 48px' }}>
+          <img
+            src={HERO_IMG}
+            alt='女性在衣架前挑选衣服'
+            style={{ display: 'block', width: '100%', maxWidth: '1420px', margin: '0 auto', aspectRatio: '3 / 1', objectFit: 'cover', objectPosition: 'center', background: C.surface }}
+          />
         </div>
-        <div
-          role='img'
-          aria-label='衣橱'
-          style={{
-            minHeight: '520px', backgroundColor: C.surface,
-            backgroundImage: 'url(/hero-wardrobe.jpeg)',
-            backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat',
-          }}
-        />
+      </section>
+
+      {/* 01 / 我们的出发点 */}
+      <section style={{ padding: '40px 0 56px' }}>
+        <div style={{ maxWidth: '1300px', margin: '0 auto', padding: '0 48px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '48px', alignItems: 'center', marginBottom: '40px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '28px' }}>
+              <span style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '72px', lineHeight: 1, color: GOLD }}>01</span>
+              <span style={{ fontFamily: 'Georgia, serif', fontSize: '28px', color: GOLD, opacity: 0.7 }}>/</span>
+              <span style={{ fontFamily: 'Georgia, "Songti SC", serif', fontSize: '28px', color: GOLD, letterSpacing: '2px' }}>我们的出发点</span>
+            </div>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '15px', color: C.sub, lineHeight: 1.9, margin: 0 }}>
+              AIFFD 智搭是一个购买前的风格决策系统。我们把色彩、体型、风格与个性整合成一份属于你的风格档案，让每一次穿衣与购买都更确定。
+            </p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+            <div style={{ flex: 1, height: '1px', background: '#D6D6D6' }} />
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', letterSpacing: '4px', color: C.muted, margin: 0, whiteSpace: 'nowrap' }}>
+              理解自己　/　保留选择　/　从容表达
+            </p>
+            <div style={{ flex: 1, height: '1px', background: '#D6D6D6' }} />
+          </div>
+        </div>
       </section>
 
       {/* 创始人手记 */}
