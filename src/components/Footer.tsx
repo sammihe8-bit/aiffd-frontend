@@ -148,7 +148,7 @@ export default function Footer() {
             {
               title: '关于',
               items: [
-                { label: '关于我们', to: '/' },
+                { label: '关于', to: '/about' },
                 { label: '专栏', to: '/column' },
                 { label: '订阅方案', to: '/subscribe' },
               ],
@@ -217,7 +217,7 @@ export default function Footer() {
               letterSpacing: '1px',
             }}
           >
-            © 2026 AIFFD 智搭 · contact@aiffd.com
+            © 2026 AIFFD 智搭 · hello@aiffd.com
           </p>
 
           <p
