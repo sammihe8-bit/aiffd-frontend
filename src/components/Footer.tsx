@@ -148,7 +148,7 @@ export default function Footer() {
             {
               title: '关于',
               items: [
-                { label: '品牌故事', to: '/' },
+                { label: '关于我们', to: '/' },
                 { label: '专栏', to: '/column' },
                 { label: '订阅方案', to: '/subscribe' },
               ],
