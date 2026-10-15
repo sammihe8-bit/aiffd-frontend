@@ -34,7 +34,7 @@ const FOUNDER_NOTE = [
   '色彩、体型、气质、生活场景，每一项都会影响一件衣服穿在身上的样子。过去，想把这些弄清楚，需要请造型师、反复试错，花费大量时间和金钱。',
   'AIFFD 想做的，是把这套判断变成每个人都能拥有的系统：先了解自己，再决定买什么。',
 ]
-const FOUNDER_SIGN = '— AIFFD 创始人'
+const FOUNDER_SIGN = '— Zenya He'
 
 const METHODS = [
   { num: '01', title: '体型', en: 'BODY', desc: '从骨架、比例与线条出发，判断什么样的剪裁、长度和廓形最能修饰你的身形。' },
