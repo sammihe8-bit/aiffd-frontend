@@ -134,7 +134,7 @@ function ConsentScreen({ onAgree }: { onAgree: () => void }) {
           </p>
           <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' as const }}>
             <Link to="/privacy" target="_blank" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: '#8A6A2F', letterSpacing: '1px' }}>查看完整隐私政策 →</Link>
-            <Link to="/about" target="_blank" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: '#8A6A2F', letterSpacing: '1px' }}>查看在线测试说明 →</Link>
+            <Link to="/test-guide" target="_blank" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: '#8A6A2F', letterSpacing: '1px' }}>查看在线测试说明 →</Link>
           </div>
         </div>
 
