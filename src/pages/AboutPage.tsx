@@ -161,7 +161,7 @@ export default function AboutPage() {
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '48px' }}>
           <div>
             <p style={{ ...label, color: C.muted }}>联系 · CONTACT</p>
-            <a href='mailto:contact@aiffd.com' style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h1, textDecoration: 'none' }}>contact@aiffd.com</a>
+            <a href='mailto:hello@aiffd.com' style={{ fontFamily: 'Georgia, serif', fontSize: '22px', color: C.h1, textDecoration: 'none' }}>hello@aiffd.com</a>
           </div>
           <div>
             <p style={{ ...label, color: C.muted }}>城市 · CITIES</p>
