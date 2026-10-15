@@ -7,6 +7,7 @@ import OnboardingPage from './pages/OnboardingPage'
 import PlaceholderPage from './pages/PlaceholderPage'
 import PrivacyPage from './pages/PrivacyPage'
 import AboutPage from './pages/AboutPage'
+import TestGuidePage from './pages/TestGuidePage'
 import BodyTestPage from './pages/BodyTestPage'
 import ColumnPage from './pages/ColumnPage'
 import ColorTestPage from './pages/ColorTestPage'
@@ -43,10 +44,11 @@ export default function App() {
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/onboarding" element={<OnboardingPage />} />
             <Route path="/privacy" element={<PrivacyPage />} />
-            <Route path="/about" element={<AboutPage />} />  {/* 2026-09-12 新增：在线测试说明，公开路由，不需要登录 */}
+            <Route path="/about" element={<AboutPage />} />  {/* 2026-10-15 改为品牌「关于」页 */}
+            <Route path="/test-guide" element={<TestGuidePage />} />  {/* 2026-10-15 新增：在线测试说明（原 /about 内容），公开路由，不需要登录 */}
             <Route path="/column" element={<ColumnPage />} />
             <Route path="/virtual-fit" element={<VirtualFitPage />} />
-            <Route path="/subscribe" element={<SubscribePage />} />  {/* ← 加在这里 */}
+            <Route path="/subscribe" element={<SubscribePage />} />
             <Route path="/research" element={<ResearchPage />} />
             {/* 以下测试相关路由改为需要登录才能进入 */}
             <Route path="/test/body" element={
