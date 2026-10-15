@@ -19,6 +19,20 @@ import { useAuth } from './hooks/useAuth'
 import ColorElementPage from './pages/ColorElementPage'
 import FashionTestPage from './pages/FashionTestPage'
 import ResearchPage from './pages/ResearchPage'
+import { useEffect } from 'react'
+
+// 2026-10-15 新增：切换页面时自动回到顶部。
+// 单页应用默认会保留上一页的滚动位置，比如在页脚点「关于」，新页面会停在底部。
+// 地址里带 #锚点（如 /subscribe#membership）时不处理，让页面自己滚到锚点位置。
+function ScrollToTop() {
+  const { pathname, hash } = useLocation()
+  useEffect(() => {
+    if (hash) return
+    window.scrollTo(0, 0)
+  }, [pathname, hash])
+  return null
+}
+
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { token } = useAuth()
   const location = useLocation()
@@ -31,6 +45,7 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <div className="min-h-screen bg-cream font-serif">
         <Navbar />
         {/* 2026-09-14 修复：原来是 pt-[60px]，只对应旧的纯导航栏高度。
