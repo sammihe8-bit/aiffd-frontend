@@ -190,6 +190,9 @@ export default function BodyTestPage() {
   const [hipProtrude, setHipProtrude] = useState<string[]>([])
   const [chestProtrude, setChestProtrude] = useState<string[]>([])
   const [fleshTexture, setFleshTexture] = useState<string[]>([])
+  // 2026-10-16 修复：最后一题选完后延迟自动跳转，setTimeout 里的 computeResult 来自点击那一刻的旧渲染，
+  // 读不到刚选的最后一题答案。改为先标记"请求完成"，等答案写进状态、重新渲染后再由 effect 计算结果。
+  const [finishRequested, setFinishRequested] = useState(false)
 
   // 一屏一题：各环节当前题目索引（骨架 0-9 / 身体轮廓 0-2）
   const [skeletonIdx, setSkeletonIdx] = useState(0)
@@ -270,8 +273,14 @@ export default function BodyTestPage() {
   }
   const goNextFlesh = () => {
     if (fleshIdx < 2) setFleshIdx(fleshIdx + 1)
-    else computeResult()
+    else setFinishRequested(true)
   }
+  useEffect(() => {
+    if (!finishRequested) return
+    setFinishRequested(false)
+    computeResult()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [finishRequested])
   const goBackFlesh = () => {
     if (fleshIdx > 0) setFleshIdx(fleshIdx - 1)
     else { setPhase('skeleton'); setSkeletonIdx(9) }

@@ -307,6 +307,10 @@ export default function StyleTestPage() {
   const [verifyQ2, setVerifyQ2] = useState('')
   const [verifyQ3, setVerifyQ3] = useState('')
   const [verifyQ4, setVerifyQ4] = useState('')
+  // 2026-10-16 修复：最后一题是"选完延迟自动跳转"，setTimeout 里调用的 finishAll 来自点击那一刻的旧渲染，
+  // 读到的 verifyQ4 还是空字符串——第 4 题从未计入气血判定，存档里 q4 也一直是 ""。
+  // 改为先标记"请求完成"，等最后一题的答案写进状态、页面重新渲染后，再由 effect 调用最新的 finishAll。
+  const [finishRequested, setFinishRequested] = useState(false)
   // 报告页展示的结果：要么是这次刚测完当场算出来的，要么是一进页面就发现已经测过、直接读存档来的
   const [completedResult, setCompletedResult] = useState<StyleReportResult | null>(null)
   // "重新测试"按钮点了之后，先弹窗问清楚要重测哪一部分，而不是直接默默重测面部+复核——
@@ -438,8 +442,14 @@ export default function StyleTestPage() {
 
   const goNextVerify = () => {
     if (verifyIdx < VERIFY_QUESTIONS.length - 1) setVerifyIdx(verifyIdx + 1)
-    else finishAll()
+    else setFinishRequested(true)
   }
+  useEffect(() => {
+    if (!finishRequested) return
+    setFinishRequested(false)
+    finishAll()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [finishRequested])
   const goBackVerify = () => {
     if (verifyIdx > 0) setVerifyIdx(verifyIdx - 1)
     else { setPhase('face'); setFaceIdx(FACE_QUESTIONS.length - 1) }
