@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { isFullProfileComplete, userScopedKey } from '../utils/userStorage'
 import Footer from '../components/Footer'
+import { syncProfile } from '../utils/profileSync'
 
 const MODULES = [
   {
@@ -73,6 +74,9 @@ const ARCHIVE_NOTES = [
 // 这样每条同意记录里存的 policyVersion 才能对应到当时用户实际看到、同意的是哪一版文案
 const CONSENT_POLICY_VERSION = 'v1.0-2026-09'
 
+// 2026-10-16 新增：年龄段，取值与后端 human_style_profiles.age_range 枚举、数据字典 01B 一致
+const AGE_RANGES = ['18-24', '25-34', '35-44', '45-54', '55+'] as const
+
 // 单个同意勾选项，抽成一个小组件方便必选/可选两组复用同一套样式，
 // 必选与可选均使用金色勾选态，通过分组标题和“可选：”前缀区分。
 function ConsentCheckbox({ id, checked, onChange, children }: {
@@ -100,8 +104,9 @@ function ConsentScreen({ onAgree }: { onAgree: () => void }) {
   const [privacyAck, setPrivacyAck] = useState(false)
   const [photoConsent, setPhotoConsent] = useState(false)
   const [researchDataConsent, setResearchDataConsent] = useState(false)
+  const [ageRange, setAgeRange] = useState<string>('')
 
-  const requiredChecked = ageAndResearchAck && privacyAck
+  const requiredChecked = ageAndResearchAck && privacyAck && !!ageRange
 
   const handleSubmit = () => {
     if (!requiredChecked) return
@@ -115,6 +120,8 @@ function ConsentScreen({ onAgree }: { onAgree: () => void }) {
     try {
       localStorage.setItem(userScopedKey('aiffd_consent', user), JSON.stringify(record))
     } catch { /* 存储失败也不阻塞用户往下走，只是这条同意记录没留档 */ }
+    // 年龄段写入云端档案（失败会提示，并在下次打开网站时补发）
+    syncProfile(user, '年龄段', { kind: 'patch', patch: { ageRange }, source: 'user_manual_edit', reason: 'Onboarding 填写年龄段' })
     onAgree()
   }
 
@@ -136,6 +143,19 @@ function ConsentScreen({ onAgree }: { onAgree: () => void }) {
             <Link to="/privacy" target="_blank" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: '#8A6A2F', letterSpacing: '1px' }}>查看完整隐私政策 →</Link>
             <Link to="/test-guide" target="_blank" style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: '#8A6A2F', letterSpacing: '1px' }}>查看在线测试说明 →</Link>
           </div>
+        </div>
+
+        {/* 2026-10-16 新增：年龄段（必选），用于个人风格档案 */}
+        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '2px', color: '#8A6A2F', marginBottom: '14px' }}>你的年龄段</p>
+        <div role="radiogroup" aria-label="年龄段" style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '10px', marginBottom: '32px' }}>
+          {AGE_RANGES.map(r => (
+            <button key={r} type="button" role="radio" aria-checked={ageRange === r} onClick={() => setAgeRange(r)} style={{
+              padding: '10px 18px', borderRadius: '4px', cursor: 'pointer',
+              border: `1.5px solid ${ageRange === r ? '#8A6A2F' : '#E5E5E5'}`,
+              background: ageRange === r ? '#F5F5F5' : '#fff', color: ageRange === r ? '#111' : '#666',
+              fontFamily: 'Inter, sans-serif', fontSize: '14px',
+            }}>{r === '55+' ? '55 岁及以上' : `${r} 岁`}</button>
+          ))}
         </div>
 
         {/* 必选：这两项不勾选就没法开始测试 */}
@@ -171,7 +191,7 @@ function ConsentScreen({ onAgree }: { onAgree: () => void }) {
           color: '#fff', border: 'none', cursor: requiredChecked ? 'pointer' : 'not-allowed',
           fontFamily: 'Inter, sans-serif', fontSize: '13px', letterSpacing: '2px',
         }}>
-          {requiredChecked ? '同意必选项并开始测试' : '请先确认必选授权'}
+          {requiredChecked ? '同意必选项并开始测试' : (ageAndResearchAck && privacyAck ? '请选择你的年龄段' : '请先确认必选授权')}
         </button>
       </div>
     </div>

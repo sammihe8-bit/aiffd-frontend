@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import Navbar from './components/Navbar'
+import ProfileSyncNotice from './components/ProfileSyncNotice'
 import HomePage from './pages/HomePage'
 import AuthPage from './pages/AuthPage'
 import ProfilePage from './pages/ProfilePage'
@@ -48,6 +49,7 @@ export default function App() {
       <ScrollToTop />
       <div className="min-h-screen bg-cream font-serif">
         <Navbar />
+        <ProfileSyncNotice />
         {/* 2026-09-14 修复：原来是 pt-[60px]，只对应旧的纯导航栏高度。
             Navbar 后来加了 34px 高的内测提示横幅（横幅+导航栏 fixed 总高度 = 94px），
             但这里的顶部留白一直没跟着更新，导致全站所有页面正文顶部都被固定定位的横幅+导航栏遮住一截。
