@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { userScopedKey } from '../utils/userStorage'
-import { humanProfileAPI } from '../utils/api'
+import { syncProfile } from '../utils/profileSync'
 import { toProfileSeason, isValidFinalSeason25, warmCoolIsFromQuestionnaire } from '../utils/colorProfile'
 import ThreeStageProgress from '../components/ThreeStageProgress'
 
@@ -218,12 +218,10 @@ export default function ColorElementPage() {
         )
         if (user && profileSeason && fromQuestionnaire && isValidFinalSeason25(finalSeason25)
             && finalSeason25.startsWith(profileSeason.seasonName)) {
-          humanProfileAPI.patchMe({
-            ...profileSeason,
-            elementName: ELEMENT_META[finalElement].name,
-            finalSeason25,
-          }, 'color_test', '五行副气测试完成（问卷）').catch(() => {
-            // 静默失败：不影响用户查看报告
+          syncProfile(user, '五行副气测试', {
+            kind: 'patch',
+            patch: { ...profileSeason, elementName: ELEMENT_META[finalElement].name, finalSeason25 },
+            source: 'color_test', reason: '五行副气测试完成（问卷）',
           })
         }
       }

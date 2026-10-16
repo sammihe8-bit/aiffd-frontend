@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { userScopedKey } from '../utils/userStorage'
-import { humanProfileAPI } from '../utils/api'
+import { syncProfile } from '../utils/profileSync'
+import { buildFashionPatch } from '../utils/profilePatches'
 import ThreeStageProgress from '../components/ThreeStageProgress'
 import { STYLE_OPTIONS, NO_FIXED_STYLE, NO_REJECTED_STYLE, styleLabelOf } from '../utils/fashionStyleOptions'
 
@@ -153,20 +154,12 @@ export default function FashionTestPage() {
     // - Q3 选"没有特别排斥的" → rejectedImageTags 为 []；否则为选中的标签（Q3 已禁止选 Q1 的标签，不会重叠）
     // - currentAspiredStyleGap：上面算出的派生信息，只用于解释，不代表"需要升级"
     // "没有固定风格""没有特别排斥的"是前端哨兵值，不写进标签数组
+    // 2026-10-16：字段换算移到 profilePatches.buildFashionPatch；写入改走 syncProfile，失败不再静默
     if (user) {
-      const tagIds = new Set<string>(STYLE_OPTIONS.map(o => o.id))
-      const onlyTags = (ids: string[]) => ids.filter(id => tagIds.has(id))
-      const noFixed = q2Selected.includes(NO_FIXED_STYLE)
-      const noRejected = q3Selected.includes(NO_REJECTED_STYLE)
-      humanProfileAPI.patchMe({
-        aspiredImageTags: onlyTags(q1Selected),
-        aspiredImageTagFavorite: q1Primary && q1Selected.includes(q1Primary) ? q1Primary : null,
-        currentImageTags: noFixed ? [] : onlyTags(q2Selected),
-        currentImageStatus: noFixed ? 'no_fixed_style' : 'selected',
-        rejectedImageTags: noRejected ? [] : onlyTags(q3Selected),
-        currentAspiredStyleGap: gap,
-      }, 'fashion_preference_test', '偏好测试完成').catch(() => {
-        // 静默失败：不影响用户查看报告
+      syncProfile(user, '个人时尚选择', {
+        kind: 'patch',
+        patch: buildFashionPatch(q1Selected, q1Primary, q2Selected, q3Selected, gap),
+        source: 'fashion_preference_test', reason: '偏好测试完成',
       })
     }
     setPhase('report')

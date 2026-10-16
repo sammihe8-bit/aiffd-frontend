@@ -4,7 +4,8 @@ import { computeStyleScore, computeStyleProbabilities, STYLE_ENGINE_VERSION, typ
 import { useAuth } from '../hooks/useAuth'
 import { userScopedKey } from '../utils/userStorage'
 import { getStylePortraitSrc } from '../utils/styleImages'
-import { humanProfileAPI } from '../utils/api'
+import { syncProfile } from '../utils/profileSync'
+import { buildQixuePatch } from '../utils/profilePatches'
 import ThreeStageProgress from '../components/ThreeStageProgress'
 
 // ─── 设计系统（与 BodyTestPage 保持一致）─────────────────────
@@ -410,16 +411,16 @@ export default function StyleTestPage() {
       humanProfilePatch.secondaryStyle = styleProbs.secondaryCode
     }
     if (payload.styleInfo?.element) humanProfilePatch.styleElement = payload.styleInfo.element
+    // 2026-10-16 产品确认：气血成为正式档案维度，五态结果和 4 题原始答案一起写入
+    const qixuePatch = buildQixuePatch(qiXueState, verifyQ1, verifyQ2, verifyQ3, verifyQ4)
+    if (qixuePatch) Object.assign(humanProfilePatch, qixuePatch)
 
+    // 2026-10-16：写入改走 syncProfile——失败自动重试，仍失败会提示用户并在下次打开网站时补发
     if (Object.keys(humanProfilePatch).length > 0) {
-      humanProfileAPI.patchMe(humanProfilePatch, 'face_test', '面部测试 + 风格判定完成').catch(() => {
-        // 静默失败：不影响用户查看结果的主流程
-      })
+      syncProfile(user, '面部与风格测试', { kind: 'patch', patch: humanProfilePatch, source: 'face_test', reason: '面部测试 + 风格判定完成' })
     }
     if (styleProbs) {
-      humanProfileAPI.saveStyleScores(styleProbs.scores, STYLE_ENGINE_VERSION).catch(() => {
-        // 静默失败：不影响用户查看结果的主流程
-      })
+      syncProfile(user, '13 型风格分布', { kind: 'styleScores', scores: styleProbs.scores, engineVersion: STYLE_ENGINE_VERSION })
     }
 
     setCompletedResult(payload)

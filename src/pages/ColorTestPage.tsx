@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { userScopedKey } from '../utils/userStorage'
-import { humanProfileAPI } from '../utils/api'
+import { syncProfile } from '../utils/profileSync'
 import ThreeStageProgress from '../components/ThreeStageProgress'
 
 const C = {
@@ -250,9 +250,7 @@ function ColorReport({ result, onReset }: { result: WarmCoolResult; onReset: () 
           // 肤色/发色/虹膜三个原始信号这次先不发：现有 q0 题问的是"偏白/偏黄"，混合了明度和底调
           // 两个概念，跟字典里重新设计的 skin_tone 枚举（很白皙/白皙/偏深…纯明度量表）不是一回事，
           // 强行映射会往数据库里塞进不准确的数据，需要等题库按数据字典重新设计后再接上。
-          humanProfileAPI.patchMe({ warmCool: result }, 'color_test', '冷暖测试完成（问卷）').catch(() => {
-            // 静默失败：不影响用户继续下一步测试
-          })
+          syncProfile(user, '冷暖测试', { kind: 'patch', patch: { warmCool: result }, source: 'color_test', reason: '冷暖测试完成（问卷）' })
           navigate('/test/color/season')
         }} style={{ background: C.gold, color: '#fff', border: 'none', borderRadius: '6px', padding: '13px 28px', fontFamily: 'Inter, sans-serif', fontSize: '13px', letterSpacing: '1px', cursor: 'pointer' }}>
           {profile.next} →

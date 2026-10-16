@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import { testProgressAPI, humanProfileAPI } from '../utils/api'
+import { testProgressAPI } from '../utils/api'
+import { syncProfile } from '../utils/profileSync'
+import { buildBodyPatch } from '../utils/profilePatches'
 import { userScopedKey } from '../utils/userStorage'
 import ThreeStageProgress from '../components/ThreeStageProgress'
 
@@ -233,30 +235,15 @@ export default function BodyTestPage() {
     testProgressAPI.save('body', 'completed', snapshot).catch(() => {})
 
     // 2026-09-16 新增：双写进 Human Profile DB，跟上面的 localStorage/testProgress 存档并行，
-    // 不影响、不阻塞现有流程（StyleTestPage 依然从 localStorage 读取 aiffd_body_result）。
-    // 只发送真正有值的字段，避免空字符串写进后端的 enum 列导致校验失败；
-    // 字段名和取值范围对照 Human Style Data Dictionary V1.0 第二节 Body。
-    // 注意：bodyShape/fleshTexture/hipProtrude/chestProtrude 这里发送的是用户原始单选值
-    // （数组的第 0 项），不是上面 aiffd_body_result 里那份叠加了体格提示码的增强版本——
-    // 后端 schema 的这几个字段是严格枚举，不接受"H型X"这类拼接后缀。
-    const humanProfilePatch: Record<string, unknown> = {}
-    if (heightRange) humanProfilePatch.heightRange = heightRange
-    if (boneScale) humanProfilePatch.boneScale = boneScale
-    if (boneRoundness) humanProfilePatch.boneRoundness = boneRoundness
-    if (boneWidth) humanProfilePatch.boneWidth = boneWidth
-    if (shoulderShape[0]) humanProfilePatch.shoulderShape = shoulderShape[0]
-    if (waistType.length) humanProfilePatch.waistType = waistType
-    if (waistLength) humanProfilePatch.waistLength = waistLength
-    if (limbLength) humanProfilePatch.limbLength = limbLength
-    if (handFootSize) humanProfilePatch.handFootSize = handFootSize
-    if (bodyShape[0]) humanProfilePatch.bodyShape = bodyShape[0]
-    if (fleshTexture[0]) humanProfilePatch.fleshTexture = fleshTexture[0]
-    if (hipProtrude[0]) humanProfilePatch.hipProtrude = hipProtrude[0]
-    if (chestProtrude[0]) humanProfilePatch.chestProtrude = chestProtrude[0]
+    // 不阻塞现有流程（StyleTestPage 依然从 localStorage 读取 aiffd_body_result）。
+    // 2026-10-16：字段换算移到 profilePatches.buildBodyPatch（肩线走向改用正式字段名 shoulderLineDirection）；
+    // 写入改走 syncProfile：失败自动重试，仍失败会提示用户并在下次打开网站时补发，不再静默丢失。
+    const humanProfilePatch = buildBodyPatch({
+      heightRange, boneScale, boneRoundness, boneWidth, shoulderShape, waistType, waistLength,
+      limbLength, handFootSize, bodyShape, fleshTexture, hipProtrude, chestProtrude,
+    })
     if (Object.keys(humanProfilePatch).length > 0) {
-      humanProfileAPI.patchMe(humanProfilePatch, 'body_test', '体型测试完成').catch(() => {
-        // 静默失败：Human Profile DB 是新增的旁路记录，写入失败不应该影响用户完成测试的主流程
-      })
+      syncProfile(user, '体型测试', { kind: 'patch', patch: humanProfilePatch, source: 'body_test', reason: '体型测试完成' })
     }
 
     // 2026-08-31 调整：不再展示单独的体型档案报告页，测完直接进风格测试的面部测试，

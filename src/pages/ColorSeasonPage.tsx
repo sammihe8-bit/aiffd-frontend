@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { userScopedKey } from '../utils/userStorage'
-import { humanProfileAPI } from '../utils/api'
+import { testProgressAPI } from '../utils/api'
+import { syncProfile } from '../utils/profileSync'
 import { toProfileSeason, warmCoolIsFromQuestionnaire } from '../utils/colorProfile'
 import ThreeStageProgress from '../components/ThreeStageProgress'
 
@@ -593,9 +594,16 @@ export default function ColorSeasonPage() {
       if (user && profileSeason && fromQuestionnaire) {
         const patch: Record<string, unknown> = { ...profileSeason }
         if (!prevSeason || prevSeason.seasonName !== profileSeason.seasonName) patch.finalSeason25 = null
-        humanProfileAPI.patchMe(patch, 'color_test', '五季测试完成（问卷）').catch(() => {
-          // 静默失败：不影响用户继续下一步测试
-        })
+        syncProfile(user, '五季测试', { kind: 'patch', patch, source: 'color_test', reason: '五季测试完成（问卷）' })
+      }
+      // 2026-10-16 新增：保存五季测试的原始答题（含发色、瞳色 A–F 选项）。
+      // 这两题的选项与后端 hair_color / iris_color 枚举对不上，暂不写进档案字段；
+      // 先把原始答案存进 test-progress，以后算法调整或枚举对齐时可以重算。
+      if (user) {
+        const rawAnswers = path === 'A' ? aAnswers : path === 'B' ? bAnswers : path === 'C' ? cAnswers : dAnswers
+        testProgressAPI.save('color_season', 'completed', {
+          path, answers: rawAnswers, warmCool, result: r, savedAt: new Date().toISOString(),
+        }).catch(err => console.error('[profile-sync] 五季原始答题保存失败', err))
       }
     }
     setStep(nextStep)
