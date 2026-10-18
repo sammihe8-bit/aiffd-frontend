@@ -120,6 +120,12 @@ function ConsentScreen({ onAgree }: { onAgree: () => void }) {
     try {
       localStorage.setItem(userScopedKey('aiffd_consent', user), JSON.stringify(record))
     } catch { /* 存储失败也不阻塞用户往下走，只是这条同意记录没留档 */ }
+    // 2026-10-18：同意记录同时写入后端 user_consents（失败会提示，并在下次打开网站时补发）。
+    // 同意时间以服务器收到请求的时间为准，所以这里不传 consentedAt。
+    syncProfile(user, '同意记录', {
+      kind: 'consent',
+      consent: { ageAndResearchAck, privacyAck, photoConsent, researchDataConsent, policyVersion: CONSENT_POLICY_VERSION, source: 'onboarding' },
+    })
     // 年龄段写入云端档案（失败会提示，并在下次打开网站时补发）
     syncProfile(user, '年龄段', { kind: 'patch', patch: { ageRange }, source: 'user_manual_edit', reason: 'Onboarding 填写年龄段' })
     onAgree()
