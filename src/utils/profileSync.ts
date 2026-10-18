@@ -8,7 +8,7 @@
 //      再把后端仍为空、但本机或后端测试存档里已有的历史结果补写进去（只填空字段，不覆盖）。
 //   3. clearLegacyUnscopedKeys：删除不带用户 ID 的旧版本机存档（现有代码已不再读写这些 key）。
 
-import { humanProfileAPI, testProgressAPI, type ChangeSource } from './api'
+import { humanProfileAPI, testProgressAPI, consentAPI, type ChangeSource, type ConsentPayload } from './api'
 import { SCOPED_STORAGE_KEYS, userScopedKey } from './userStorage'
 import { warmCoolIsFromQuestionnaire } from './colorProfile'
 import { buildBodyPatch, buildQixuePatch, buildFashionPatch, buildColorPatch, type ProfilePatch, type BodyAnswers } from './profilePatches'
@@ -19,6 +19,7 @@ export type StyleScoreRow = { styleCode: string; probability: number; isPrimary?
 export type SyncOp =
   | { kind: 'patch'; patch: ProfilePatch; source: ChangeSource; reason?: string }
   | { kind: 'styleScores'; scores: StyleScoreRow[]; engineVersion?: string }
+  | { kind: 'consent'; consent: ConsentPayload }
 
 interface QueuedSync { label: string; op: SyncOp; failedAt: string }
 
@@ -28,9 +29,9 @@ const queueKey = (user: AuthUser | null) => userScopedKey('aiffd_pending_profile
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
 
 function run(op: SyncOp): Promise<unknown> {
-  return op.kind === 'patch'
-    ? humanProfileAPI.patchMe(op.patch, op.source, op.reason)
-    : humanProfileAPI.saveStyleScores(op.scores, op.engineVersion)
+  if (op.kind === 'patch') return humanProfileAPI.patchMe(op.patch, op.source, op.reason)
+  if (op.kind === 'consent') return consentAPI.save(op.consent)
+  return humanProfileAPI.saveStyleScores(op.scores, op.engineVersion)
 }
 
 // 4xx（除 408/429）是数据本身不合法，重试也不会成功；其余（断网、超时、5xx）值得重试
@@ -139,7 +140,10 @@ export async function backfillProfile(user: AuthUser | null): Promise<void> {
     }
   }
 
-  // 2. 再补写历史结果（后端为空、本机或后端测试存档里有值）
+  // 2. 同意记录：服务端还没有任何记录、本机有完整的旧记录时，补传一次（标记为 local_backfill）
+  await backfillConsent(user)
+
+  // 3. 再补写历史结果（后端为空、本机或后端测试存档里有值）
   let profile: Record<string, unknown>
   try {
     const res = await humanProfileAPI.getMe()
@@ -221,6 +225,37 @@ export async function backfillProfile(user: AuthUser | null): Promise<void> {
 
   if (allDone) {
     try { sessionStorage.setItem(sessionFlag(user), '1') } catch { /* 忽略 */ }
+  }
+}
+
+// 2026-10-18：同意记录此前只存在浏览器本机。补传时保留本机记录里的原始同意时间，
+// 后端会把它标记为 local_backfill（浏览器自报，证据力弱于 Onboarding 直接写入），
+// 且只在服务端还没有任何记录时接受，所以重复执行是安全的。
+async function backfillConsent(user: AuthUser) {
+  const local = readJson<{
+    ageAndResearchAck?: unknown; privacyAck?: unknown; photoConsent?: unknown
+    researchDataConsent?: unknown; policyVersion?: unknown; timestamp?: unknown
+  }>(userScopedKey('aiffd_consent', user))
+  if (!local) return
+  const consentedAt = typeof local.timestamp === 'string' && !Number.isNaN(Date.parse(local.timestamp))
+    ? new Date(local.timestamp).toISOString() : null
+  // 本机记录不完整（缺必选授权或时间）就不补传，避免写入无法证明的同意
+  if (local.ageAndResearchAck !== true || local.privacyAck !== true || !consentedAt
+      || typeof local.policyVersion !== 'string' || !local.policyVersion) return
+  try {
+    const res = await consentAPI.getMe()
+    if (res.data?.consent) return
+    await consentAPI.save({
+      ageAndResearchAck: true,
+      privacyAck: true,
+      photoConsent: local.photoConsent === true,
+      researchDataConsent: local.researchDataConsent === true,
+      policyVersion: local.policyVersion,
+      source: 'local_backfill',
+      consentedAt,
+    })
+  } catch (err) {
+    console.error('[profile-sync] 补传同意记录失败', err)
   }
 }
 

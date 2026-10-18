@@ -116,4 +116,21 @@ export const humanProfileAPI = {
     api.post('/human-profile/me/color-signals', { signalType, value, sourceMethod, confidence }),
 }
 
+// 同意记录（2026-10-18 新增）：对接后端 api/routes/consents.ts。只追加，最新一条为当前状态。
+export interface ConsentPayload {
+  ageAndResearchAck: boolean
+  privacyAck: boolean
+  photoConsent: boolean
+  researchDataConsent: boolean
+  policyVersion: string
+  // onboarding：用户在 Onboarding 提交；local_backfill：从浏览器本机旧记录补传（须带 consentedAt）
+  source: 'onboarding' | 'local_backfill'
+  consentedAt?: string
+}
+
+export const consentAPI = {
+  getMe: () => api.get('/consents/me'),
+  save: (consent: ConsentPayload) => api.post('/consents', consent),
+}
+
 export default api
