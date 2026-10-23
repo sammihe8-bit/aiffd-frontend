@@ -381,8 +381,8 @@ export default function BodyTestPage() {
             </h2>
             <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.body, lineHeight: 1.8, marginBottom: '24px' }}>
               {resumeChoice === 'inprogress'
-                ? '本设备上保存了一份还没做完的记录，可以选择继续、重新开始，或者先去做别的测试。'
-                : '本设备上已经保存了一份完整的体型测试结果，可以直接查看，也可以重新测一次覆盖它。'}
+                ? '你有一份还没做完的体型测试记录，可以选择继续、重新开始，或者先去做别的测试。'
+                : '你已经保存了一份完整的体型测试结果，可以直接查看，也可以重新测一次覆盖它。'}
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {resumeChoice === 'inprogress' ? (

@@ -10,7 +10,7 @@ import ThreeStageProgress from '../components/ThreeStageProgress'
 import { testProgressAPI } from '../utils/api'
 import { buildBodyResult } from '../utils/bodyResult'
 import { useServerProfile } from '../hooks/useServerProfile'
-import { styleFromServer } from '../utils/profileFromServer'
+import { styleFromServer, bodyAnswersFromServer } from '../utils/profileFromServer'
 
 // ─── 设计系统（与 BodyTestPage 保持一致）─────────────────────
 const C = {
@@ -322,14 +322,19 @@ export default function StyleTestPage() {
   // 连体型也会一起重新测，实际上只会重测面部测试+整体风格复核，体型数据原样保留
   const [showRestartChoice, setShowRestartChoice] = useState(false)
 
+  // 体型数据来源（2026-10-23）：本机 → 云端体型测试完整存档（test_progress）→ 云端档案表字段。
+  // 三处都查完之前显示“正在读取”，避免先闪出“需要先完成体型测试”；只有三处都没有才让用户去做体型测试。
+  // 之前只看本机：换设备后档案页显示“体型已完成，继续面部测试”，点进来却被要求先做体型测试，
+  // 去体型测试页又提示“已完成”并跳回档案页，形成死循环。
+  const [bodyRemoteChecked, setBodyRemoteChecked] = useState(false)
   useEffect(() => {
+    setBodyRemoteChecked(false)
     const raw = localStorage.getItem(userScopedKey('aiffd_body_result', user))
     if (raw) {
-      try { setBodyResult(JSON.parse(raw)); return } catch { /* 存档损坏，按本机没有处理 */ }
+      try { setBodyResult(JSON.parse(raw)); setBodyRemoteChecked(true); return } catch { /* 存档损坏，按本机没有处理 */ }
     }
     setBodyResult(null) // 显式清空：避免切换账号后仍然沿用上一个账号读到的 bodyResult 残留在 state 里
-    // 2026-10-23：本机没有体型结果（换设备、清缓存）时，用云端的体型测试存档重建，不用让用户重做体型测试
-    if (!user?.id) return
+    if (!user?.id) { setBodyRemoteChecked(true); return }
     let cancelled = false
     testProgressAPI.get('body')
       .then(res => {
@@ -337,6 +342,7 @@ export default function StyleTestPage() {
         if (!cancelled && progress?.status === 'completed' && progress.data) setBodyResult(buildBodyResult(progress.data))
       })
       .catch(err => console.error('[style-test] 读取云端体型存档失败', err))
+      .finally(() => { if (!cancelled) setBodyRemoteChecked(true) })
     return () => { cancelled = true }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id])
@@ -356,6 +362,15 @@ export default function StyleTestPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [serverProfile, phase])
+
+  // 最后一道兜底：完整存档也没有时，用云端档案表里的体型字段（与档案页显示“体型已完成”的判断一致）
+  useEffect(() => {
+    if (bodyResult || !bodyRemoteChecked || !serverProfile) return
+    const answers = bodyAnswersFromServer(serverProfile)
+    if (answers) setBodyResult(buildBodyResult(answers))
+  }, [bodyResult, bodyRemoteChecked, serverProfile])
+  // 云端档案读取失败或还没返回时，不能一直显示“正在读取”：最多等 serverProfile 一次结果
+  const bodyLoading = !bodyResult && (!bodyRemoteChecked || (!!user?.id && serverProfile === undefined))
 
   // 一进页面就检查这个账号是不是已经测过风格测试了，测过就直接跳结果页，不再让用户从头再答一遍
   useEffect(() => {
@@ -557,16 +572,16 @@ export default function StyleTestPage() {
                 风格测试 · 13 型判定
               </p>
               <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '26px', color: C.h2, fontWeight: 400, margin: 0 }}>
-                {bodyResult ? '体型数据已就绪，开始面部测试' : '需要先完成体型测试'}
+                {bodyLoading ? '正在读取你的体型数据…' : bodyResult ? '体型数据已就绪，开始面部测试' : '需要先完成体型测试'}
               </h2>
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.body, lineHeight: 1.8, marginTop: '14px' }}>
-                {bodyResult
+                {bodyLoading ? '' : bodyResult
                   ? '风格测试分三步：体型测试（已完成）→ 面部测试 → 整体风格复核，三部分一起算出你的 13 型结论。'
                   : '风格测试需要用到体型测试（骨架+身体轮廓）的数据才能计算最终结论，请先完成体型测试。'}
               </p>
             </div>
 
-            {bodyResult ? (
+            {bodyLoading ? null : bodyResult ? (
               <button onClick={() => setPhase('face')} style={btnGold}>开始面部测试 →</button>
             ) : (
               <Link to="/test/body" style={{
