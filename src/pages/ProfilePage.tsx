@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import { userAPI } from '../utils/api'
+import { userAPI, humanProfileAPI } from '../utils/api'
+import { styleFromServer, colorFromServer, bodyFromServer, fashionFromServer, hasFaceOnServer, type ServerProfile } from '../utils/profileFromServer'
 import { userScopedKey } from '../utils/userStorage'
 import { getStylePortraitSrc } from '../utils/styleImages'
 import { STYLE_OPTIONS, styleLabelOf } from '../utils/fashionStyleOptions'
@@ -143,23 +144,48 @@ export default function ProfilePage() {
     }
   }
 
+  // ── 云端档案（2026-10-22 新增）────────────────────────
+  // 读取顺序：本机优先、云端补缺。本机有的结果照常显示；本机没有的（换设备、清缓存、换浏览器），
+  // 用云端档案换算出的数据补上。读取失败时页面照常只显示本机数据。
+  const [serverProfile, setServerProfile] = useState<ServerProfile | null>(null)
+  useEffect(() => {
+    if (!user?.id) return
+    let cancelled = false
+    humanProfileAPI.getMe()
+      .then(res => { if (!cancelled) setServerProfile(res.data?.profile ?? null) })
+      .catch(err => console.error('[profile] 读取云端档案失败，仅显示本机数据', err))
+    return () => { cancelled = true }
+  }, [user?.id])
+
   // ── 档案数据读取 ──────────────────────────────────
   const raw = localStorage.getItem(userScopedKey('aiffd_profile', user))
-  const profile: StyleProfile | null = raw ? JSON.parse(raw) : null
+  const localProfile: StyleProfile | null = raw ? (() => { try { return JSON.parse(raw) } catch { return null } })() : null
+  // 年龄段以云端为准（Onboarding 采集，取值 18-24 等）；本机旧存档里的“30–39岁”只作兜底
+  const ageRange = (typeof serverProfile?.ageRange === 'string' && serverProfile.ageRange) || localProfile?.ageRange || ''
+  const profile: StyleProfile | null = localProfile || ageRange
+    ? { ...(localProfile ?? { bodyType: '', styleDirections: [], budget: '', concerns: [], skinTone: '', scenes: [] }), ageRange }
+    : null
 
-  const warmCool = localStorage.getItem(userScopedKey('aiffd_warmcool', user)) || ''
-  const seasonName = localStorage.getItem(userScopedKey('aiffd_season_name', user)) || ''
-  const seasonElement = localStorage.getItem(userScopedKey('aiffd_season_element', user)) || ''
-  const elementName = localStorage.getItem(userScopedKey('aiffd_element_name', user)) || ''
-  const finalSeason25 = localStorage.getItem(userScopedKey('aiffd_25season', user)) || ''
+  const serverColor = colorFromServer(serverProfile)
+  const localWarmCool = localStorage.getItem(userScopedKey('aiffd_warmcool', user)) || ''
+  const localSeasonName = localStorage.getItem(userScopedKey('aiffd_season_name', user)) || ''
+  // 色彩各层按“同一次测试”整组取用：本机有季型就整组用本机，避免本机季型与云端副气拼在一起
+  const colorFromLocal = !!localSeasonName || (!!localWarmCool && !serverColor.seasonName)
+  const warmCool = colorFromLocal ? localWarmCool : (localWarmCool || serverColor.warmCool)
+  const seasonName = colorFromLocal ? localSeasonName : serverColor.seasonName
+  const seasonElement = colorFromLocal ? (localStorage.getItem(userScopedKey('aiffd_season_element', user)) || '') : serverColor.seasonElement
+  const elementName = colorFromLocal ? (localStorage.getItem(userScopedKey('aiffd_element_name', user)) || '') : serverColor.elementName
+  const finalSeason25 = colorFromLocal ? (localStorage.getItem(userScopedKey('aiffd_25season', user)) || '') : serverColor.finalSeason25
 
   const bodyRaw = localStorage.getItem(userScopedKey('aiffd_body_result', user))
-  const bodyResult = bodyRaw ? (() => { try { return JSON.parse(bodyRaw) } catch { return null } })() : null
+  const localBody = bodyRaw ? (() => { try { return JSON.parse(bodyRaw) } catch { return null } })() : null
+  const bodyResult = localBody ?? bodyFromServer(serverProfile)
 
   const styleRaw = localStorage.getItem(userScopedKey('aiffd_style_result', user))
-  const styleResult: StyleResultData | null = styleRaw
+  const localStyle: StyleResultData | null = styleRaw
     ? (() => { try { return JSON.parse(styleRaw) as StyleResultData } catch { return null } })()
     : null
+  const styleResult: StyleResultData | null = localStyle ?? styleFromServer(serverProfile)
 
   // 五官详情（StyleTestPage 存的 { [维度id]: { label, value } } 结构）
   const faceRaw = localStorage.getItem(userScopedKey('aiffd_face_result', user))
@@ -171,13 +197,18 @@ export default function ProfilePage() {
 
   // 个人时尚选择（目前只上线了"理想形象" Q1-Q3）
   const fashionRaw = localStorage.getItem(userScopedKey('aiffd_fashion_style', user))
-  const fashionResult: {
+  const localFashion: {
     aspired_style_primary: string | null
     aspired_style_secondary: string[]
     current_style: string[]
     current_aspired_style_gap: 'stable' | 'gap' | 'no_fixed_style'
     rejected_style_codes: string[]
   } | null = fashionRaw ? (() => { try { return JSON.parse(fashionRaw) } catch { return null } })() : null
+  const fashionResult = localFashion ?? fashionFromServer(serverProfile)
+
+  // 有任何一块结果来自云端时，在页面上说明一句，避免用户疑惑“为什么这里显示得比较简略”
+  const restoredFromServer = (!localStyle && !!styleResult) || (!localBody && !!bodyResult)
+    || (!colorFromLocal && !!seasonName) || (!localFashion && !!fashionResult)
 
   // "最想成为的样子"（Q1 的最喜欢选项）对应的插画，用于个人时尚选择区块右侧的卡片展示
   const aspiredStyleCards = fashionResult
@@ -268,6 +299,12 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
+
+        {restoredFromServer && (
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.body, lineHeight: 1.7, margin: '0 0 24px', padding: '10px 14px', background: '#fff', border: `1px solid ${C.border}`, borderLeft: `3px solid ${C.gold}`, borderRadius: '4px' }}>
+            这台设备上没有部分测试记录，相关结果已从你的云端档案恢复。五官等少数详情只保存在做测试的那台设备上，这里会显示得简略一些。
+          </p>
+        )}
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px', borderBottom: `1px solid ${C.border}`, paddingBottom: '32px', marginBottom: '40px', position: 'relative' }}>
           {/* 头像：点击打开预设图案选择器 */}
@@ -408,7 +445,9 @@ export default function ProfilePage() {
                     </div>
                   ) : (
                     <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, margin: 0, lineHeight: 1.8 }}>
-                      这份风格结论是改版前测出来的，当时还没存五官原始答案，重新做一次面部测试即可补上这部分详情。
+                      {hasFaceOnServer(serverProfile)
+                        ? '五官详情只保存在你做面部测试的那台设备上，这台设备暂时无法显示。重新做一次面部测试即可在这里看到。'
+                        : '这份风格结论是改版前测出来的，当时还没存五官原始答案，重新做一次面部测试即可补上这部分详情。'}
                     </p>
                   )}
                 </div>
