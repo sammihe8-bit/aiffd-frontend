@@ -1,3 +1,4 @@
+import { buildBodyResult } from '../utils/bodyResult'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
@@ -6,6 +7,7 @@ import { syncProfile } from '../utils/profileSync'
 import { buildBodyPatch } from '../utils/profilePatches'
 import { userScopedKey } from '../utils/userStorage'
 import ThreeStageProgress from '../components/ThreeStageProgress'
+import { useServerProfile } from '../hooks/useServerProfile'
 
 const C = {
   h1: '#111111', h2: '#222222', sub: '#444444',
@@ -65,7 +67,7 @@ function letterOf(i: number): string {
 // 用户界面只显示"细/匀/直/宽"，这套 X/V/H/O 编码完全不对用户展示，
 // 只在后台数据里额外附加一份 body_shape_hint，作为体格(H/X/A/V)判定的辅助信号，
 // 和用户在 Q9 体格题里的直接选择一起合并进打分引擎的 bodyShape 维度
-const WAIST_BODYSHAPE_HINT: Record<string, string> = { 细: 'X', 匀: 'V', 直: 'H', 宽: 'O' }
+// （2026-10-23：映射表 WAIST_BODYSHAPE_HINT 移到 utils/bodyResult.ts）
 
 function OptionCard({ label, sub, active, onClick }: {
   label: string; sub?: string; active: boolean; onClick: () => void
@@ -108,6 +110,7 @@ export default function BodyTestPage() {
   // 本轮全部移除，统一走数据库存档。checkLocalFallback() 保留——它现在的用途是迁移"强制登录之前，
   // 以访客身份测过一半"遗留在本机的旧数据，这个场景依然真实存在。
   const { user } = useAuth()
+  const serverProfile = useServerProfile(user) // 2026-10-23：进度条等“已完成”判断，本机没有时参考云端档案
   const [phase, setPhase] = useState<Phase>('method')
   const [method, setMethod] = useState<'manual' | 'ai' | ''>('')
 
@@ -172,10 +175,9 @@ export default function BodyTestPage() {
   const [heightRange, setHeightRange] = useState('')
   const [boneScale, setBoneScale] = useState('')
   // 骨架形状原本是一道多选题（圆/角/匀/宽/窄），2026-08-27 改为两道单选子题：
-  // 骨点明显程度（圆润↔有棱角）+ 肩部横向展开感（偏窄↔偏宽），两个答案合并成 boneShape 数组
+  // 骨点明显程度（圆润↔有棱角）+ 肩部横向展开感（偏窄↔偏宽），两个答案在 buildBodyResult 里合并进 boneScale 数组
   const [boneRoundness, setBoneRoundness] = useState('') // 骨点较弱→圆 / 骨点适中→匀 / 骨点明显→角
   const [boneWidth, setBoneWidth] = useState('') // 偏窄→窄 / 适中→匀 / 偏宽→宽
-  const boneShape = [boneRoundness, boneWidth].filter(Boolean)
   const [shoulderShape, setShoulderShape] = useState<string[]>([])
   // 2026-08-28 腰型拆成两道题：Q6 横向轮廓(细/匀/直/宽，多选) + Q7 纵向比例(短/适中/长，单选)
   // 两边答案最后合并成一个数组喂给打分引擎的 waist 维度，跟原表格"细+匀+长"这类组合完全对应
@@ -210,22 +212,13 @@ export default function BodyTestPage() {
   // 本函数只负责把体型测试 11 个原始维度存入 aiffd_body_result，供 StyleTestPage 的两层匹配引擎读取。
   // （原本这里还会顺带算气血态 qiXueState，现在气血态 4 题已经挪到独立模块，这里不再处理）
   const computeResult = () => {
-    // 腰型答案派生出的体格倾向提示（X/V/H/O），只在后台数据里出现，界面从不展示
-    const bodyShapeHint = waistType.map(w => WAIST_BODYSHAPE_HINT[w]).filter(Boolean)
-    // Q6(横向轮廓) + Q7(纵向比例) 合并成最终喂给引擎的腰型组合词，"适中"不贡献任何词
-    const waistCombined = waistLength === '适中' ? waistType : [...waistType, ...(waistLength ? [waistLength] : [])]
-
-    // 供打分引擎使用的原始维度（键名对应 src/data/styleMatrix.ts 里的 DIMENSIONS[].id）
-    // 骨架大小是 combo 类型，把"尺寸(S/M/L)"和"形状(圆/角/匀/宽/窄)"两屏答案合并成一个数组
-    // waist 数组是 Q6+Q7 的合并结果；bodyShape 数组额外合并了腰型派生出的体格提示码
-    // 这两个 key 现在带用户 ID 前缀，登录用户之间互不干扰；访客统一落在 'guest' 桶里
-    localStorage.setItem(userScopedKey('aiffd_body_result', user), JSON.stringify({
-      boneScale: [boneScale, ...boneShape], height: heightRange, shoulder: shoulderShape,
-      waist: waistCombined,
-      limb: limbLength, handFoot: handFootSize, bodyShape: [...bodyShape, ...bodyShapeHint.map(h => `${h}型`)],
-      fleshTexture, hip: hipProtrude, chest: chestProtrude,
-      waist_ui_label: waistCombined, body_shape_hint: bodyShapeHint, // 额外保留两层数据，供后台/分析使用
-    }))
+    // 2026-10-23：体型结果的组装移到 utils/bodyResult.buildBodyResult，面部测试页换设备时也用它从云端存档重建
+    const bodyResultData = buildBodyResult({
+      heightRange, boneScale, boneRoundness, boneWidth, shoulderShape, waistType, waistLength,
+      limbLength, handFootSize, bodyShape, fleshTexture, hipProtrude, chestProtrude,
+    })
+    const bodyShapeHint = bodyResultData.body_shape_hint
+    localStorage.setItem(userScopedKey('aiffd_body_result', user), JSON.stringify(bodyResultData))
 
     // 续测存档：标记为已完成
     const snapshot: BodySnapshot = {
@@ -364,8 +357,8 @@ export default function BodyTestPage() {
     <div style={{ minHeight: '100vh', background: '#faf9f7' }}>
       <ThreeStageProgress
         activeStage="form"
-        formDone={!!localStorage.getItem(userScopedKey('aiffd_style_result', user))}
-        colorDone={!!localStorage.getItem(userScopedKey('aiffd_25season', user))}
+        formDone={!!localStorage.getItem(userScopedKey('aiffd_style_result', user)) || !!serverProfile?.primaryStyle}
+        colorDone={!!localStorage.getItem(userScopedKey('aiffd_25season', user)) || !!serverProfile?.finalSeason25}
         preferenceDone={false}
         currentLabel={
           phase === 'skeleton' ? '骨架测试' : phase === 'flesh' ? '身体轮廓' : undefined
@@ -388,8 +381,8 @@ export default function BodyTestPage() {
             </h2>
             <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: C.body, lineHeight: 1.8, marginBottom: '24px' }}>
               {resumeChoice === 'inprogress'
-                ? '本设备上保存了一份还没做完的记录，可以选择继续、重新开始，或者先去做别的测试。'
-                : '本设备上已经保存了一份完整的体型测试结果，可以直接查看，也可以重新测一次覆盖它。'}
+                ? '你有一份还没做完的体型测试记录，可以选择继续、重新开始，或者先去做别的测试。'
+                : '你已经保存了一份完整的体型测试结果，可以直接查看，也可以重新测一次覆盖它。'}
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {resumeChoice === 'inprogress' ? (

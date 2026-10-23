@@ -7,6 +7,7 @@
 import { STYLES, type StyleInfo } from '../data/styleMatrix'
 import { STYLE_CODE_BY_CN } from './styleScoring'
 import { NO_FIXED_STYLE } from './fashionStyleOptions'
+import type { BodyAnswersForResult } from './bodyResult'
 
 export type ServerProfile = Record<string, unknown>
 
@@ -29,7 +30,7 @@ const CN_BY_CODE: Record<string, string> = Object.fromEntries(Object.entries(STY
 
 export interface StyleResultView { family: string; variant: string; styleInfo: StyleInfo }
 
-export function styleFromServer(p: ServerProfile | null): StyleResultView | null {
+export function styleFromServer(p: ServerProfile | null | undefined): StyleResultView | null {
   const cn = CN_BY_CODE[str(p?.primaryStyle)]
   const info = cn ? STYLES.find(s => s.cn === cn) : undefined
   return info ? { family: info.family, variant: info.cn, styleInfo: info } : null
@@ -38,7 +39,7 @@ export function styleFromServer(p: ServerProfile | null): StyleResultView | null
 // ── 色彩 ─────────────────────────────────────────────────────────
 export interface ColorView { warmCool: string; seasonName: string; seasonElement: string; elementName: string; finalSeason25: string }
 
-export function colorFromServer(p: ServerProfile | null): ColorView {
+export function colorFromServer(p: ServerProfile | null | undefined): ColorView {
   return {
     warmCool: str(p?.warmCool) === 'uncertain' ? '' : str(p?.warmCool),
     seasonName: str(p?.seasonName),
@@ -52,7 +53,7 @@ export function colorFromServer(p: ServerProfile | null): ColorView {
 // 本机版本的骨架、体型里还叠加了体格提示码，云端只有用户原始选择，所以显示会略简略
 export interface BodyView { height: string; boneScale: string[]; shoulder: string[]; waist: string[]; bodyShape: string[]; fleshTexture: string[] }
 
-export function bodyFromServer(p: ServerProfile | null): BodyView | null {
+export function bodyFromServer(p: ServerProfile | null | undefined): BodyView | null {
   if (!p || !str(p.boneScale)) return null
   const nonEmpty = (...xs: string[]) => xs.filter(Boolean)
   return {
@@ -65,6 +66,19 @@ export function bodyFromServer(p: ServerProfile | null): BodyView | null {
   }
 }
 
+// 云端档案里的体型字段 → 体型测试答案（供面部测试打分引擎使用）。
+// 只在云端没有完整答题存档（test_progress）时兜底用：档案表的多选项只存了第一项，信息略少于完整存档。
+export function bodyAnswersFromServer(p: ServerProfile | null | undefined): BodyAnswersForResult | null {
+  if (!p || !str(p.boneScale)) return null
+  const one = (v: unknown) => (str(v) ? [str(v)] : [])
+  return {
+    heightRange: str(p.heightRange), boneScale: str(p.boneScale), boneRoundness: str(p.boneRoundness),
+    boneWidth: str(p.shoulderLineDirection), shoulderShape: one(p.shoulderShape), waistType: list(p.waistType),
+    waistLength: str(p.waistLength), limbLength: str(p.limbLength), handFootSize: str(p.handFootSize),
+    bodyShape: one(p.bodyShape), fleshTexture: one(p.fleshTexture), hipProtrude: one(p.hipProtrude), chestProtrude: one(p.chestProtrude),
+  }
+}
+
 // ── 个人时尚选择：风格形象标签 → 与本机 aiffd_fashion_style 同形状的数据 ────────
 export interface FashionView {
   aspired_style_primary: string | null
@@ -74,7 +88,7 @@ export interface FashionView {
   rejected_style_codes: string[]
 }
 
-export function fashionFromServer(p: ServerProfile | null): FashionView | null {
+export function fashionFromServer(p: ServerProfile | null | undefined): FashionView | null {
   const aspired = list(p?.aspiredImageTags)
   if (!p || aspired.length === 0) return null
   const favorite = str(p.aspiredImageTagFavorite) || null

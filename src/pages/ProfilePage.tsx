@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import { userAPI, humanProfileAPI } from '../utils/api'
-import { styleFromServer, colorFromServer, bodyFromServer, fashionFromServer, bodyLabel, type ServerProfile } from '../utils/profileFromServer'
+import { userAPI } from '../utils/api'
+import { styleFromServer, colorFromServer, bodyFromServer, fashionFromServer, bodyLabel } from '../utils/profileFromServer'
+import { useServerProfile } from '../hooks/useServerProfile'
 import { userScopedKey } from '../utils/userStorage'
 import { getStylePortraitSrc } from '../utils/styleImages'
 import { STYLE_OPTIONS, styleLabelOf } from '../utils/fashionStyleOptions'
@@ -147,15 +148,7 @@ export default function ProfilePage() {
   // ── 云端档案（2026-10-22 新增）────────────────────────
   // 读取顺序：本机优先、云端补缺。本机有的结果照常显示；本机没有的（换设备、清缓存、换浏览器），
   // 用云端档案换算出的数据补上。读取失败时页面照常只显示本机数据。
-  const [serverProfile, setServerProfile] = useState<ServerProfile | null>(null)
-  useEffect(() => {
-    if (!user?.id) return
-    let cancelled = false
-    humanProfileAPI.getMe()
-      .then(res => { if (!cancelled) setServerProfile(res.data?.profile ?? null) })
-      .catch(err => console.error('[profile] 读取云端档案失败，仅显示本机数据', err))
-    return () => { cancelled = true }
-  }, [user?.id])
+  const serverProfile = useServerProfile(user)
 
   // ── 档案数据读取 ──────────────────────────────────
   const raw = localStorage.getItem(userScopedKey('aiffd_profile', user))

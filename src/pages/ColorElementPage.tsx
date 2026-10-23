@@ -5,6 +5,7 @@ import { userScopedKey } from '../utils/userStorage'
 import { syncProfile } from '../utils/profileSync'
 import { toProfileSeason, isValidFinalSeason25, warmCoolIsFromQuestionnaire } from '../utils/colorProfile'
 import ThreeStageProgress from '../components/ThreeStageProgress'
+import { useServerProfile } from '../hooks/useServerProfile'
 
 const C = {
   h1: '#111111', h2: '#222222', sub: '#444444',
@@ -171,6 +172,7 @@ function FinalReport({ season, seasonName, element }: {
 export default function ColorElementPage() {
   const location = useLocation()
   const { user } = useAuth() // 读取五季兜底值、以及确认副气结果存档时，都要用同一个用户前缀
+  const serverProfile = useServerProfile(user) // 2026-10-23：进度条等“已完成”判断，本机没有时参考云端档案
 
   const season: SeasonResult = (location.state?.season || localStorage.getItem(userScopedKey('aiffd_season_result', user)) || 'changxia') as SeasonResult
   const seasonName: string = (location.state?.seasonName || localStorage.getItem(userScopedKey('aiffd_season_name', user)) || '长夏')
@@ -239,8 +241,8 @@ export default function ColorElementPage() {
     <div style={{ minHeight: '100vh', background: C.bg, paddingBottom: '60px' }}>
       <ThreeStageProgress
         activeStage="color"
-        formDone={!!localStorage.getItem(userScopedKey('aiffd_style_result', user))}
-        colorDone={!!localStorage.getItem(userScopedKey('aiffd_25season', user))}
+        formDone={!!localStorage.getItem(userScopedKey('aiffd_style_result', user)) || !!serverProfile?.primaryStyle}
+        colorDone={!!localStorage.getItem(userScopedKey('aiffd_25season', user)) || !!serverProfile?.finalSeason25}
         preferenceDone={false}
         currentLabel={step !== 'intro' && step !== 'report' ? '五行副气测试' : undefined}
         currentNum={step !== 'intro' && step !== 'report' ? currentIndex : undefined}

@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { userScopedKey } from '../utils/userStorage'
 import { syncProfile } from '../utils/profileSync'
 import ThreeStageProgress from '../components/ThreeStageProgress'
+import { useServerProfile } from '../hooks/useServerProfile'
+import { colorFromServer } from '../utils/profileFromServer'
 
 const C = {
   h1: '#111111', h2: '#222222', sub: '#444444',
@@ -445,6 +447,7 @@ function BookingPage({ onBack }: { onBack: () => void }) {
 export default function ColorTestPage() {
   const navigate = useNavigate()
   const { user } = useAuth() // 存 AI 结果页 warmCool 时也要用同一个用户前缀
+  const serverProfile = useServerProfile(user) // 2026-10-23：进度条等“已完成”判断，本机没有时参考云端档案
   const [step, setStep] = useState<StepKey>('intro')
   const [photoUploaded, setPhotoUploaded] = useState(false)
   const [analyzing, setAnalyzing] = useState(false)
@@ -471,6 +474,23 @@ export default function ColorTestPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id])
+
+  // 2026-10-23：本机没有色彩结果、但云端档案里三层都已完成时，同样直接给结论摘要（只在刚进页面时生效一次）
+  const serverColorChecked = useRef(false)
+  useEffect(() => { serverColorChecked.current = false }, [user?.id])
+  useEffect(() => {
+    if (serverColorChecked.current || !serverProfile) return
+    serverColorChecked.current = true
+    if (step !== 'intro' || localStorage.getItem(userScopedKey('aiffd_25season', user))) return
+    const c = colorFromServer(serverProfile)
+    if (!c.finalSeason25) return
+    const wc = c.warmCool as WarmCoolResult
+    setCompletedSummary({
+      warmCoolTitle: RESULT_PROFILES[wc]?.title ?? '',
+      seasonName: c.seasonName, elementName: c.elementName, finalSeason25: c.finalSeason25,
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [serverProfile, step])
 
   // "重新测试"：清空色彩测试三层的所有存档，从冷暖测试第一步重新开始
   const restartColorTest = () => {
@@ -508,8 +528,8 @@ export default function ColorTestPage() {
     <div style={{ minHeight: '100vh', background: C.bg, paddingBottom: '60px' }}>
       <ThreeStageProgress
         activeStage="color"
-        formDone={!!localStorage.getItem(userScopedKey('aiffd_style_result', user))}
-        colorDone={!!localStorage.getItem(userScopedKey('aiffd_25season', user))}
+        formDone={!!localStorage.getItem(userScopedKey('aiffd_style_result', user)) || !!serverProfile?.primaryStyle}
+        colorDone={!!localStorage.getItem(userScopedKey('aiffd_25season', user)) || !!serverProfile?.finalSeason25}
         preferenceDone={false}
         currentLabel={
           step === 'q0' ? '明度判断' : step === 'q1' ? '首饰测试' : step === 'q2' ? '冷暖色卡'
