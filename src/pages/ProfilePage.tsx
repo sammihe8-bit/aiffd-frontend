@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { userAPI, humanProfileAPI } from '../utils/api'
-import { styleFromServer, colorFromServer, bodyFromServer, fashionFromServer, hasFaceOnServer, type ServerProfile } from '../utils/profileFromServer'
+import { styleFromServer, colorFromServer, bodyFromServer, fashionFromServer, bodyLabel, type ServerProfile } from '../utils/profileFromServer'
 import { userScopedKey } from '../utils/userStorage'
 import { getStylePortraitSrc } from '../utils/styleImages'
 import { STYLE_OPTIONS, styleLabelOf } from '../utils/fashionStyleOptions'
@@ -206,10 +206,6 @@ export default function ProfilePage() {
   } | null = fashionRaw ? (() => { try { return JSON.parse(fashionRaw) } catch { return null } })() : null
   const fashionResult = localFashion ?? fashionFromServer(serverProfile)
 
-  // 有任何一块结果来自云端时，在页面上说明一句，避免用户疑惑“为什么这里显示得比较简略”
-  const restoredFromServer = (!localStyle && !!styleResult) || (!localBody && !!bodyResult)
-    || (!colorFromLocal && !!seasonName) || (!localFashion && !!fashionResult)
-
   // "最想成为的样子"（Q1 的最喜欢选项）对应的插画，用于个人时尚选择区块右侧的卡片展示
   const aspiredStyleCards = fashionResult
     ? [
@@ -300,11 +296,6 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {restoredFromServer && (
-          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.body, lineHeight: 1.7, margin: '0 0 24px', padding: '10px 14px', background: '#fff', border: `1px solid ${C.border}`, borderLeft: `3px solid ${C.gold}`, borderRadius: '4px' }}>
-            这台设备上没有部分测试记录，相关结果已从你的云端档案恢复。五官等少数详情只保存在做测试的那台设备上，这里会显示得简略一些。
-          </p>
-        )}
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px', borderBottom: `1px solid ${C.border}`, paddingBottom: '32px', marginBottom: '40px', position: 'relative' }}>
           {/* 头像：点击打开预设图案选择器 */}
@@ -416,11 +407,11 @@ export default function ProfilePage() {
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1px', background: C.border }}>
                     {[
                       { label: '身高区间', value: bodyResult.height },
-                      { label: '骨架', value: Array.isArray(bodyResult.boneScale) ? bodyResult.boneScale.join(' · ') : bodyResult.boneScale },
-                      { label: '肩形', value: Array.isArray(bodyResult.shoulder) ? bodyResult.shoulder.join(' + ') : null },
-                      { label: '腰型', value: Array.isArray(bodyResult.waist) ? bodyResult.waist.join(' + ') : null },
-                      { label: '体型', value: Array.isArray(bodyResult.bodyShape) ? bodyResult.bodyShape.join(' + ') : null },
-                      { label: '皮肉质', value: Array.isArray(bodyResult.fleshTexture) ? bodyResult.fleshTexture.join(' + ') : null },
+                      { label: '骨架', value: Array.isArray(bodyResult.boneScale) ? bodyResult.boneScale.map(bodyLabel).join(' · ') : bodyResult.boneScale },
+                      { label: '肩形', value: Array.isArray(bodyResult.shoulder) ? bodyResult.shoulder.map(bodyLabel).join(' + ') : null },
+                      { label: '腰型', value: Array.isArray(bodyResult.waist) ? bodyResult.waist.map(bodyLabel).join(' + ') : null },
+                      { label: '体型', value: Array.isArray(bodyResult.bodyShape) ? bodyResult.bodyShape.map(bodyLabel).join(' + ') : null },
+                      { label: '皮肉质', value: Array.isArray(bodyResult.fleshTexture) ? bodyResult.fleshTexture.map(bodyLabel).join(' + ') : null },
                     ].filter(item => item.value).map((item, i) => (
                       <div key={i} style={{ background: '#fff', padding: '16px' }}>
                         <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', color: C.muted, margin: '0 0 4px' }}>{item.label}</p>
@@ -445,9 +436,7 @@ export default function ProfilePage() {
                     </div>
                   ) : (
                     <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: C.muted, margin: 0, lineHeight: 1.8 }}>
-                      {hasFaceOnServer(serverProfile)
-                        ? '五官详情只保存在你做面部测试的那台设备上，这台设备暂时无法显示。重新做一次面部测试即可在这里看到。'
-                        : '这份风格结论是改版前测出来的，当时还没存五官原始答案，重新做一次面部测试即可补上这部分详情。'}
+                      重新做一次面部测试，即可在这里看到五官详情。
                     </p>
                   )}
                 </div>

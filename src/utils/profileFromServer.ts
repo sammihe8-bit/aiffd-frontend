@@ -89,7 +89,12 @@ export function fashionFromServer(p: ServerProfile | null): FashionView | null {
   }
 }
 
-// 面部是否已在云端有结果（五官中文详情只存在本机，云端只能告诉用户“已测过”）
-export function hasFaceOnServer(p: ServerProfile | null): boolean {
-  return !!p && ['cheekContour', 'eyeShape', 'noseShape', 'chinShape', 'mouthFullness'].some(k => str(p[k]))
+
+// 体型选项代码 → 页面显示用中文（本机和云端存的都是选项代码，如 sharp_angular、balanced）
+const BODY_LABELS: Record<string, string> = {
+  S: '小骨架', M: '中骨架', L: '大骨架',
+  rounded: '圆润肩', blunt_angular: '方正肩', sharp_angular: '尖锐肩',
+  taut: '紧实清晰', balanced: '自然均衡', soft: '柔和饱满', uncertain: '不太确定',
 }
+
+export const bodyLabel = (code: string): string => BODY_LABELS[code] ?? code
