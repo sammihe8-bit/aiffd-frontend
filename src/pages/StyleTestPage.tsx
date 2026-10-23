@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { computeStyleScore, computeStyleProbabilities, STYLE_ENGINE_VERSION, type StyleAnswers } from '../utils/styleScoring'
 import { useAuth } from '../hooks/useAuth'
 import { userScopedKey } from '../utils/userStorage'
@@ -349,12 +349,15 @@ export default function StyleTestPage() {
 
   // 2026-10-23：本机没有风格结果、但云端档案里有时，同样直接显示结果页（只在刚进页面、还没开始答题时生效一次）
   const serverProfile = useServerProfile(user)
+  const location = useLocation()
   const serverStyleChecked = useRef(false)
   useEffect(() => { serverStyleChecked.current = false }, [user?.id])
   useEffect(() => {
     if (serverStyleChecked.current || !serverProfile) return
     serverStyleChecked.current = true
     if (phase !== 'intro' || localStorage.getItem(userScopedKey('aiffd_style_result', user))) return
+    // 刚做完（或重做）体型测试跳过来的，要继续做面部测试，不能直接显示云端的旧风格结果
+    if ((location.state as { fromBodyTest?: boolean } | null)?.fromBodyTest) return
     const fromServer = styleFromServer(serverProfile)
     if (fromServer) {
       setCompletedResult({ variant: fromServer.variant, styleInfo: fromServer.styleInfo })
@@ -412,6 +415,12 @@ export default function StyleTestPage() {
       }
     })
     localStorage.setItem(userScopedKey('aiffd_face_result', user), JSON.stringify(faceDetail))
+    // 2026-10-23：五官详情（中文展示标签）和原始选项同时存进云端测试存档，换设备、退出重登后档案页也能显示
+    testProgressAPI.save('style', 'completed', {
+      faceDetail, selections: imageComboSelections,
+      verify: { q1: verifyQ1, q2: verifyQ2, q3: verifyQ3, q4: verifyQ4 }, qiXueState,
+      result: { variant: payload.variant, family: scoreResult.winningFamily }, savedAt: new Date().toISOString(),
+    }).catch(err => console.error('[style-test] 五官详情存入云端失败', err))
 
     // 整体风格复核 4 题的结果单独存档，供色彩测试计算五行使用
     localStorage.setItem(userScopedKey('aiffd_qixue_result', user), JSON.stringify({
