@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import { userAPI } from '../utils/api'
+import { userAPI, testProgressAPI } from '../utils/api'
 import { styleFromServer, colorFromServer, bodyFromServer, fashionFromServer, bodyLabel } from '../utils/profileFromServer'
 import { useServerProfile } from '../hooks/useServerProfile'
 import { userScopedKey } from '../utils/userStorage'
@@ -182,9 +182,25 @@ export default function ProfilePage() {
 
   // 五官详情（StyleTestPage 存的 { [维度id]: { label, value } } 结构）
   const faceRaw = localStorage.getItem(userScopedKey('aiffd_face_result', user))
-  const faceResult: Record<string, { label: string; value: string }> | null = faceRaw
+  const localFace: Record<string, { label: string; value: string }> | null = faceRaw
     ? (() => { try { return JSON.parse(faceRaw) } catch { return null } })()
     : null
+  // 2026-10-23：本机没有时读云端测试存档（面部测试完成时会把五官详情一起存进 test_progress 的 style 记录）
+  const [serverFace, setServerFace] = useState<Record<string, { label: string; value: string }> | null>(null)
+  useEffect(() => {
+    setServerFace(null)
+    if (!user?.id || faceRaw) return
+    let cancelled = false
+    testProgressAPI.get('style')
+      .then(res => {
+        const detail = res.data?.progress?.data?.faceDetail
+        if (!cancelled && detail && typeof detail === 'object') setServerFace(detail)
+      })
+      .catch(err => console.error('[profile] 读取云端五官详情失败', err))
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, !!faceRaw])
+  const faceResult = localFace ?? serverFace
   const styleDisplayName = styleResult?.styleInfo?.cn || styleResult?.variant || ''
   const portraitSrc = getStylePortraitSrc(styleDisplayName)
 

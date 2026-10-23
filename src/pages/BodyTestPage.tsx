@@ -8,6 +8,7 @@ import { buildBodyPatch } from '../utils/profilePatches'
 import { userScopedKey } from '../utils/userStorage'
 import ThreeStageProgress from '../components/ThreeStageProgress'
 import { useServerProfile } from '../hooks/useServerProfile'
+import { useConsentRecord } from '../hooks/useConsentRecord'
 
 const C = {
   h1: '#111111', h2: '#222222', sub: '#444444',
@@ -117,17 +118,10 @@ export default function BodyTestPage() {
   // 2026-09-12 新增：是否显示"AI 拍照识别"选项，取决于用户在 /onboarding 同意页勾选的 photoConsent。
   // 规则（产品侧已确认）：找不到同意记录时默认显示（不阻断没走过 onboarding、直接进测试的用户）；
   // 只有明确读到 photoConsent === false 才隐藏这个选项。
-  const photoConsentAllowed = (() => {
-    if (typeof window === 'undefined') return true
-    try {
-      const raw = localStorage.getItem(userScopedKey('aiffd_consent', user))
-      if (!raw) return true
-      const consent = JSON.parse(raw)
-      return consent.photoConsent !== false
-    } catch {
-      return true
-    }
-  })()
+  // 2026-10-23：同意记录本机没有时查云端（退出登录会清本机存档）。读取中先不显示拍照选项。
+  const consentRecord = useConsentRecord(user)
+  const photoConsentAllowed = consentRecord.status === 'none'
+    || (consentRecord.status === 'found' && consentRecord.photoConsent)
 
   // 2026-08-27 新增：进度存档与续测提醒。
   // 现在这个页面必然是已登录用户（PrivateRoute 保证），初始值统一是 'none'，不弹窗，
@@ -244,7 +238,7 @@ export default function BodyTestPage() {
 
     // 2026-08-31 调整：不再展示单独的体型档案报告页，测完直接进风格测试的面部测试，
     // 结果统一在 ProfilePage 里查看
-    navigate('/test/style')
+    navigate('/test/style', { state: { fromBodyTest: true } }) // 刚测完体型，面部测试页不要直接显示旧的风格结果
   }
 
   // 骨架(10) + 身体轮廓(3) = 13 题，跨环节统一计数，方便一屏一题的进度展示

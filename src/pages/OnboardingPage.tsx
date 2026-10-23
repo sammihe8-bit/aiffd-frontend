@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { isFullProfileComplete, userScopedKey } from '../utils/userStorage'
+import { useConsentRecord } from '../hooks/useConsentRecord'
+import { useServerProfile } from '../hooks/useServerProfile'
 import Footer from '../components/Footer'
 import { syncProfile } from '../utils/profileSync'
 
@@ -208,12 +210,15 @@ function ArchivePage() {
   const [expandedModule, setExpandedModule] = useState<string | null>('style')
   const navigate = useNavigate()
   const { user } = useAuth()
+  const serverProfile = useServerProfile(user)
 
   // 统一的"开始测试"入口逻辑：已经把体型+风格+色彩三层全部测完的用户，
   // 点这个按钮不应该再从头问一遍，而是直接进个人风格结果页，并弹窗询问要不要调整某项/重新测试。
   // 只针对这个主入口按钮；下面模块卡片里"开始 →"链接到具体某一项测试，保持原样直接跳转，不受这个判断影响。
   const handleStartClick = () => {
-    if (isFullProfileComplete(user)) {
+    // 2026-10-23：本机没有存档时参考云端档案（体型、风格、色彩三层都有值才算全部完成）
+    const serverComplete = !!serverProfile?.boneScale && !!serverProfile?.primaryStyle && !!serverProfile?.finalSeason25
+    if (isFullProfileComplete(user) || serverComplete) {
       navigate('/profile', { state: { showRetestPrompt: true } })
     } else {
       navigate('/test/style')
@@ -448,12 +453,15 @@ function ArchivePage() {
 // aiffd_consent 同意记录，用户只要刷新页面或重新进入 /onboarding，同意页依然会重新弹出。
 // 现在改成惰性初始化：先查一次本机是否已经有这个用户（或访客 'guest' 桶）的同意记录，
 // 有就直接跳过同意页，直接展示 ArchivePage。
+// 2026-10-23：改用 useConsentRecord——本机没有时再查云端 user_consents，查询期间不先闪出同意页。
 export default function OnboardingPage() {
   const { user } = useAuth()
-  const [agreed, setAgreed] = useState(() => {
-    if (typeof window === 'undefined') return false
-    return !!localStorage.getItem(userScopedKey('aiffd_consent', user))
-  })
-  if (!agreed) return <ConsentScreen onAgree={() => setAgreed(true)} />
+  // 2026-10-23：本机没有同意记录时查云端（退出登录会清本机存档），云端有就不再让用户同意一遍
+  const consentRecord = useConsentRecord(user)
+  const [agreedNow, setAgreedNow] = useState(false)
+  if (consentRecord.status === 'loading' && !agreedNow) {
+    return <div style={{ minHeight: '60vh' }} />
+  }
+  if (consentRecord.status !== 'found' && !agreedNow) return <ConsentScreen onAgree={() => setAgreedNow(true)} />
   return <ArchivePage />
 }

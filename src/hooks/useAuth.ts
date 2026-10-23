@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { migrateGuestDataToUser } from '../utils/userStorage'
+import { migrateGuestDataToUser, clearLocalUserData, localDataBackedUp } from '../utils/userStorage'
 
 const TOKEN_KEY = 'aiffd_token'
 const USER_KEY  = 'aiffd_user'
@@ -37,6 +37,9 @@ export function useAuth() {
     window.dispatchEvent(new Event('auth-change'))
   }
   const logout = () => {
+    // 2026-10-23：退出时清掉本机测试存档（结果都在云端，重新登录会读回来）。
+    // 只有本次会话已确认把本机旧结果补传到云端时才清；补传没成功就先留着，避免丢掉还没上云的数据。
+    if (localDataBackedUp(user)) clearLocalUserData(user)
     localStorage.removeItem(TOKEN_KEY)
     localStorage.removeItem(USER_KEY)
     setToken(null)
