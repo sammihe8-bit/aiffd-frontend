@@ -5,6 +5,7 @@ import { userScopedKey } from '../utils/userStorage'
 import { syncProfile } from '../utils/profileSync'
 import { buildFashionPatch } from '../utils/profilePatches'
 import ThreeStageProgress from '../components/ThreeStageProgress'
+import { useServerProfile } from '../hooks/useServerProfile'
 import { STYLE_OPTIONS, NO_FIXED_STYLE, NO_REJECTED_STYLE, styleLabelOf } from '../utils/fashionStyleOptions'
 
 const C = {
@@ -66,6 +67,7 @@ function StyleImageCard({ label, desc, img, active, disabled, onClick }: {
 
 export default function FashionTestPage() {
   const { user } = useAuth()
+  const serverProfile = useServerProfile(user) // 2026-10-23：进度条等“已完成”判断，本机没有时参考云端档案
   const [phase, setPhase] = useState<Phase>('intro')
 
   // 是否已经存在这个模块的测试结果。已完成的用户重新进入这个页面时，
@@ -74,7 +76,10 @@ export default function FashionTestPage() {
   const fashionKey = userScopedKey('aiffd_fashion_style', user)
   const [retestState, setRetestState] = useState<'none' | 'confirming'>('none')
   const [confirmedRetest, setConfirmedRetest] = useState(false)
-  const existingFashionResult = !confirmedRetest && !!localStorage.getItem(fashionKey)
+  // 2026-10-23：本机没有、但云端档案里已有理想形象结果时，也先显示“已完成”提示屏（只在还没开始答题时）
+  const serverHasFashion = phase === 'intro' && typeof serverProfile?.aspiredImageTags === 'string'
+    && serverProfile.aspiredImageTags !== '' && serverProfile.aspiredImageTags !== '[]'
+  const existingFashionResult = !confirmedRetest && (!!localStorage.getItem(fashionKey) || serverHasFashion)
 
   const confirmRestart = () => {
     localStorage.removeItem(fashionKey)
@@ -169,9 +174,9 @@ export default function FashionTestPage() {
     <div style={{ minHeight: '100vh', background: '#faf9f7' }}>
       <ThreeStageProgress
         activeStage="preference"
-        formDone={!!localStorage.getItem(userScopedKey('aiffd_style_result', user))}
-        colorDone={!!localStorage.getItem(userScopedKey('aiffd_25season', user))}
-        preferenceDone={!!localStorage.getItem(fashionKey)}
+        formDone={!!localStorage.getItem(userScopedKey('aiffd_style_result', user)) || !!serverProfile?.primaryStyle}
+        colorDone={!!localStorage.getItem(userScopedKey('aiffd_25season', user)) || !!serverProfile?.finalSeason25}
+        preferenceDone={!!localStorage.getItem(fashionKey) || serverHasFashion}
         currentLabel={phase === 'q1' ? '理想形象 · 你想成为的样子' : phase === 'q2' ? '理想形象 · 实际最常穿' : phase === 'q3' ? '理想形象 · 明确不喜欢' : undefined}
         currentNum={phase === 'q1' ? 1 : phase === 'q2' ? 2 : phase === 'q3' ? 3 : undefined}
         currentTotal={(phase === 'q1' || phase === 'q2' || phase === 'q3') ? 3 : undefined}

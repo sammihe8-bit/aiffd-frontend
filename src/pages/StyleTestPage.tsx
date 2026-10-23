@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { computeStyleScore, computeStyleProbabilities, STYLE_ENGINE_VERSION, type StyleAnswers } from '../utils/styleScoring'
 import { useAuth } from '../hooks/useAuth'
@@ -7,6 +7,10 @@ import { getStylePortraitSrc } from '../utils/styleImages'
 import { syncProfile } from '../utils/profileSync'
 import { buildQixuePatch } from '../utils/profilePatches'
 import ThreeStageProgress from '../components/ThreeStageProgress'
+import { testProgressAPI } from '../utils/api'
+import { buildBodyResult } from '../utils/bodyResult'
+import { useServerProfile } from '../hooks/useServerProfile'
+import { styleFromServer } from '../utils/profileFromServer'
 
 // ─── 设计系统（与 BodyTestPage 保持一致）─────────────────────
 const C = {
@@ -321,12 +325,37 @@ export default function StyleTestPage() {
   useEffect(() => {
     const raw = localStorage.getItem(userScopedKey('aiffd_body_result', user))
     if (raw) {
-      try { setBodyResult(JSON.parse(raw)) } catch { setBodyResult(null) }
-    } else {
-      setBodyResult(null) // 显式清空：避免切换账号后仍然沿用上一个账号读到的 bodyResult 残留在 state 里
+      try { setBodyResult(JSON.parse(raw)); return } catch { /* 存档损坏，按本机没有处理 */ }
     }
+    setBodyResult(null) // 显式清空：避免切换账号后仍然沿用上一个账号读到的 bodyResult 残留在 state 里
+    // 2026-10-23：本机没有体型结果（换设备、清缓存）时，用云端的体型测试存档重建，不用让用户重做体型测试
+    if (!user?.id) return
+    let cancelled = false
+    testProgressAPI.get('body')
+      .then(res => {
+        const progress = res.data?.progress
+        if (!cancelled && progress?.status === 'completed' && progress.data) setBodyResult(buildBodyResult(progress.data))
+      })
+      .catch(err => console.error('[style-test] 读取云端体型存档失败', err))
+    return () => { cancelled = true }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id])
+
+  // 2026-10-23：本机没有风格结果、但云端档案里有时，同样直接显示结果页（只在刚进页面、还没开始答题时生效一次）
+  const serverProfile = useServerProfile(user)
+  const serverStyleChecked = useRef(false)
+  useEffect(() => { serverStyleChecked.current = false }, [user?.id])
+  useEffect(() => {
+    if (serverStyleChecked.current || !serverProfile) return
+    serverStyleChecked.current = true
+    if (phase !== 'intro' || localStorage.getItem(userScopedKey('aiffd_style_result', user))) return
+    const fromServer = styleFromServer(serverProfile)
+    if (fromServer) {
+      setCompletedResult({ variant: fromServer.variant, styleInfo: fromServer.styleInfo })
+      setPhase('report')
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [serverProfile, phase])
 
   // 一进页面就检查这个账号是不是已经测过风格测试了，测过就直接跳结果页，不再让用户从头再答一遍
   useEffect(() => {
@@ -511,7 +540,7 @@ export default function StyleTestPage() {
       <ThreeStageProgress
         activeStage="form"
         formDone={!!completedResult}
-        colorDone={!!localStorage.getItem(userScopedKey('aiffd_25season', user))}
+        colorDone={!!localStorage.getItem(userScopedKey('aiffd_25season', user)) || !!serverProfile?.finalSeason25}
         preferenceDone={false}
         currentLabel={phase === 'face' ? FACE_QUESTIONS[faceIdx].title : phase === 'verify' ? '整体风格复核' : undefined}
         currentNum={phase === 'face' ? faceIdx + 1 : phase === 'verify' ? verifyIdx + 1 : undefined}

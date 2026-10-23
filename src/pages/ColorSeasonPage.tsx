@@ -6,6 +6,7 @@ import { testProgressAPI } from '../utils/api'
 import { syncProfile } from '../utils/profileSync'
 import { toProfileSeason, warmCoolIsFromQuestionnaire } from '../utils/colorProfile'
 import ThreeStageProgress from '../components/ThreeStageProgress'
+import { useServerProfile } from '../hooks/useServerProfile'
 
 const C = {
   h1: '#111111', h2: '#222222', sub: '#444444',
@@ -526,6 +527,7 @@ function SeasonReport({ result, onReset }: { result: SeasonResult; onReset: () =
 export default function ColorSeasonPage() {
   const location = useLocation()
   const { user } = useAuth() // 读取 warmCool 兜底值、以及答完题后立即存档时，都要用同一个用户前缀
+  const serverProfile = useServerProfile(user) // 2026-10-23：进度条等“已完成”判断，本机没有时参考云端档案
   const warmCool: WarmCoolInput = (
     (location.state?.warmCool as WarmCoolInput) ||
     (localStorage.getItem(userScopedKey('aiffd_warmcool', user)) as WarmCoolInput) ||
@@ -639,8 +641,8 @@ export default function ColorSeasonPage() {
     <div style={{ minHeight: '100vh', background: '#faf9f7', paddingBottom: '60px' }}>
       <ThreeStageProgress
         activeStage="color"
-        formDone={!!localStorage.getItem(userScopedKey('aiffd_style_result', user))}
-        colorDone={!!localStorage.getItem(userScopedKey('aiffd_25season', user))}
+        formDone={!!localStorage.getItem(userScopedKey('aiffd_style_result', user)) || !!serverProfile?.primaryStyle}
+        colorDone={!!localStorage.getItem(userScopedKey('aiffd_25season', user)) || !!serverProfile?.finalSeason25}
         preferenceDone={false}
         currentLabel={step !== 'intro' && step !== 'report' ? '五季测试' : undefined}
         currentNum={step !== 'intro' && step !== 'report' ? currentIndex : undefined}
