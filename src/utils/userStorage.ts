@@ -76,3 +76,29 @@ export function migrateGuestDataToUser(user: AuthUser | null): void {
     localStorage.removeItem(guestKey)
   })
 }
+
+// 2026-10-23 新增：退出登录时清掉这个用户在本机的测试存档。
+// 各页面已改为“本机优先、云端补缺”，清掉后重新登录会从云端读回结果；清掉可以避免：
+//   - 共用电脑时，测试结果长期留在浏览器里；
+//   - 本机旧结果盖过在别的设备上更新过的云端结果。
+// 保留：预设头像选择（只是界面偏好）、待同步队列（同步失败、等下次补发的写入，删了就真丢了）。
+const KEEP_ON_LOGOUT = new Set(['aiffd_avatar_choice'])
+
+export function clearLocalUserData(user: AuthUser | null): void {
+  if (!user?.id) return
+  try {
+    SCOPED_STORAGE_KEYS.filter(base => !KEEP_ON_LOGOUT.has(base))
+      .forEach(base => localStorage.removeItem(userScopedKey(base, user)))
+  } catch {
+    // 本机存储不可用时忽略
+  }
+}
+
+// 本机存档里的旧结果是否已经确认补传到云端（profileSync.backfillProfile 在本次会话里全部成功才会打标记）
+export function localDataBackedUp(user: AuthUser | null): boolean {
+  try {
+    return !!sessionStorage.getItem(`aiffd_profile_backfill_done_${user?.id ?? 'guest'}`)
+  } catch {
+    return false
+  }
+}

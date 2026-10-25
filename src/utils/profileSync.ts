@@ -143,6 +143,10 @@ export async function backfillProfile(user: AuthUser | null): Promise<void> {
   // 2. 同意记录：服务端还没有任何记录、本机有完整的旧记录时，补传一次（标记为 local_backfill）
   await backfillConsent(user)
 
+  // 2b. 五官详情（2026-10-23）：此前只存在本机。云端测试存档里还没有时补传一份，
+  //     这样退出登录清掉本机存档后，档案页仍能显示五官详情
+  const faceOk = await backfillFaceDetail(user)
+
   // 3. 再补写历史结果（后端为空、本机或后端测试存档里有值）
   let profile: Record<string, unknown>
   try {
@@ -211,7 +215,7 @@ export async function backfillProfile(user: AuthUser | null): Promise<void> {
     })
   }
 
-  let allDone = true
+  let allDone = faceOk
   for (const job of jobs) {
     const patch = onlyEmptyFields(job.patch, profile)
     if (Object.keys(patch).length === 0) continue
@@ -225,6 +229,23 @@ export async function backfillProfile(user: AuthUser | null): Promise<void> {
 
   if (allDone) {
     try { sessionStorage.setItem(sessionFlag(user), '1') } catch { /* 忽略 */ }
+  }
+}
+
+async function backfillFaceDetail(user: AuthUser): Promise<boolean> {
+  const faceDetail = readJson<Record<string, unknown>>(userScopedKey('aiffd_face_result', user))
+  if (!faceDetail || Object.keys(faceDetail).length === 0) return true
+  try {
+    const res = await testProgressAPI.get('style')
+    if (res.data?.progress?.data?.faceDetail) return true
+    const qixue = readJson<Record<string, unknown>>(userScopedKey('aiffd_qixue_result', user))
+    await testProgressAPI.save('style', 'completed', {
+      faceDetail, qiXueState: qixue?.qiXueState ?? null, source: 'local_backfill', savedAt: new Date().toISOString(),
+    })
+    return true
+  } catch (err) {
+    console.error('[profile-sync] 补传五官详情失败', err)
+    return !isRetryable(err)
   }
 }
 
