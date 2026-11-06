@@ -6,3 +6,12 @@
   from = "/*"
   to = "/index.html"
   status = 200
+
+# Static responses only; API/function responses need their own headers.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Content-Security-Policy = "frame-ancestors 'none'; object-src 'none'; base-uri 'self'"
