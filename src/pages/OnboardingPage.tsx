@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { isFullProfileComplete, userScopedKey } from '../utils/userStorage'
 import { useConsentRecord } from '../hooks/useConsentRecord'
+import { CONSENT_POLICY_VERSION, AGE_RANGES } from '../utils/consentConstants'
 import { useServerProfile } from '../hooks/useServerProfile'
 import Footer from '../components/Footer'
 import { syncProfile } from '../utils/profileSync'
@@ -72,12 +73,7 @@ const ARCHIVE_NOTES = [
   },
 ]
 
-// 隐私政策/知情同意书的版本号——以后协议文案有实质性修改，就把这个版本号往上加一位，
-// 这样每条同意记录里存的 policyVersion 才能对应到当时用户实际看到、同意的是哪一版文案
-const CONSENT_POLICY_VERSION = 'v1.0-2026-09'
-
-// 2026-10-16 新增：年龄段，取值与后端 human_style_profiles.age_range 枚举、数据字典 01B 一致
-const AGE_RANGES = ['18-24', '25-34', '35-44', '45-54', '55+'] as const
+// 协议版本号与年龄段取值：2026-11-12 移到 utils/consentConstants.ts（「我的档案」也要用）
 
 // 单个同意勾选项，抽成一个小组件方便必选/可选两组复用同一套样式，
 // 必选与可选均使用金色勾选态，通过分组标题和“可选：”前缀区分。
@@ -99,7 +95,7 @@ function ConsentCheckbox({ id, checked, onChange, children }: {
   )
 }
 
-function ConsentScreen({ onAgree }: { onAgree: () => void }) {
+function ConsentScreen({ onAgree, notice }: { onAgree: () => void; notice?: string }) {
   const { user } = useAuth()
   // 四个选项默认全部不勾选，这是硬性要求，不能有任何一个默认 true
   const [ageAndResearchAck, setAgeAndResearchAck] = useState(false)
@@ -138,7 +134,10 @@ function ConsentScreen({ onAgree }: { onAgree: () => void }) {
       <div style={{ maxWidth: '680px', margin: '0 auto', padding: '64px 24px 96px' }}>
         <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '4px', color: '#8A6A2F', marginBottom: '12px' }}>AIFFD 智搭</p>
         <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '28px', fontWeight: 400, color: '#111', marginBottom: '8px' }}>数据使用授权</h1>
-        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: '#737373', marginBottom: '40px' }}>开始建立你的风格档案前，请确认以下授权</p>
+        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: '#737373', marginBottom: notice ? '16px' : '40px' }}>开始建立你的风格档案前，请确认以下授权</p>
+        {notice && (
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: '#8A6A2F', marginBottom: '40px' }}>{notice}</p>
+        )}
 
         <div style={{ background: '#F5F5F5', padding: '20px 24px', borderLeft: '3px solid #8A6A2F', marginBottom: '40px' }}>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: '#444', lineHeight: '1.9', marginBottom: '12px' }}>
@@ -456,12 +455,19 @@ function ArchivePage() {
 // 2026-10-23：改用 useConsentRecord——本机没有时再查云端 user_consents，查询期间不先闪出同意页。
 export default function OnboardingPage() {
   const { user } = useAuth()
+  const location = useLocation()
+  const navigate = useNavigate()
+  // 2026-11-12：从测试页被守卫带过来的（老用户还没有同意记录），同意后回到原来要去的页面
+  const from = (location.state as { from?: string } | null)?.from
   // 2026-10-23：本机没有同意记录时查云端（退出登录会清本机存档），云端有就不再让用户同意一遍
   const consentRecord = useConsentRecord(user)
   const [agreedNow, setAgreedNow] = useState(false)
   if (consentRecord.status === 'loading' && !agreedNow) {
     return <div style={{ minHeight: '60vh' }} />
   }
-  if (consentRecord.status !== 'found' && !agreedNow) return <ConsentScreen onAgree={() => setAgreedNow(true)} />
+  if (consentRecord.status !== 'found' && !agreedNow) {
+    return <ConsentScreen notice={from ? '继续之前，请先确认数据使用说明并选择年龄段。只需要确认一次。' : undefined}
+      onAgree={() => { if (from) navigate(from, { replace: true }); else setAgreedNow(true) }} />
+  }
   return <ArchivePage />
 }
