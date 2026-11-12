@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import ProfileSyncNotice from './components/ProfileSyncNotice'
+import { useConsentRecord } from './hooks/useConsentRecord'
 import HomePage from './pages/HomePage'
 import AuthPage from './pages/AuthPage'
 import ProfilePage from './pages/ProfilePage'
@@ -40,8 +41,22 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
   // 未登录：带上 reason 和来源路径跳去登录页，AuthPage 可以用 location.state 显示对应提示文案
   // reason: 'login_required' → 提示"请先登录"；AuthPage 自己再判断这个账号是否已注册过
   return token
-    ? <>{children}</>
+    ? <ConsentGate>{children}</ConsentGate>
     : <Navigate to="/auth" replace state={{ reason: 'login_required', from: location.pathname }} />
+}
+
+// 2026-11-12：老用户（本机和云端都没有同意记录）进入测试页、档案页前先去确认一次同意书，
+// 同意页同时会补上年龄段；确认后自动回到原来要去的页面。
+// 读取中显示空白；云端读取失败时放行，不因为一次网络问题把用户挡在外面。
+function ConsentGate({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth()
+  const location = useLocation()
+  const consent = useConsentRecord(user)
+  if (consent.status === 'loading') return <div style={{ minHeight: '60vh' }} />
+  if (consent.status === 'none') {
+    return <Navigate to="/onboarding" replace state={{ reason: 'consent_required', from: location.pathname }} />
+  }
+  return <>{children}</>
 }
 export default function App() {
   return (

@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth'
 import { userAPI, testProgressAPI } from '../utils/api'
 import { styleFromServer, colorFromServer, bodyFromServer, fashionFromServer, bodyLabel } from '../utils/profileFromServer'
 import { useServerProfile } from '../hooks/useServerProfile'
+import { AgeRangePrompt, ConsentSettings } from '../components/ProfileAccountSettings'
 import { userScopedKey } from '../utils/userStorage'
 import { getStylePortraitSrc } from '../utils/styleImages'
 import { STYLE_OPTIONS, styleLabelOf } from '../utils/fashionStyleOptions'
@@ -154,7 +155,9 @@ export default function ProfilePage() {
   const raw = localStorage.getItem(userScopedKey('aiffd_profile', user))
   const localProfile: StyleProfile | null = raw ? (() => { try { return JSON.parse(raw) } catch { return null } })() : null
   // 年龄段以云端为准（Onboarding 采集，取值 18-24 等）；本机旧存档里的“30–39岁”只作兜底
-  const ageRange = (typeof serverProfile?.ageRange === 'string' && serverProfile.ageRange) || localProfile?.ageRange || ''
+  // 2026-11-12：在本页补填的年龄段先直接显示（云端档案下次读取时也会有）
+  const [ageOverride, setAgeOverride] = useState('')
+  const ageRange = ageOverride || (typeof serverProfile?.ageRange === 'string' && serverProfile.ageRange) || localProfile?.ageRange || ''
   const profile: StyleProfile | null = localProfile || ageRange
     ? { ...(localProfile ?? { bodyType: '', styleDirections: [], budget: '', concerns: [], skinTone: '', scenes: [] }), ageRange }
     : null
@@ -610,23 +613,33 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {profile && (
-          <div style={{ background: '#fff', border: `1px solid ${C.border}`, borderRadius: '8px', padding: '28px', marginBottom: '24px' }}>
-            <SectionTitle label="补充信息" />
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1px', background: C.border }}>
-              {[
-                { label: '年龄段', value: profile?.ageRange },
-                { label: '预算区间', value: profile?.budget },
-                { label: '肤色倾向', value: profile?.skinTone },
-              ].map((item, i) => (
-                <div key={i} style={{ background: '#fff', padding: '20px' }}>
-                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '2px', color: C.muted, marginBottom: '8px' }}>{item.label}</p>
-                  <p style={{ fontFamily: 'Georgia, serif', fontSize: '16px', color: C.h1, margin: 0 }}>{item.value || '未填写'}</p>
-                </div>
-              ))}
+        {/* 2026-11-12：补充信息始终显示；还没有年龄段时在这里补填 */}
+        <div style={{ background: '#fff', border: `1px solid ${C.border}`, borderRadius: '8px', padding: '28px', marginBottom: '24px' }}>
+          <SectionTitle label="补充信息" />
+          {!ageRange && serverProfile !== undefined && (
+            <div style={{ marginBottom: '20px' }}>
+              <AgeRangePrompt user={user} onSaved={setAgeOverride} />
             </div>
+          )}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1px', background: C.border }}>
+            {[
+              { label: '年龄段', value: ageRange },
+              { label: '预算区间', value: profile?.budget },
+              { label: '肤色倾向', value: profile?.skinTone },
+            ].map((item, i) => (
+              <div key={i} style={{ background: '#fff', padding: '20px' }}>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '2px', color: C.muted, marginBottom: '8px' }}>{item.label}</p>
+                <p style={{ fontFamily: 'Georgia, serif', fontSize: '16px', color: C.h1, margin: 0 }}>{item.value || '未填写'}</p>
+              </div>
+            ))}
           </div>
-        )}
+        </div>
+
+        {/* 2026-11-12：数据与授权——查看并修改两项可选授权 */}
+        <div style={{ background: '#fff', border: `1px solid ${C.border}`, borderRadius: '8px', padding: '28px', marginBottom: '24px' }}>
+          <SectionTitle label="数据与授权" />
+          <ConsentSettings user={user} />
+        </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
           {[

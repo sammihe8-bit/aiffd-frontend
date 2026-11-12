@@ -123,8 +123,9 @@ export interface ConsentPayload {
   photoConsent: boolean
   researchDataConsent: boolean
   policyVersion: string
-  // onboarding：用户在 Onboarding 提交；local_backfill：从浏览器本机旧记录补传（须带 consentedAt）
-  source: 'onboarding' | 'local_backfill'
+  // onboarding：用户在 Onboarding 提交；local_backfill：从浏览器本机旧记录补传（须带 consentedAt）；
+  // profile_update：在「我的档案」里修改 / 撤回两项可选授权（2026-11-12）
+  source: 'onboarding' | 'local_backfill' | 'profile_update'
   consentedAt?: string
 }
 
